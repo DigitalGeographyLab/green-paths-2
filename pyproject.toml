@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "green-paths-2"
+version = "0.1.0"
+description = "Bi-objective exposure routing for healthier path choices"
+authors = ["roope heinonen <roope.heinonen@helsinki.fi>"]
+readme = "README.rst"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
