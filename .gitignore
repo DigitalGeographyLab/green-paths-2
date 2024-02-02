@@ -110,3 +110,4 @@ ENV/
 .DS_Store
 src/data/cache/
 data/test_data/
+src/preprocessing/osm_processing/processed_network
