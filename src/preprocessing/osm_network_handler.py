@@ -21,7 +21,7 @@ from src.preprocessing.spatial_operations import (
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 
 
-# roope todo -> poista? plottailua
+# TODO: poista? plottailua
 # ax = test_result["buffer"].plot()
 
 # fig = ax.get_figure()
@@ -63,10 +63,10 @@ class OsmNetworkHandler:
 
     @time_logger
     def convert_network_to_gdf(self) -> None:
-        """roope todo"""
+        """TODO"""
         LOG.info("converting OSM network to gdf")
         osm_network = OSM(self.osm_pbf_file)
-        # roope todo -> laita tää ottamaan vaa esim pyöräiltävät tai käveltävät tms.?
+        # TODO:  -> laita tää ottamaan vaa esim pyöräiltävät tai käveltävät tms.?
         # filtteröi confien mukaan?
         network_gdf = osm_network.get_network(network_type="all")
         LOG.info("successfully converted OSM network to gdf")
@@ -74,7 +74,7 @@ class OsmNetworkHandler:
         self.network_gdf = network_gdf
 
     def handle_crs(self, user_config: UserConfig) -> None:
-        """roope todo"""
+        """TODO"""
         LOG.info("Handle network CRS")
         self.network_gdf = handle_gdf_crs(
             "network",
@@ -84,17 +84,16 @@ class OsmNetworkHandler:
         )
 
     def handle_invalid_geometries(self) -> None:
-        """roope todo"""
+        """TODO"""
         LOG.info("Handle invalid geometries")
         invalid_geometries = has_invalid_geometries(self.network_gdf, "network")
         if invalid_geometries:
-            # roope todo -> salee laita conffeihi toi flagi!
+            # TODO:  -> salee laita conffeihi toi flagi!
             self.network_gdf = fix_invalid_geometries(
                 self.network_gdf, remove_invalid=True
             )
 
-    # roope todo -> pitäskö tähän olla monta?
-    # kans in other news -> tarvitaanko tätä kaikissa scenarioissa?
+    # TODO: dont use this for network, maybe use for data?
     @time_logger
     def create_buffer_for_geometries(self, network_buffer: str) -> None:
         """

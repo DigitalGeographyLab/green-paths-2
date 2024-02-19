@@ -1,7 +1,7 @@
 # Greetings traveller! This is the user's configuration file.
 #
 
-# Roope todo -> kirjota tää puhtaaks -> poista wanha
+# TODO:  -> kirjota tää puhtaaks -> poista wanha
 
 
 # The path to the OSM PBF file that you want to use. Path OR area should be specified, not both.
@@ -9,7 +9,7 @@
 
   # (primary) osm_pbf_file_path: this is the path to the osm pbf file. This will override area
 
-  # roope todo: this was removed... but should it be added back?
+  # TODO: : this was removed... but should it be added back?
   # osm_pbf_area: either name of the place e.g. Helsinki or the bbox coordinates e.g. 24.9,60.1,25.1,60.3
 #
 # The data sources are specified in a list called data_sources. 
@@ -32,7 +32,7 @@
 #                   format supported by OMat, including GeoPackage,
 #                   GeoTIFF, and PNG.
 #
-# roope todo add more
+# TODO:  add more
 
 # europe e.g. 3035
 project_crs: 3879
@@ -63,10 +63,10 @@ data_sources:
     # optional and should only be used if know what doing -> calculate only the means...
     use_only_simple_exposure: True
 
-    # roope todo -> tee validaatioon checkit näistä!
+    # TODO -> tee validaatioon checkit näistä!
     primary_data_column: db_hi # mandatory
     secondary_data_column: db_lo # optional
-    # roope todo -> mieti mitä tälle?
+    # TODO:  -> mieti mitä tälle?
     multiple_data_strategy: mean # optional. Mandatory if secondary_data_column is specified
     columns_of_interest: ["db_lo", "db_hi", "geometry"] # optional
     original_crs: 3879 # optional
@@ -84,7 +84,9 @@ data_sources:
 # formula: "(db_lo + db_hi) / 2"  # Mean of db_lo and db_hi 
 
 
-# roope todo -> this the logic for choosing the actions to be applied to the data sources
+# TODO:
+
+# -> this the logic for choosing the actions to be applied to the data sources
 # Predefined actions
 # actions = {
 #     "sum": lambda x: x.sum(),

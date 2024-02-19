@@ -152,7 +152,7 @@ def process_vector_data(
     for osm_id, group_df in dfs_by_osm_id:
         LOG.info(f"Data for osm_id {osm_id}:")
 
-        jotain = calculate_exposure_distances(data_source, group_df)
+        test = calculate_exposure_distances(data_source, group_df)
 
     # LOG.info(f"analysis results: {spatially_joined_edges_with_polygons.head(2)}")
     # LOG.info(f"analysis length: {len(spatially_joined_edges_with_polygons)}")

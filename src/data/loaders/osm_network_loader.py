@@ -4,13 +4,12 @@ from pyrosm import get_data
 from typing import Union, Tuple
 
 from src.logging import setup_logger, LoggerColors
-
-
 from src.config import DATA_CACHE_DIR_PATH
 
-# helsinki_pbf = download_osm_pbf("Helsinki")
-# bbox_pbf = download_osm_pbf((24.940, 60.155, 25.020, 60.205))  # Example coordinatess
 
+# # Example usage:
+
+# helsinki_pbf = download_osm_pbf("Helsinki")
 
 # DATA_CACHE_DIR_PATH: str = (
 #     "/Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache"
@@ -48,7 +47,7 @@ def download_osm_pbf(area: Union[str, Tuple[float, float, float, float]]):
 
 import argparse
 
-# roope todo -> tää vaa väliaikainen...
+# TODO MOVE THIS FUNCTIONALITY TO THE MAIN CLI
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a function with a CLI parameter.")
     parser.add_argument(

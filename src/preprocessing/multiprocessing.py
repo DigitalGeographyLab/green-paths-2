@@ -1,4 +1,4 @@
-""" roope todo """
+""" TODO """
 
 import os
 import multiprocessing as mp
@@ -9,7 +9,7 @@ from src.timer import time_logger
 LOG = setup_logger(__name__, LoggerColors.CYAN.value)
 
 
-# roope todo -> laita noi conffeihin...
+# TODO -_> set to confs
 def determine_num_processes(gdf, small_threshold=50000, medium_threshold=200000):
     """determine number of processes to use for parallel processing"""
     num_cores = os.cpu_count()

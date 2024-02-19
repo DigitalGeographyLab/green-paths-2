@@ -1,6 +1,5 @@
 """ Data Source Handler Class """
 
-
 from src.preprocessing.data_source import DataSource
 from src.logging import setup_logger, LoggerColors
 
@@ -28,16 +27,3 @@ class UserDataHandler:
         """Populate data sources from config dictionary."""
         for data_source in data_sources:
             self.add_data_source(data_source)
-
-
-# roope todo -> poista nää
-# [{
-
-#'name': 'green_points',
-# 'filepath': '/Users/hcroope/omat/GP2/data/greenery_points.gpkg',
-# 'data_type': 'vector',
-# 'layer_name': 'Helsinki_4326',
-# 'original_crs': 3879},
-
-
-# {'name': 'noise_helsinki', 'filepath': '/Users/hcroope/omat/GP2/data/Helsinki_noise_data_2022/Melualueet_2022_01_kadut_maant_LAeq7-22_NPM_20231116_123645.gml', 'data_type': 'vector', 'columns_of_interest': ['db_lo', 'db_hi', 'geometry'], 'original_crs': 3879}, {'name': 'test_data_source', 'filepath': 'not_a_file.gpkg', 'data_type': 'raster'}]

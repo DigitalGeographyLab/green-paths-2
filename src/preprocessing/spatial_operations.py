@@ -1,4 +1,5 @@
-""" roope todo """
+""" Spatial operations for GeoDataFrames. """
+
 import geopandas as gpd
 import shapely
 from src.preprocessing.data_source import DataSource
@@ -79,7 +80,7 @@ def handle_gdf_crs(
 
 
 @time_logger
-def create_buffers_for_edges(gdf, buffer: int) -> (gpd.GeoDataFrame, str):
+def create_buffers_for_edges(gdf, buffer: int) -> gpd.GeoDataFrame:
     """
     Creates buffers in meters for gdf active geometry column.
     Creates new column called 'geometry_buffer_{buffer}' for gdf.
@@ -96,7 +97,7 @@ def convert_wkt_to_geometries(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
 
 def has_invalid_geometries(gdf: gpd.GeoDataFrame, name: str = "") -> bool:
-    """roope todo"""
+    """Check for invalid geometries in GeoDataFrame"""
     LOG.info(f"Checking for invalid geometries for {name}")
 
     non_geom_rows = gdf[
@@ -155,26 +156,6 @@ def spatial_join_gdfs(
     return joined_gdf
 
 
-# import geopandas as gpd
-# from shapely.geometry import LineString
-# from shapely.ops import split
-
-
-def calculate_exposure_distances(
-    data_source: DataSource, osm_id_grouped_gdf: gpd.GeoDataFrame
-) -> gpd.GeoDataFrame:
-    processed_segments = osm_id_grouped_gdf.apply(
-        lambda row: process_segment(row, data_source), axis=1
-    )
-
-    # roope todo ->
-    # Aggregate processed data
-    # aggregated_values = processed_segments.groupby(
-    #     "osm_id"
-    # ).sum()  # or any other aggregation function
-    return "aggregated_values"
-
-
 import geopandas as gpd
 from shapely.geometry import LineString
 from shapely.ops import split
@@ -185,9 +166,7 @@ def cut_line_by_polygon(line, polygon):
 
 
 def process_segment(row, data_source):
-    """roope todo"""
-    # LOG.info("rowrowrowrowrowrowrowrowrowrow")
-    # LOG.info(row)
+    """TODO maybe remove secondary_data_source and multiple_data_strategy?"""
     osm_id = row["osm_id"]
     edge_geom = row["geometry_network"]
     data_geom = row["geometry_data"]
@@ -199,25 +178,17 @@ def process_segment(row, data_source):
         LOG.info(
             "Has also secondary_data_source: {secondary_data_source}, using with strategy: {multiple_data_strategy}."
         )
-        # roope todo -> tähän sitä logiikkaa
 
-    # roope todo -> siirrä nää sinne validaatioon ja jos ehkä niin flagin alle?
-    # pitääkö korjata tällee -> EI?!
-    # if not edge_geom.is_valid:
-    #     LOG.info("edge_geom is not valid")
-    #     edge_geom = edge_geom.buffer(0)
-    #     # raise Exception(f"Invalid edge geometry when processing {osm_id}")
-
-    # if not data_geom.is_valid:
-    #     LOG.info("data_geom is not valid")
-    #     data_geom = data_geom.buffer(0)
-    # raise Exception(f"Invalid edge geometry when processing {osm_id}")
+    # TODO: add point sampling!
 
     if edge_geom.intersects(data_geom):
         LOG.info(osm_id)
         segments = cut_line_by_polygon(edge_geom, data_geom)
         LOG.info(segments)
         return
+
+        # TODO: logic for each segment...
+        # remember to handle multiprocessing / parallel processing
 
         # for segment in segments:
         #     segment_length = segment.length
@@ -236,49 +207,3 @@ def process_segment(row, data_source):
     # segments_df = pd.DataFrame(
     #     results, columns=["osm_id", "segment_length", "weighted_value"]
     # )
-
-
-# # roope -> should this use multiple fields? -> db_lo, db_hi?
-# def calculate_distances_exposed(data_source: DataSource, osm_id_grouped_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-#     results = []
-
-#     exposure_distance = {}
-#     for _, row in osm_id_grouped_gdf.iterrows():
-#         osm_id = row["osm_id"]
-#         # roope todo -> laita confeist
-#         edge = row["osm_edge_buffer"]
-#         # roope todo -> laita confeist
-#         polygon = row["geometry_polygon"]  # The noise polygon
-#         # roope todo -> laita confeist
-#         polygon_data_column_name = row["roope_todo_placeholder"]
-#         # db_hi = row["db_hi"]
-
-#         if edge.intersects(polygon):
-#             segments = cut_line_by_polygon(edge, polygon)
-#             for segment in segments:
-#                 segment_length = segment.length
-#                 if  in my_dict:
-#                     my_dict[key] += value
-#                 else:
-#                     my_dict[key] = value
-#                 # Calculate weighted value based on db_lo, db_hi, and segment length
-#                 # Handle NaN values as per your chosen strategy
-#                 # weighted_value = calculate_weighted_value(
-#                 #     segment_length, db_lo, db_hi
-#                 # )  # Implement this function
-#                 results.append((row["osm_id"], segment_length, weighted_value))
-
-#     # Convert results to a DataFrame
-#     segments_df = pd.DataFrame(
-#         results, columns=["osm_id", "segment_length", "weighted_value"]
-#     )
-
-#     # Aggregate values per edge
-#     aggregated_values = segments_df.groupby("osm_id")["weighted_value"].sum()
-
-
-# lagacy:
-# Assuming points_gdf is your points GeoDataFrame
-# points_within_buffers = gpd.sjoin(points_gdf, gdf_edges, op='within')
-
-# mean_values = points_within_buffers.groupby('osmid')['point_value_column'].mean()

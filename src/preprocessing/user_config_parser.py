@@ -68,7 +68,7 @@ class UserConfig:
             raise ConfigDataError(
                 f"Didn't find osm network pbf file with provided user confs. Path was {osm_pbf_path}"
             )
-        # roope todo : lisää tähän joku checki mikä lataa ja kattoo onhan siel kamaa jne... et on osmid't ja kaikkee
+        # TODO: lisää tähän joku checki mikä lataa ja kattoo onhan siel kamaa jne... et on osmid't ja kaikkee
         _, file_extension = os.path.splitext(osm_pbf_path)
         if file_extension.lower() != ".pbf":
             raise ConfigDataError(
@@ -97,9 +97,9 @@ class UserConfig:
             filepath = data.get(DataSourceModel.Filepath.value)
             data_type = data.get(DataSourceModel.Datatype.value)
 
-            # roope todo -> laita tänne vlalidoinnit tolle datalle...
+            # TODO: laita tänne vlalidoinnit tolle datalle...
 
-            # roope todo: kato meneekö ees tänne jos kaatuu aikaisemmin
+            # TODO: kato meneekö ees tänne jos kaatuu aikaisemmin
             if (
                 not name
                 or not filepath

@@ -1,4 +1,4 @@
-# roope todo
+""" TODO """
 
 # Code is based on Green Paths 1 project: <URL tähän>
 import certifi
@@ -16,9 +16,10 @@ from functools import partial
 
 from src.logging import setup_logger
 
-# roope todo -> this isn't working... -> fix it
+# TODO this isn't working... -> fix it
 # says that incomplete data fetching XXX bytes... -> timeout?
 # maybe alter this code to use some other approach? for fething like requests
+# note: code mainly from GP1
 
 
 # Set a longer timeout

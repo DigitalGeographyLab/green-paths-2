@@ -1,11 +1,10 @@
 """Used to run functions in parallel"""
 
-
-# roope todo -> laita logiikkaa tänne, mis voi valita millä ajetaan parallelisointi
+# TODO: laita logiikkaa tänne, mis voi valita millä ajetaan parallelisointi
 # pitäskö tää olla luokka?
 
 
-# roope todo -> pitäskö olla filu missä ajetaan joko vaan perus funktio, tai sit käyttäen eri parallelisointeja?
+# TODO: pitäskö olla filu missä ajetaan joko vaan perus funktio, tai sit käyttäen eri parallelisointeja?
 # meneekö ihan liian hifistelyksi?
 
 ## PARALLEEEEEEL

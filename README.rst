@@ -14,6 +14,28 @@ Green Paths 2
         :alt: Documentation Status
 
 
+GREEN PATHS 2 IS UNDER CONSTRUCTION!!!
+
+TODOS
+        preprocessing:
+
+                osm_processor
+                - [ ] convert osm_processor to cli
+                - [ ] put paths to confs
+                - [ ] add tests for osm_processor
+
+                etc...
+
+        routing:
+
+                - [ ] todo todo
+                etc...
+
+        analysis:
+
+                - [ ] todo todo
+                etc...
+
 
 
 Bi-objective exposure routing for healthier paths choices

@@ -24,11 +24,11 @@ LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 # todo -> Dask this, or some parts that are similar e.g. the whole DS processing!!! ??
 
 
-# roope todo -> poista testi kun haluut testaa kaikella
+# TODO: -> poista testi kun haluut testaa kaikella
 
 ROOPE_DEVELOPMENT = True
 
-# roope todo -> move all these methods to a better place!!!
+# TODO: -> move all these methods to a better place!!!
 
 
 def parse_config(config_path: str) -> UserConfig:
@@ -80,26 +80,26 @@ def process_osm_network(
         network.handle_crs(user_config)
         network.handle_invalid_geometries()
 
-        # roope todo -> siirrä nää netrokiin eri metodeihin
+        # TODO: -> siirrä nää netrokiin eri metodeihin
 
-        # roope todo -> onko hyvä et on tällee katotaan pitääkö buffer?
+        # TODO: -> onko hyvä et on tällee katotaan pitääkö buffer?
         if user_config.osm_network.network_buffer > 0:
             network.create_buffer_for_geometries(user_config.osm_network.network_buffer)
 
         # Convert 'geometry' column to WKT
 
-        # roope todo -> transfer gdf geom to" new column name
+        # TODO: -> transfer gdf geom to" new column name
         # this is obsolete if not needing to save to a gpkg
         # wkt_geometry_column_name = network.convert_gdf_geometry_to_wkt(
         #     current_column_name="geometry",
         #     target_column_name="original_geometry_wkt",
         # )
 
-        # roope todo -> mieti tän logiikka onks järkevä noin vaa plussailla?
+        # TODO: -> mieti tän logiikka onks järkevä noin vaa plussailla?
         network.network_filter_by_columns(NETWORK_COLUMNS_TO_KEEP)
 
         # Set 'buffer' as the active geometry column
-        # roope todo -> mieti toi bufferin hakeminen ja mitä käytetään jne...
+        # TODO: -> mieti toi bufferin hakeminen ja mitä käytetään jne...
         # vai voiko tässä vaa olla tää buffer_column_names[0]?
         network.set_geometry_column(DEFAULT_OSM_NETWORK_BUFFER_NAME)
         # also check the buffer geoms for invalid geometries
@@ -117,7 +117,7 @@ def process_osm_network(
     return network
 
 
-# roope todo, rename
+# TODO:, rename
 def main(use_network_cache: bool = False):
     try:
         LOG.info("Starting preprocessing")
@@ -140,7 +140,7 @@ def main(use_network_cache: bool = False):
 
             if data_source.data_type == DataTypes.Vector.value:
                 LOG.info(f"found vector data source")
-                # roope todo -> laita flagi käytetäänkö buffer vai ei?
+                # TODO: -> laita flagi käytetäänkö buffer vai ei?
                 process_vector_data(
                     data_name, data_source, osm_network_gdf, user_config
                 )
@@ -151,14 +151,14 @@ def main(use_network_cache: bool = False):
                 #     ),
                 # )
 
-                # roope todo -> täs pitää varmaa kattoo confeista onko piste, viiva vai polygon?
+                # TODO: -> täs pitää varmaa kattoo confeista onko piste, viiva vai polygon?
                 # nyt mee vaa polygon...
                 # if point jne...
 
                 # mean_values = df.groupby('osm_id')['your_column_name'].mean()
 
             elif data_source.data_type == DataTypes.Raster.value:
-                # roope todo -> tähän tää raster versio miten lasketaan juttuja...
+                # TODO: -> tähän tää raster versio miten lasketaan juttuja...
                 # result_dask_gdf = DaskGenerator.dask_operation_generator(
                 #     main_gdf,
                 #     lambda df: SpatialAnalysis.overlay_analysis(
@@ -182,53 +182,5 @@ def main(use_network_cache: bool = False):
             del data_source
             gc.collect()
 
-    # roope todo -> tee joku mis katotaan tää mitä niill tehdään yamlista
-
-    # def apply_formula(gdf, formula):
-    #     # Safely evaluate the formula on the GeoDataFrame
-    #     gdf['normalized_value'] = gdf.eval(formula)
-    #     return gdf
-
-    # formula: "(db_lo + db_hi) / 2"  # Mean of db_lo and db_hi
-
     except ConfigDataError as e:
         LOG.error(f"Config error occurred: {e}")
-
-
-# roope todo -> add error handling for the preprocessing -> nice messages jne cleanup
-
-
-# if __name__ == "__main__":
-#     main()
-
-
-# täs gpt neuvoi miten tehdä tota dask
-
-# final_gdfs = []
-# for data in datasets:
-#     # Your Dask operation and compute
-#     result_dask_gdf = dask_operation_generator(buffer_gdf, some_operation_func)
-#     computed_gdf = result_dask_gdf.compute()
-
-#     # Append the result to the list
-#     final_gdfs.append(computed_gdf)
-
-# # Concatenate all the results into one final GeoDataFrame
-# concatenated_gdf = pd.concat(final_gdfs)
-
-
-# _***_
-
-
-# # Further processing or aggregation
-# # Example: Aggregate results and convert to dictionary
-# final_gdf = computed_gdf.groupby("OSM_ID").agg({"your_aggregate_function"})
-# final_dict = final_gdf.to_dict(orient="index")
-
-# # Optionally, save to a database or another file format
-# final_gdf.to_file("final_results.geojson", driver="GeoJSON")
-# # OR for database
-# # final_gdf.to_sql('your_table', con=engine)
-
-# # # Assuming 'value_column' needs normalization
-# # final_gdf['normalized_value'] = (final_gdf['value_column'] - final_gdf['value_column'].min()) / (final_gdf['value_column'].max() - final_gdf['value_column'].min())
