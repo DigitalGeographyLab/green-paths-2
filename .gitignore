@@ -104,3 +104,10 @@ ENV/
 # IDE settings
 .vscode/
 .idea/
+
+# Customs
+.DS_Store
+src/data/cache/
+data/test_data/
+
+src/visualizations

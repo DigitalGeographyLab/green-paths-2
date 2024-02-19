@@ -1,0 +1,101 @@
+# Greetings traveller! This is the user's configuration file.
+#
+
+# TODO:  -> kirjota tää puhtaaks -> poista wanha
+
+
+# The path to the OSM PBF file that you want to use. Path OR area should be specified, not both.
+# if both are specified, the area will be ignored.
+
+  # (primary) osm_pbf_file_path: this is the path to the osm pbf file. This will override area
+
+  # TODO: : this was removed... but should it be added back?
+  # osm_pbf_area: either name of the place e.g. Helsinki or the bbox coordinates e.g. 24.9,60.1,25.1,60.3
+#
+# The data sources are specified in a list called data_sources. 
+# Each data source needs the following keys:
+#
+#   name: The name of the data source.
+#
+#   filepath: The path to the data source file. This can be either
+#             an absolute path, or a path relative to the directory
+#             containing the analysis configuration file.
+#
+#   type: The type of the data source. This can be one of the
+#         following:
+#
+#         - vector: A vector data source. This can be any vector
+#                   format supported by OMat, including GeoPackage,
+#                   Shapefile, GeoJSON, and CSV.
+#
+#         - raster: A raster data source. This can be any raster
+#                   format supported by OMat, including GeoPackage,
+#                   GeoTIFF, and PNG.
+#
+# TODO:  add more
+
+# europe e.g. 3035
+project_crs: 3879
+
+osm_network:
+  # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/london_osm_network.osm.pbf
+  osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/helsinki_region_pbf_osm_network.osm.pbf
+  # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/helsinki_history_pbf_osm_network.osm.pbf
+  original_crs: 4326
+  network_buffer: 5
+  filter_columns: ["id"]
+
+
+# for gpkg -> layer_name, (for others?)
+
+data_sources:
+  # - name: green_points
+  #   filepath:  /Users/hcroope/omat/GP2/data/greenery_points.gpkg
+  #   data_type: vector
+  #   layer_name: Helsinki_4326
+  #   # onks tää väärä?
+  #   original_crs: 3879
+
+  - name: noise_helsinki
+    filepath:  /Users/hcroope/omat/GP2/data/Helsinki_noise_data_2022/Melualueet_2022_01_kadut_maant_LAeq7-22_NPM_20231116_123645.gml # mandatory
+    data_type: vector # mandatory
+
+    # optional and should only be used if know what doing -> calculate only the means...
+    use_only_simple_exposure: True
+
+    # TODO -> tee validaatioon checkit näistä!
+    primary_data_column: db_hi # mandatory
+    secondary_data_column: db_lo # optional
+    # TODO:  -> mieti mitä tälle?
+    multiple_data_strategy: mean # optional. Mandatory if secondary_data_column is specified
+    columns_of_interest: ["db_lo", "db_hi", "geometry"] # optional
+    original_crs: 3879 # optional
+
+
+
+  # - name: test_data_source
+  #   filepath:  "not_a_file.gpkg"
+  #   data_type: raster
+
+
+
+
+# e.g. formula like this:
+# formula: "(db_lo + db_hi) / 2"  # Mean of db_lo and db_hi 
+
+
+# TODO:
+
+# -> this the logic for choosing the actions to be applied to the data sources
+# Predefined actions
+# actions = {
+#     "sum": lambda x: x.sum(),
+#     "mean": lambda x: x.mean(),
+#     "force": lambda gdf, formula: gdf.eval(formula),
+#     "minus": lambda x: x.iloc[:, 0] - x.iloc[:, 1:].sum(axis=1),
+#     # Add more actions as needed
+# }
+
+# # Function to apply action
+# def apply_action(gdf, action, columns):
+#     return actions[action](gdf[columns])
