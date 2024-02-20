@@ -4,10 +4,15 @@ import geopandas as gpd
 import shapely
 from src.preprocessing.data_source import DataSource
 from src.data_utilities import rename_gdf_column
-from src.config import DEFAULT_OSM_NETWORK_BUFFER_NAME
+from src.config import GDF_BUFFERED_GEOMETRY_NAME
 from src.logging import setup_logger, LoggerColors
 from src.timer import time_logger
 from shapely import wkt
+from pyproj import CRS
+
+import geopandas as gpd
+from shapely.geometry import LineString
+from shapely.ops import split
 
 
 LOG = setup_logger(__name__, LoggerColors.ORANGE.value)
@@ -25,6 +30,13 @@ def init_crs(gdf, crs):
 def project_to_crs(gdf, crs):
     gdf.to_crs(crs, inplace=True)
     return gdf
+
+
+def crs_uses_meters(crs_code) -> bool:
+    """Check if CRS uses meters as unit."""
+    # Allows input as EPSG code, PROJ string, etc.
+    crs = CRS.from_user_input(crs_code)
+    return crs.axis_info[0].unit_name == "metre"
 
 
 def handle_gdf_crs(
@@ -54,7 +66,7 @@ def handle_gdf_crs(
     # if data has no crs, and no crs is given in params (mostly derived from config), raise error
     # for we can't know what is the correct CRS for the data/gdf
     if not gdf_original_crs and not original_crs:
-        # roope todo -> ehkä custom error?
+        # TODO: ehkä custom error?
         raise Exception(f"No CRS found or original CRS defined for data: {name}")
 
     # if gdf has no crs, but original_crs is found from conf
@@ -73,20 +85,24 @@ def handle_gdf_crs(
     return gdf
 
 
-# roope todo -> laita use conffeihi et voi vaihtaa tätä distance arvoa ja per jokainen data...
+# TODO: laita use conffeihi et voi vaihtaa tätä distance arvoa ja per jokainen data...
 # toi jokainen data -> kysy joltain esim Vuokko / Tuuli / Chris onko järkevää?
 
-# roope todo -> laita mahollisuus laittaa eri bufferit per data?
+# TODO: laita mahollisuus laittaa eri bufferit per data?
 
 
 @time_logger
-def create_buffers_for_edges(gdf, buffer: int) -> gpd.GeoDataFrame:
+def create_buffer_for_geometries(
+    self, gdf: gpd.GeoDataFrame, buffer: str
+) -> gpd.GeoDataFrame:
     """
-    Creates buffers in meters for gdf active geometry column.
-    Creates new column called 'geometry_buffer_{buffer}' for gdf.
+    loops through user config and creates buffers for geometries
+    ::param user_config: UserConfig object
+    ::param gdf: GeoDataFrame including buffered geometries
     """
-    # buffer name will be e.g. geometry_buffer_20
-    gdf[DEFAULT_OSM_NETWORK_BUFFER_NAME] = gdf.geometry.buffer(buffer)
+    LOG.info(f"Creating {buffer}m buffer for geometries in GeoDataFrame {gdf.name}")
+    gdf = gdf.copy()
+    gdf[GDF_BUFFERED_GEOMETRY_NAME] = gdf.geometry.buffer(buffer)
     return gdf
 
 
@@ -116,7 +132,7 @@ def has_invalid_geometries(gdf: gpd.GeoDataFrame, name: str = "") -> bool:
     return True
 
 
-# roope todo -> ehkä halutaan poistaa? -> flagi poistamiseen confeista?
+# TODO: flagi poistamiseen confeista?
 def fix_invalid_geometries(gdf: gpd.GeoDataFrame, remove_invalid: bool = False):
     """
     Fix invalid geometries, try to fix with buffer 0
@@ -156,28 +172,25 @@ def spatial_join_gdfs(
     return joined_gdf
 
 
-import geopandas as gpd
-from shapely.geometry import LineString
-from shapely.ops import split
-
-
 def cut_line_by_polygon(line, polygon):
     return [seg for seg in split(line, polygon) if seg.within(polygon)]
 
 
 def process_segment(row, data_source):
-    """TODO maybe remove secondary_data_source and multiple_data_strategy?"""
+    """
+    TODO maybe remove secondary_data_source and multiple_data_strategy?
+    """
     osm_id = row["osm_id"]
     edge_geom = row["geometry_network"]
     data_geom = row["geometry_data"]
-    primary_data_source = data_source.primary_data_column
-    secondary_data_source = hasattr(data_source, "secondary_data_column")
-    multiple_data_strategy = hasattr(data_source, "multiple_data_strategy")
+    data_column = data_source.data_column
 
-    if secondary_data_source and multiple_data_strategy:
-        LOG.info(
-            "Has also secondary_data_source: {secondary_data_source}, using with strategy: {multiple_data_strategy}."
-        )
+    # TODO: remove?
+    # multiple_data_strategy = hasattr(data_source, "multiple_data_strategy")
+    # if secondary_data_source and multiple_data_strategy:
+    #     LOG.info(
+    #         "Has also secondary_data_source: {secondary_data_source}, using with strategy: {multiple_data_strategy}."
+    #     )
 
     # TODO: add point sampling!
 
