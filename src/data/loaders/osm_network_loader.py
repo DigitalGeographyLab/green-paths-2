@@ -1,65 +1,51 @@
+""" Helper class to download OSM network data for a specified area. """
+
 import os
 import shutil
-from pyrosm import get_data
-from typing import Union, Tuple
+import pyrosm
 
 from src.logging import setup_logger, LoggerColors
-from src.config import DATA_CACHE_DIR_PATH
 
-
-# # Example usage:
-
-# helsinki_pbf = download_osm_pbf("Helsinki")
-
-# DATA_CACHE_DIR_PATH: str = (
-#     "/Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache"
-# )
-
+from src.config import DATA_CACHE_DIR_PATH, OSM_CACHE_DIR_NAME
 
 LOG = setup_logger(__name__, LoggerColors.RED.value)
 
 
-def download_osm_pbf(area: Union[str, Tuple[float, float, float, float]]):
+def get_available_pyrosm_data_sources() -> None:
+    """List all available data sources from pyrosm."""
+    LOG.info(pyrosm.data.available)
+
+
+def download_and_move_osm_pbf(name_of_city: str) -> None:
+    """Download OSM PBF file for a specified city and move it to cache dir."""
+    pyrosm_default_save_path, cache_file_path = download_osm_pbf(name_of_city)
+
+    # Move the file from pyrosm tmp default save path to cache dir
+    if os.path.exists(pyrosm_default_save_path):
+        shutil.move(pyrosm_default_save_path, cache_file_path)
+
+
+def download_osm_pbf(area: str):
     """
     Download OSM PBF file for a specified area.
-    :param area: Area name (e.g. Helsinki) as a string OR bounding box as a tuple (minx, miny, maxx, maxy).
+    :param area: Area name (e.g. Helsinki) as a string.
     :return: Path to the downloaded OSM PBF file.
     """
 
-    network_file_name = f"{area}_osm_network.osm.pbf"
-    cache_file_path = os.path.join(DATA_CACHE_DIR_PATH, network_file_name)
+    network_file_name = f"{area}_network.osm.pbf"
+    cache_file_path = os.path.join(
+        DATA_CACHE_DIR_PATH, OSM_CACHE_DIR_NAME, network_file_name
+    )
 
     if os.path.exists(cache_file_path):
         LOG.info(
-            f"OSM network file already exists in cache, skipping download. Path: {cache_file_path}"
+            f"{network_file_name} OSM network file already exists in cache, skipping download. Path: {cache_file_path}"
         )
         return cache_file_path, cache_file_path
 
     if isinstance(area, str):
-        return get_data(area), cache_file_path
-    elif isinstance(area, tuple) and len(area) == 4:
-        return get_data(bbox=area), cache_file_path
+        return pyrosm.get_data(area), cache_file_path
     else:
         raise ValueError(
-            "osm network area parameter should be either name (string) or bounding box coordinates (tuple)."
+            "osm network area parameter should be name of city (string). For supported cities run: python green_paths_2.py fetch_osm_network -l"
         )
-
-
-import argparse
-
-# TODO MOVE THIS FUNCTIONALITY TO THE MAIN CLI
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run a function with a CLI parameter.")
-    parser.add_argument(
-        "param",
-        type=str,
-        help="Name of city or a bounding box (tuple, minx, miny, maxx, maxy).",
-    )
-
-    args = parser.parse_args()
-
-    default_path, cache_file_path = download_osm_pbf(args.param)
-
-    # Move the file
-    if os.path.exists(default_path):
-        shutil.move(default_path, cache_file_path)
