@@ -1,7 +1,9 @@
 """ General configurations for Green Paths 2 project """
 
-NETWORK_BUFFERED_GDF_CACHE_FILE_NAME = "osm_network_buffered_cache.gpkg"
-BUFFERED_NETWORK_GPKG_CACHE_PATH = f"/Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/dev/{NETWORK_BUFFERED_GDF_CACHE_FILE_NAME}"
+# OSM
+
+OSM_SEGMENTED_NETWORK_DIR_PATH = "src/data/cache/osm"
+OSM_SEGMENTED_NETWORK_NAME = "segmented_network.osm.pbf"
 
 SUPPORTED_DATA_TYPES = ["point", "line", "polygon", "raster"]
 SUPPORTED_FILE_FORMATS = [
@@ -9,15 +11,22 @@ SUPPORTED_FILE_FORMATS = [
     "gml",
 ]  # "shp", "csv", "json", "geojson", "tif", "tiff"
 
-DEFAULT_OSM_NETWORK_BUFFER_NAME = "osm_edge_buffer"
-NETWORK_COLUMNS_TO_KEEP = ["id", "geometry", DEFAULT_OSM_NETWORK_BUFFER_NAME]
-
-DEFAULT_OSM_NETWORK_BUFFER_METERS = 20
+NETWORK_COLUMNS_TO_KEEP = ["id", "geometry"]
 
 # cache dir for programatically downloadable data
 DATA_CACHE_DIR_PATH: str = (
     "/Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache"
 )
 
+OSM_CACHE_DIR_NAME: str = "osm"
+
+OSM_CACHE_SEGMENTED_DIR_NAME: str = "segmented"
+
+OSM_SEGMENTED_DEFAULT_FILE_NAME: str = "segmented_network.osm.pbf"
+
 # path to user configuration file which has e.g. data sources and osm network file path
 USER_CONFIG_PATH = "src/user/config.yaml"
+
+
+# GDF DEFAULT NAMES
+GDF_BUFFERED_GEOMETRY_NAME = "buffered_geometry"
