@@ -1,13 +1,13 @@
 """ This module contains functions for loading and processing vector data. """
 
 import geopandas as gpd
+from config import FIX_INVALID_GEOMETRIES
 from src.preprocessing.data_source import DataSource
 
 from src.data_utilities import filter_gdf_by_columns_if_found, rename_gdf_column
 
 # from src.preprocessing.data_types import DataSourceModel
 from src.preprocessing.spatial_operations import (
-    calculate_exposure_distances,
     fix_invalid_geometries,
     handle_gdf_crs,
     has_invalid_geometries,
@@ -22,7 +22,7 @@ LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 import fiona
 
 
-# roope todo -> need to rename layers?
+# TODO:  -> need to rename layers?
 # noise_layers = {name: gdf.rename(columns={'db_low': name}) for name, gdf in noise_layers.items()}
 def list_vector_data_layers(gpkg_path):
     LOG.info(f"Listing layers in GeoPackage: {gpkg_path}")
@@ -31,7 +31,7 @@ def list_vector_data_layers(gpkg_path):
     return available_layers
 
 
-# roope todo -> what if there is multiple layers?
+# TODO:  -> what if there is multiple layers?
 def load_vector_data(data_path: str, layer_name: str = None):
     """
     Load vector point data from GeoPackage.
@@ -102,7 +102,7 @@ def preprocess_vector_data(
         original_crs=data_source.original_crs,
     )
 
-    # roope todo -> muuttujiin nimet!
+    # TODO:  -> muuttujiin nimet!
 
     # save the data geometry to a new column to preserve it during sjoin
     # also rename geometry column to be more descriptive
@@ -111,29 +111,29 @@ def preprocess_vector_data(
     return vector_data_gdf
 
 
-# roope todo -> maybe not pass the config here only the values?
-# roope todo -> toi data source model on väärä
+# TODO:  -> maybe not pass the config here only the values?
+# TODO:  -> toi data source model on väärä
 def process_vector_data(
     data_name: str,
     data_source: DataSource,
     osm_network_gdf: gpd.GeoDataFrame,
     user_config: UserConfig,
 ):
-    LOG.info(data_source.filepath)
+    LOG.info(f"processing vector data: {data_source.filepath}")
     vector_data_gdf: gpd.GeoDataFrame = load_vector_data(data_source.filepath)
     cleaned_vector_data_gdf: gpd.GeoDataFrame = preprocess_vector_data(
         vector_data_gdf, data_name, data_source, user_config
     )
 
-    # pitäskö tää laittaa flagin alle?
     data_has_invalid_geometries = has_invalid_geometries(
         cleaned_vector_data_gdf, "vector data"
     )
     if data_has_invalid_geometries:
         cleaned_vector_data_gdf = fix_invalid_geometries(
-            cleaned_vector_data_gdf, remove_invalid=True
+            cleaned_vector_data_gdf, remove_invalid=FIX_INVALID_GEOMETRIES
         )
 
+    # TODO: should all this spatial join be removed -> if rasterizing is used?
     spatially_joined_edges_with_polygons: gpd.GeoDataFrame = spatial_join_gdfs(
         osm_network_gdf, cleaned_vector_data_gdf
     )
@@ -141,18 +141,17 @@ def process_vector_data(
     # drop index
     # spatially_joined_edges_with_polygons.reset_index(drop=True)
 
+    # group
     dfs_by_osm_id = spatially_joined_edges_with_polygons.groupby("osm_id")
-    LOG.info(f"dfs_by_osm_id: {dfs_by_osm_id}")
-    LOG.info(f"lkeeeeen: {len(dfs_by_osm_id)}")
 
     # drop index
     # spatially_joined_edges_with_polygons.reset_index(drop=True)
 
-    # roope todo -> tää varmaankin pitäs laittaa jotenkin paralleleille hyvin helposti!
+    # TODO:  -> tää varmaankin pitäs laittaa jotenkin paralleleille hyvin helposti!
     for osm_id, group_df in dfs_by_osm_id:
         LOG.info(f"Data for osm_id {osm_id}:")
 
-        test = calculate_exposure_distances(data_source, group_df)
+        # test = calculate_exposure_distances(data_source, group_df)
 
     # LOG.info(f"analysis results: {spatially_joined_edges_with_polygons.head(2)}")
     # LOG.info(f"analysis length: {len(spatially_joined_edges_with_polygons)}")

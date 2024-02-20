@@ -6,8 +6,8 @@ import pytest
 
 from click.testing import CliRunner
 
-from green_paths_2 import green_paths_2
-from green_paths_2 import cli
+from green_paths_2_cli import green_paths_2
+from green_paths_2_cli import cli
 
 
 @pytest.fixture

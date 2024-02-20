@@ -107,7 +107,7 @@ ENV/
 
 # Customs
 .DS_Store
-src/data/cache/
+src/data/cache/*
 data/test_data/
 
 src/visualizations

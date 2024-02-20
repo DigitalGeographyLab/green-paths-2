@@ -34,8 +34,7 @@ def dask_operation_runner(gdf, operation_func: Callable):
     dask_gdf = dd.from_pandas(gdf, npartitions=2)
     # dask_gdf = dask_gdf.repartition(partition_size="100MB")
 
-    # should this be removed?
-
+    # TODO: remove buffer object?
     new_cols = {"buffer": "object"}
     metadata = update_metadata(gdf, new_cols)
 
