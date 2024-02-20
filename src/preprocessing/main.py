@@ -9,8 +9,6 @@ from src.preprocessing.user_data_handler import UserDataHandler
 from src.preprocessing.raster_processor import get_raster_stats
 from src.logging import setup_logger, LoggerColors
 from src.config import (
-    BUFFERED_NETWORK_GPKG_CACHE_PATH,
-    DEFAULT_OSM_NETWORK_BUFFER_NAME,
     NETWORK_COLUMNS_TO_KEEP,
     USER_CONFIG_PATH,
 )
@@ -21,14 +19,11 @@ from src.preprocessing.user_config_parser import UserConfig
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 
-# todo -> Dask this, or some parts that are similar e.g. the whole DS processing!!! ??
-
-
+# TODO: -> conf Dasking/multiprocess this
 # TODO: -> poista testi kun haluut testaa kaikella
+# TODO: -> move all methods to a better place!!!
 
 ROOPE_DEVELOPMENT = True
-
-# TODO: -> move all these methods to a better place!!!
 
 
 def parse_config(config_path: str) -> UserConfig:
@@ -36,94 +31,46 @@ def parse_config(config_path: str) -> UserConfig:
     Get and parse user configuration file.
 
     :param config_path: Path to the configuration file.
-    :return: User configurations.
+    :return: UserConfig object.
     """
     user_config = UserConfig()
     user_config.parse_config(config_path)
     return user_config
 
 
-def process_osm_network(
-    use_network_cache: bool = False, user_config: UserConfig = None
-):
+def process_osm_network(user_config: UserConfig = None) -> gpd.GeoDataFrame:
     """
     Process OSM network.
-    Use cached network if available, otherwise build new and save to cache.
 
-
-    :param use_network_cache: Use cached network if available.
     :param user_config: User configurations.
-    :return: Processed OSM network.
+    :return: GeoDataFrame of the OSM network.
     """
+    LOG.info("Processing OSM network.")
+    network = OsmNetworkHandler(osm_pbf_file=user_config.osm_network.osm_pbf_file_path)
+    network.convert_network_to_gdf()
 
-    if use_network_cache and os.path.exists(BUFFERED_NETWORK_GPKG_CACHE_PATH):
-        # roope -> pitää muokata et on vaan se 1 geometry!!!
-        LOG.info("Loading buffered network from cache")
-        network = OsmNetworkHandler()
-        cached_gpd = gpd.read_file(BUFFERED_NETWORK_GPKG_CACHE_PATH)
-        network.set_network_gdf(cached_gpd)
-    else:
-        LOG.info(
-            "Buffered network not found in cache, building new and saving to cache"
-        )
+    if ROOPE_DEVELOPMENT:
+        # ota sata ekeaa rivii vaan
+        dev_gdf = network.get_network_gdf().iloc[:100]
+        network.set_network_gdf(dev_gdf)
 
-        network = OsmNetworkHandler(
-            osm_pbf_file=user_config.osm_network.osm_pbf_file_path
-        )
-        network.convert_network_to_gdf()
-
-        if ROOPE_DEVELOPMENT:
-            # ota sata ekeaa rivii vaan
-            dev_gdf = network.get_network_gdf().iloc[:10]
-            network.set_network_gdf(dev_gdf)
-
-        network.handle_crs(user_config)
-        network.handle_invalid_geometries()
-
-        # TODO: -> siirrä nää netrokiin eri metodeihin
-
-        # TODO: -> onko hyvä et on tällee katotaan pitääkö buffer?
-        if user_config.osm_network.network_buffer > 0:
-            network.create_buffer_for_geometries(user_config.osm_network.network_buffer)
-
-        # Convert 'geometry' column to WKT
-
-        # TODO: -> transfer gdf geom to" new column name
-        # this is obsolete if not needing to save to a gpkg
-        # wkt_geometry_column_name = network.convert_gdf_geometry_to_wkt(
-        #     current_column_name="geometry",
-        #     target_column_name="original_geometry_wkt",
-        # )
-
-        # TODO: -> mieti tän logiikka onks järkevä noin vaa plussailla?
-        network.network_filter_by_columns(NETWORK_COLUMNS_TO_KEEP)
-
-        # Set 'buffer' as the active geometry column
-        # TODO: -> mieti toi bufferin hakeminen ja mitä käytetään jne...
-        # vai voiko tässä vaa olla tää buffer_column_names[0]?
-        network.set_geometry_column(DEFAULT_OSM_NETWORK_BUFFER_NAME)
-        # also check the buffer geoms for invalid geometries
-        network.handle_invalid_geometries()
-        network.rename_column("id", "osm_id")
-
-        network_gdf = network.get_network_gdf()
-
-        LOG.info(network_gdf)
-        LOG.info(network_gdf.columns)
-
-        network_gdf = network_gdf.drop("geometry", axis=1)
-        network_gdf.to_file(BUFFERED_NETWORK_GPKG_CACHE_PATH, driver="GPKG")
+    network.handle_crs(user_config)
+    network.handle_invalid_geometries()
+    network.network_filter_by_columns(NETWORK_COLUMNS_TO_KEEP)
+    network.handle_invalid_geometries()
+    network.rename_column("id", "osm_id")
+    # network_gdf = network.get_network_gdf()
 
     return network
 
 
-# TODO:, rename
-def main(use_network_cache: bool = False):
+# TODO: rename
+def preprocessing():
     try:
         LOG.info("Starting preprocessing")
         # parse and validate user configurations
         user_config = parse_config(USER_CONFIG_PATH)
-        network = process_osm_network(use_network_cache, user_config)
+        network = process_osm_network(user_config)
 
         # use the same network for all data sources
 
@@ -140,7 +87,7 @@ def main(use_network_cache: bool = False):
 
             if data_source.data_type == DataTypes.Vector.value:
                 LOG.info(f"found vector data source")
-                # TODO: -> laita flagi käytetäänkö buffer vai ei?
+                # TODO: -> confeista jos datalle buffer?
                 process_vector_data(
                     data_name, data_source, osm_network_gdf, user_config
                 )
