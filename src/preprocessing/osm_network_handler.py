@@ -8,12 +8,10 @@ from src.preprocessing.user_config_parser import UserConfig
 from src.logging import setup_logger
 from src.logging import setup_logger, LoggerColors
 from src.timer import time_logger
-from src.config import DEFAULT_OSM_NETWORK_BUFFER_METERS
 
 from src.preprocessing.spatial_operations import (
     has_invalid_geometries,
     fix_invalid_geometries,
-    create_buffers_for_edges,
     handle_gdf_crs,
 )
 
@@ -21,7 +19,7 @@ from src.preprocessing.spatial_operations import (
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 
 
-# TODO: poista? plottailua
+# TODO: plottailua, poista tai siirrä
 # ax = test_result["buffer"].plot()
 
 # fig = ax.get_figure()
@@ -66,15 +64,14 @@ class OsmNetworkHandler:
         """TODO"""
         LOG.info("converting OSM network to gdf")
         osm_network = OSM(self.osm_pbf_file)
-        # TODO:  -> laita tää ottamaan vaa esim pyöräiltävät tai käveltävät tms.?
-        # filtteröi confien mukaan?
+        # TODO:  -> laita tää ottamaan vaa esim pyöräiltävät tai käveltävät tms.? -> ei vältsii ettei lähe liikaa kamaa pois?
         network_gdf = osm_network.get_network(network_type="all")
         LOG.info("successfully converted OSM network to gdf")
         LOG.info(f"network gdf size: {len(network_gdf)}")
         self.network_gdf = network_gdf
 
     def handle_crs(self, user_config: UserConfig) -> None:
-        """TODO"""
+        """Sets the CRS for the network GeoDataFrame."""
         LOG.info("Handle network CRS")
         self.network_gdf = handle_gdf_crs(
             "network",
@@ -84,27 +81,14 @@ class OsmNetworkHandler:
         )
 
     def handle_invalid_geometries(self) -> None:
-        """TODO"""
+        """Handles invalid geometries in the network GeoDataFrame."""
         LOG.info("Handle invalid geometries")
         invalid_geometries = has_invalid_geometries(self.network_gdf, "network")
         if invalid_geometries:
-            # TODO:  -> salee laita conffeihi toi flagi!
+            # TODO: laita conffeihi toi flagi!
             self.network_gdf = fix_invalid_geometries(
                 self.network_gdf, remove_invalid=True
             )
-
-    # TODO: dont use this for network, maybe use for data?
-    @time_logger
-    def create_buffer_for_geometries(self, network_buffer: str) -> None:
-        """
-        loops through user config and creates buffers for geometries
-        ::param user_config: UserConfig object
-        ::return: list of buffer names
-        """
-        buffer = network_buffer if network_buffer else DEFAULT_OSM_NETWORK_BUFFER_METERS
-
-        LOG.info(f"Creating {buffer}m buffer for network geometry")
-        self.network_gdf = create_buffers_for_edges(self.network_gdf, buffer=buffer)
 
     def network_filter_by_columns(self, columns: list[str]) -> None:
         """
