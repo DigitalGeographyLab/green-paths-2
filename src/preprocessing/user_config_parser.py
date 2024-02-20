@@ -2,6 +2,7 @@
 
 import os
 import yaml
+from preprocessing.spatial_operations import crs_uses_meters
 from src.logging import setup_logger, LoggerColors
 from src.preprocessing.preprocessing_exceptions import ConfigDataError, ConfigError
 from src.preprocessing.data_types import DataSourceModel, DataTypes
@@ -83,6 +84,11 @@ class UserConfig:
         """
         if not config.get("project_crs"):
             raise ConfigDataError("Invalid or missing project crs configuration.")
+
+        if not crs_uses_meters(config.get("project_crs")):
+            raise ConfigDataError(
+                "Invalid project crs. Project crs should use meters as units. Most of projected CRS's use meters as units, opposed to geographic CRS's which use degrees."
+            )
 
     def validate_data_sources(self, config: dict) -> list[dict[str, str]]:
         """
