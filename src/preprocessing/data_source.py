@@ -13,8 +13,7 @@ class DataSource:
         name: str,
         filepath: str,
         data_type: str,
-        primary_data_column: str,
-        secondary_data_column: Optional[str] = None,
+        data_column: str,
         original_crs: Optional[str] = None,
         columns_of_interest: Optional[list[str]] = None,
         **source_specific_attributes: Any
@@ -22,8 +21,7 @@ class DataSource:
         self.name = name
         self.filepath = filepath
         self.data_type = data_type
-        self.primary_data_column = primary_data_column
-        self.secondary_data_column = secondary_data_column
+        self.data_column = data_column
         self.original_crs = original_crs
         self.columns_of_interest = columns_of_interest
         self.source_specific_attributes = source_specific_attributes
