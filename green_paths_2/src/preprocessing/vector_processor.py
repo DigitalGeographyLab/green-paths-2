@@ -1,20 +1,23 @@
 """ This module contains functions for loading and processing vector data. """
 
 import geopandas as gpd
-from config import FIX_INVALID_GEOMETRIES
-from src.preprocessing.data_source import DataSource
+from green_paths_2.src.config import FIX_INVALID_GEOMETRIES
+from green_paths_2.src.preprocessing.data_source import DataSource
 
-from src.data_utilities import filter_gdf_by_columns_if_found, rename_gdf_column
+from green_paths_2.src.data_utilities import (
+    filter_gdf_by_columns_if_found,
+    rename_gdf_column,
+)
 
-# from src.preprocessing.data_types import DataSourceModel
-from src.preprocessing.spatial_operations import (
+# from green_paths_2.src.preprocessing.data_types import DataSourceModel
+from green_paths_2.src.preprocessing.spatial_operations import (
     fix_invalid_geometries,
     handle_gdf_crs,
     has_invalid_geometries,
     spatial_join_gdfs,
 )
-from src.preprocessing.user_config_parser import UserConfig
-from src.logging import setup_logger, LoggerColors
+from green_paths_2.src.preprocessing.user_config_parser import UserConfig
+from green_paths_2.src.logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 
@@ -71,7 +74,7 @@ def preprocess_vector_data(
     vector_data_gdf: gpd.GeoDataFrame,
     data_name: str,
     data_source: DataSource,
-    user_config: UserConfig,
+    project_crs: int,
 ) -> gpd.GeoDataFrame:
     """
     Preprocess vector data.
@@ -98,63 +101,61 @@ def preprocess_vector_data(
     vector_data_gdf = handle_gdf_crs(
         name=data_name,
         gdf=vector_data_gdf,
-        target_crs=user_config.project_crs,
+        target_crs=project_crs,
         original_crs=data_source.original_crs,
     )
 
-    # TODO:  -> muuttujiin nimet!
-
+    # TODO:  -> muuttujiin nimet! vai poista?
     # save the data geometry to a new column to preserve it during sjoin
     # also rename geometry column to be more descriptive
-    vector_data_gdf["geometry_data"] = vector_data_gdf["geometry"].copy()
+    # vector_data_gdf["geometry_data"] = vector_data_gdf["geometry"].copy()
 
     return vector_data_gdf
 
 
 # TODO:  -> maybe not pass the config here only the values?
 # TODO:  -> toi data source model on väärä
-def process_vector_data(
+def load_and_process_vector_data(
     data_name: str,
     data_source: DataSource,
-    osm_network_gdf: gpd.GeoDataFrame,
-    user_config: UserConfig,
-):
+    project_crs: int,
+) -> gpd.GeoDataFrame:
     LOG.info(f"processing vector data: {data_source.filepath}")
     vector_data_gdf: gpd.GeoDataFrame = load_vector_data(data_source.filepath)
     cleaned_vector_data_gdf: gpd.GeoDataFrame = preprocess_vector_data(
-        vector_data_gdf, data_name, data_source, user_config
+        vector_data_gdf, data_name, data_source, project_crs
     )
 
     data_has_invalid_geometries = has_invalid_geometries(
-        cleaned_vector_data_gdf, "vector data"
+        cleaned_vector_data_gdf, data_name
     )
     if data_has_invalid_geometries:
         cleaned_vector_data_gdf = fix_invalid_geometries(
             cleaned_vector_data_gdf, remove_invalid=FIX_INVALID_GEOMETRIES
         )
+    return cleaned_vector_data_gdf
+    # # TODO: should all this spatial join be removed -> if rasterizing is used?
+    # spatially_joined_edges_with_polygons: gpd.GeoDataFrame = spatial_join_gdfs(
+    #     osm_network_gdf, cleaned_vector_data_gdf
+    # )
 
-    # TODO: should all this spatial join be removed -> if rasterizing is used?
-    spatially_joined_edges_with_polygons: gpd.GeoDataFrame = spatial_join_gdfs(
-        osm_network_gdf, cleaned_vector_data_gdf
-    )
+    # # drop index
+    # # spatially_joined_edges_with_polygons.reset_index(drop=True)
 
-    # drop index
-    # spatially_joined_edges_with_polygons.reset_index(drop=True)
+    # # group
+    # dfs_by_osm_id = spatially_joined_edges_with_polygons.groupby("osm_id")
 
-    # group
-    dfs_by_osm_id = spatially_joined_edges_with_polygons.groupby("osm_id")
+    # # drop index
+    # # spatially_joined_edges_with_polygons.reset_index(drop=True)
 
-    # drop index
-    # spatially_joined_edges_with_polygons.reset_index(drop=True)
+    # # TODO:  -> tää varmaankin pitäs laittaa jotenkin paralleleille hyvin helposti!
+    # for osm_id, group_df in dfs_by_osm_id:
+    #     LOG.info(f"Data for osm_id {osm_id}:")
 
-    # TODO:  -> tää varmaankin pitäs laittaa jotenkin paralleleille hyvin helposti!
-    for osm_id, group_df in dfs_by_osm_id:
-        LOG.info(f"Data for osm_id {osm_id}:")
+    #     # test = calculate_exposure_distances(data_source, group_df)
 
-        # test = calculate_exposure_distances(data_source, group_df)
+    # # LOG.info(f"analysis results: {spatially_joined_edges_with_polygons.head(2)}")
+    # # LOG.info(f"analysis length: {len(spatially_joined_edges_with_polygons)}")
 
-    # LOG.info(f"analysis results: {spatially_joined_edges_with_polygons.head(2)}")
-    # LOG.info(f"analysis length: {len(spatially_joined_edges_with_polygons)}")
-
-    # unique_osm_ids_count = analysis_results["osm_id"].nunique()
-    # LOG.info(unique_osm_ids_count)
+    # # unique_osm_ids_count = analysis_results["osm_id"].nunique()
+    # # LOG.info(unique_osm_ids_count)

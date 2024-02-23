@@ -3,13 +3,22 @@
 import geopandas as gpd
 from pyrosm import OSM
 
-from src.data_utilities import filter_gdf_by_columns_if_found, rename_gdf_column
-from src.preprocessing.user_config_parser import UserConfig
-from src.logging import setup_logger
-from src.logging import setup_logger, LoggerColors
-from src.timer import time_logger
+from green_paths_2.src.config import (
+    GENERAL_ID_DEFAULT_KEY,
+    NETWORK_COLUMNS_TO_KEEP,
+    OSM_ID_DEFAULT_KEY,
+    SEGMENT_SAMPLING_POINTS_KEY,
+)
+from green_paths_2.src.data_utilities import (
+    filter_gdf_by_columns_if_found,
+    rename_gdf_column,
+)
+from green_paths_2.src.logging import setup_logger
+from green_paths_2.src.logging import setup_logger, LoggerColors
+from green_paths_2.src.timer import time_logger
 
-from src.preprocessing.spatial_operations import (
+
+from green_paths_2.src.preprocessing.spatial_operations import (
     has_invalid_geometries,
     fix_invalid_geometries,
     handle_gdf_crs,
@@ -19,20 +28,8 @@ from src.preprocessing.spatial_operations import (
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 
 
-# TODO: plottailua, poista tai siirrä
-# ax = test_result["buffer"].plot()
-
-# fig = ax.get_figure()
-# fig.savefig(
-#     "/Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/roope_test.png"
-# )
-
-# Convert the network to a GeoDataFrame
-# gdf_edges = ox.graph_to_gdfs(G, nodes=False, edges=True)
-# LOG.info(gdf_edges.head())
-# Get pedestrian roads as GeoDataFrame
-# gdf_pedestrian = osm_network.get_network(network_type="walking")
-# combined_gdf = pd.concat([gdf_pedestrian, gdf_cycling], ignore_index=True)
+# TODO: remove this :D
+ROOPE_DEVELOPMENT = False
 
 
 class OsmNetworkHandler:
@@ -70,14 +67,14 @@ class OsmNetworkHandler:
         LOG.info(f"network gdf size: {len(network_gdf)}")
         self.network_gdf = network_gdf
 
-    def handle_crs(self, user_config: UserConfig) -> None:
+    def handle_crs(self, project_crs, original_crs) -> None:
         """Sets the CRS for the network GeoDataFrame."""
         LOG.info("Handle network CRS")
         self.network_gdf = handle_gdf_crs(
             "network",
             self.network_gdf,
-            target_crs=user_config.project_crs,
-            original_crs=user_config.osm_network.original_crs,
+            target_crs=project_crs,
+            original_crs=original_crs,
         )
 
     def handle_invalid_geometries(self) -> None:
@@ -115,3 +112,68 @@ class OsmNetworkHandler:
             current_column_name
         ].apply(lambda x: x.wkt)
         return target_column_name
+
+    def sample_points(self, geometry, num_points):
+        from shapely.geometry import MultiLineString, LineString, Point
+
+        """
+        Generate evenly spaced sample points along the geometry.
+        Handles both LineString and MultiLineString geometries.
+        """
+        points = []
+
+        if isinstance(geometry, LineString):
+            points = [
+                geometry.interpolate(float(i) / (num_points - 1), normalized=True)
+                for i in range(num_points)
+            ]
+        elif isinstance(geometry, MultiLineString):
+            # Use .geoms to iterate over each LineString in a MultiLineString
+            for line in geometry.geoms:
+                points += [
+                    line.interpolate(float(i) / (num_points - 1), normalized=True)
+                    for i in range(num_points)
+                ]
+
+        return points
+
+    def generate_sampling_points(
+        self, segment_sampling_points_amount: int
+    ) -> gpd.GeoDataFrame:
+        """
+        Generate sampling points for each road segment.
+
+        Parameters:
+        - segment_sampling_points_amount: The number of sampling points to generate for each road segment.
+
+        Returns:
+        - GeoDataFrame with sampling points added as a new column.
+        """
+
+        self.network_gdf[SEGMENT_SAMPLING_POINTS_KEY] = self.network_gdf.geometry.apply(
+            lambda x: self.sample_points(x, segment_sampling_points_amount)
+        )
+
+    def process_osm_network(
+        self, project_crs: int, original_crs: int, segment_sampling_points_amount: int
+    ) -> gpd.GeoDataFrame:
+        """
+        Process OSM network.
+
+        :param user_config: User configurations.
+        :return: GeoDataFrame of the OSM network.
+        """
+        LOG.info("Processing OSM network.")
+        self.convert_network_to_gdf()
+        if ROOPE_DEVELOPMENT:
+            # ota sata ekeaa rivii vaan
+            dev_gdf = self.get_network_gdf().iloc[:100]
+            self.set_network_gdf(dev_gdf)
+
+        self.rename_column(GENERAL_ID_DEFAULT_KEY, OSM_ID_DEFAULT_KEY)
+        self.handle_crs(project_crs, original_crs)
+        self.handle_invalid_geometries()
+        self.network_filter_by_columns(NETWORK_COLUMNS_TO_KEEP)
+        self.handle_invalid_geometries()
+        self.generate_sampling_points(segment_sampling_points_amount)
+        return self.get_network_gdf()

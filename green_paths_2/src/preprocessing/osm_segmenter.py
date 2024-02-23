@@ -4,13 +4,13 @@ import datetime
 import os
 import osmium
 
-from src.config import (
+from green_paths_2.src.config import (
     DATA_CACHE_DIR_PATH,
     OSM_CACHE_DIR_NAME,
     OSM_CACHE_SEGMENTED_DIR_NAME,
     OSM_SEGMENTED_DEFAULT_FILE_NAME,
 )
-from src.logging import setup_logger, LoggerColors
+from green_paths_2.src.logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.RED.value)
 

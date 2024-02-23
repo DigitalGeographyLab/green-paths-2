@@ -7,10 +7,20 @@ import matplotlib.pyplot as plt
 PLOT_DESTINATION_PATH = "src/visualizations"
 
 
-def simple_plot_gdf(
+# TODO: maybe remove geometry_column_names and just use default geometry for one gdf?
+def simple_plot_gdfs(
     gdf: gpd.GeoDataFrame, title: str = None, geometry_column_names: list = None
-):
-    fig, ax = plt.subplots(figsize=(10, 10))
+) -> None:
+    """
+    Plot GeoDataFrames with multiple geometry columns.
+
+    :param gdf: GeoDataFrame to plot.
+    :param title: Title of the plot.
+    :param geometry_column_names: List of geometry column names to plot.
+
+    :return: None
+    """
+    _, ax = plt.subplots(figsize=(10, 10))
 
     # list of color names
     colors = [
@@ -27,7 +37,6 @@ def simple_plot_gdf(
         "cyan",
     ]
 
-    # dfs
     new_dfs = []
     plot_name = ""
 
@@ -53,7 +62,7 @@ def simple_plot_gdf(
 
 # e.g. use example
 
-# from src.plotter import simple_plot_gdf
+# from green_paths_2.src..plotter import simple_plot_gdf
 #
 # simple_plot_gdf(
 #     spatially_joined_edges_with_polygons,

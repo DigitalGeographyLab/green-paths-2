@@ -2,13 +2,13 @@
 
 import argparse
 
-from src.logging import setup_logger, LoggerColors
-from src.data.loaders.osm_network_loader import (
+from green_paths_2.src.logging import setup_logger, LoggerColors
+from green_paths_2.src.data_fetchers.osm_network_loader import (
     download_and_move_osm_pbf,
     get_available_pyrosm_data_sources,
 )
-from src.preprocessing.main import preprocessing
-from src.preprocessing.osm_segmenter import segment_osm_network
+from green_paths_2.src.preprocessing.main import preprocessing
+from green_paths_2.src.preprocessing.osm_segmenter import segment_osm_network
 
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 
@@ -49,11 +49,11 @@ def main():
     )
 
     # DATA LOADERS
-    loaders_parser = subparsers.add_parser(
+    fetchers_parser = subparsers.add_parser(
         "fetch_osm_network", help="Fetch data from different sources."
     )
 
-    loaders_parser.add_argument(
+    fetchers_parser.add_argument(
         "-a",
         "--area",
         type=str,
@@ -61,7 +61,7 @@ def main():
         required=False,
     )
 
-    loaders_parser.add_argument(
+    fetchers_parser.add_argument(
         "-l",
         "--list_available_cities",
         help="Prints all available cities (pyrosm)",

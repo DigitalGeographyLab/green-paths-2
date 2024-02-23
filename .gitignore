@@ -107,7 +107,6 @@ ENV/
 
 # Customs
 .DS_Store
-src/data/cache/*
-data/test_data/
-
-src/visualizations
+green_paths_2/src/cache/*
+green_paths_2/src/visualizations
+green_paths_2/data/*

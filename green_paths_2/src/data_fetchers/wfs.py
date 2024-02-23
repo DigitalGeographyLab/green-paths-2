@@ -14,7 +14,7 @@ from enum import Enum
 from requests import Request
 from functools import partial
 
-from src.logging import setup_logger
+from green_paths_2.src.logging import setup_logger
 
 # TODO this isn't working... -> fix it
 # says that incomplete data fetching XXX bytes... -> timeout?

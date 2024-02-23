@@ -3,8 +3,8 @@
 import os
 import multiprocessing as mp
 import pandas as pd
-from src.logging import setup_logger, LoggerColors
-from src.timer import time_logger
+from green_paths_2.src.logging import setup_logger, LoggerColors
+from green_paths_2.src.timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.CYAN.value)
 

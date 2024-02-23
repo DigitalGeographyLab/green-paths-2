@@ -1,6 +1,11 @@
 """ TODO """
 
+import os
 import geopandas as gpd
+
+from green_paths_2.src.logging import setup_logger, LoggerColors
+
+LOG = setup_logger(__name__, LoggerColors.RED.value)
 
 
 def filter_gdf_by_columns_if_found(
@@ -43,3 +48,30 @@ def rename_gdf_column(
     updated_gdf = gdf.copy()
     updated_gdf.rename(columns={old_column_name: new_column_name}, inplace=True)
     return updated_gdf
+
+
+def determine_file_type(file_path: str) -> str | None:
+    """
+    Determine DataType from file extension.
+
+    Parameters:
+    - file_path: Path to the file as a string.
+
+    Returns:
+    - A string indicating the file type ('raster', 'vector', or 'unknown').
+    """
+    LOG.info(f"No DataType given, determining type for {file_path}")
+    # Common raster and vector file extensions
+    raster_extensions = [".tif", ".tiff", ".img", ".dem", ".dtm", ".nc"]
+    vector_extensions = [".shp", ".geojson", ".gpkg", ".kml", ".gml"]
+
+    # Get the file extension
+    _, ext = os.path.splitext(file_path.lower())
+
+    # Determine file type
+    if ext in raster_extensions:
+        return "raster"
+    elif ext in vector_extensions:
+        return "vector"
+    else:
+        return None

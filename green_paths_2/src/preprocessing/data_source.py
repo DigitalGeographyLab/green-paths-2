@@ -1,7 +1,7 @@
 """ Data Source Class / Model """
 
 from typing import Any, Optional
-from src.logging import setup_logger, LoggerColors
+from green_paths_2.src.logging import setup_logger, LoggerColors
 
 
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
@@ -12,8 +12,10 @@ class DataSource:
         self,
         name: str,
         filepath: str,
-        data_type: str,
         data_column: str,
+        raster_cell_resolution: Optional[int],
+        data_type: Optional[str] = None,
+        save_raster_file: Optional[bool] = None,
         original_crs: Optional[str] = None,
         columns_of_interest: Optional[list[str]] = None,
         **source_specific_attributes: Any
@@ -22,8 +24,10 @@ class DataSource:
         self.filepath = filepath
         self.data_type = data_type
         self.data_column = data_column
+        self.raster_cell_resolution = raster_cell_resolution
         self.original_crs = original_crs
         self.columns_of_interest = columns_of_interest
+        self.save_raster_file = save_raster_file
         self.source_specific_attributes = source_specific_attributes
 
     def get_name(self):
@@ -50,11 +54,26 @@ class DataSource:
     def set_original_crs(self, original_crs: str):
         self.original_crs = original_crs
 
+    def get_data_column(self):
+        return self.data_column
+
+    def set_data_column(self, data_column: str):
+        self.data_column = data_column
+
+    def get_raster_cell_resolution(self):
+        return self.raster_cell_resolution
+
+    def set_raster_cell_resolution(self, raster_cell_resolution: int):
+        self.raster_cell_resolution = raster_cell_resolution
+
     def get_columns_of_interest(self):
         return self.columns_of_interest
 
     def set_columns_of_interest(self, columns_of_interest: list[str]):
         self.columns_of_interest = columns_of_interest
+
+    def get_save_raster_file(self):
+        return self.save_raster_file
 
     def get_data_specific_attributes(self):
         return self.source_specific_attributes

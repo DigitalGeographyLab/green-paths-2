@@ -2,11 +2,11 @@
 
 import geopandas as gpd
 import shapely
-from src.preprocessing.data_source import DataSource
-from src.data_utilities import rename_gdf_column
-from src.config import GDF_BUFFERED_GEOMETRY_NAME
-from src.logging import setup_logger, LoggerColors
-from src.timer import time_logger
+from green_paths_2.src.preprocessing.data_source import DataSource
+from green_paths_2.src.data_utilities import rename_gdf_column
+from green_paths_2.src.config import GDF_BUFFERED_GEOMETRY_NAME, OSM_ID_DEFAULT_KEY
+from green_paths_2.src.logging import setup_logger, LoggerColors
+from green_paths_2.src.timer import time_logger
 from shapely import wkt
 from pyproj import CRS
 
@@ -180,7 +180,7 @@ def process_segment(row, data_source):
     """
     TODO maybe remove secondary_data_source and multiple_data_strategy?
     """
-    osm_id = row["osm_id"]
+    osm_id = row[OSM_ID_DEFAULT_KEY]
     edge_geom = row["geometry_network"]
     data_geom = row["geometry_data"]
     data_column = data_source.data_column

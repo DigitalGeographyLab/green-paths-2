@@ -4,9 +4,9 @@ import os
 import shutil
 import pyrosm
 
-from src.logging import setup_logger, LoggerColors
+from green_paths_2.src.logging import setup_logger, LoggerColors
 
-from src.config import DATA_CACHE_DIR_PATH, OSM_CACHE_DIR_NAME
+from green_paths_2.src.config import DATA_CACHE_DIR_PATH, OSM_CACHE_DIR_NAME
 
 LOG = setup_logger(__name__, LoggerColors.RED.value)
 

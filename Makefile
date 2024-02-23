@@ -1,4 +1,4 @@
-.PHONY: clean clean-build clean-pyc clean-test coverage dist docs help install lint lint/flake8 lint/black
+.PHONY: clean clean-build clean-pyc clean-test coverage dist docs help install lint lint/flake8 lint/black greenpaths2
 .DEFAULT_GOAL := help
 
 define BROWSER_PYSCRIPT
@@ -48,9 +48,9 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint/flake8: ## check style with flake8
-	flake8 green_paths_2 tests
+	flake8 green_paths_2
 lint/black: ## check style with black
-	black --check green_paths_2 tests
+	black --check green_paths_2
 
 lint: lint/flake8 lint/black ## check style
 
@@ -85,3 +85,8 @@ dist: clean ## builds source and wheel package
 
 install: clean ## install the package to the active Python's site-packages
 	poetry install
+
+greenpaths2:
+	poetry run python green_paths_2_cli.py $(filter-out $@,$(MAKECMDGOALS))
+%:
+	@:
