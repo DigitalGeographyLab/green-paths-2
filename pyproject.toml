@@ -9,6 +9,8 @@ readme = "README.rst"
 python = "^3.11"
 black = "^24.2.0"
 isort = "^5.13.2"
+xarray = "^2024.2.0"
+rioxarray = "^0.15.1"
 
 
 [build-system]

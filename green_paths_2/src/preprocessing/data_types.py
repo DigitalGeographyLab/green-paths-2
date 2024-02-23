@@ -13,6 +13,7 @@ class DataSourceModel(Enum):
     Filepath = "filepath"
     Datatype = "data_type"
     Datacolumn = "data_column"
+    DataBuffer = "data_buffer"
     Rastercellresolution = "raster_cell_resolution"
     Originalcrs = "original_crs"
     Columnsofinterest = "columns_of_interest"

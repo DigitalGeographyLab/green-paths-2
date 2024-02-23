@@ -13,7 +13,8 @@ class DataSource:
         name: str,
         filepath: str,
         data_column: str,
-        raster_cell_resolution: Optional[int],
+        data_buffer: Optional[int] = None,
+        raster_cell_resolution: Optional[int] = None,
         data_type: Optional[str] = None,
         save_raster_file: Optional[bool] = None,
         original_crs: Optional[str] = None,
@@ -24,6 +25,7 @@ class DataSource:
         self.filepath = filepath
         self.data_type = data_type
         self.data_column = data_column
+        self.data_buffer = data_buffer
         self.raster_cell_resolution = raster_cell_resolution
         self.original_crs = original_crs
         self.columns_of_interest = columns_of_interest
@@ -59,6 +61,12 @@ class DataSource:
 
     def set_data_column(self, data_column: str):
         self.data_column = data_column
+
+    def get_data_buffer(self):
+        return self.data_buffer
+
+    def set_data_buffer(self, data_buffer: int):
+        self.data_buffer = data_buffer
 
     def get_raster_cell_resolution(self):
         return self.raster_cell_resolution

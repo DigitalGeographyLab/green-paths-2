@@ -2,6 +2,7 @@
 
 import os
 import yaml
+from green_paths_2.src.config import DEFAULT_CONFIGURATION_VALUES
 from green_paths_2.src.data_utilities import determine_file_type
 from green_paths_2.src.preprocessing.spatial_operations import crs_uses_meters
 from green_paths_2.src.logging import setup_logger, LoggerColors
@@ -54,9 +55,10 @@ class UserConfig:
             config = self._load_config(config_path)
             self._validate_config(config)
             self.set_attributes(config)
+            self.set_defaults()
         # handle possible errors
-        except FileNotFoundError:
-            raise ConfigError(f"Configuration file not found at {config_path}")
+        # except FileNotFoundError:
+        #     raise ConfigError(f"Configuration file not found at {config_path}")
         except yaml.YAMLError:
             raise ConfigError("Error parsing YAML configuration file.")
         return self
@@ -77,6 +79,14 @@ class UserConfig:
             else:
                 # plain value
                 setattr(self, key, value)
+
+    def set_defaults(self):
+        """
+        Update configuration with default values for any keys not provided by the user.
+        """
+        for key, default_value in DEFAULT_CONFIGURATION_VALUES.items():
+            if not hasattr(self, key):
+                setattr(self, key, default_value)
 
     def validate_osm_pbf_network_file(self, config: dict) -> None:
         """

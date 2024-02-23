@@ -6,7 +6,6 @@ from green_paths_2.src.preprocessing.data_source import DataSource
 
 from green_paths_2.src.data_utilities import (
     filter_gdf_by_columns_if_found,
-    rename_gdf_column,
 )
 
 # from green_paths_2.src.preprocessing.data_types import DataSourceModel
@@ -14,7 +13,6 @@ from green_paths_2.src.preprocessing.spatial_operations import (
     fix_invalid_geometries,
     handle_gdf_crs,
     has_invalid_geometries,
-    spatial_join_gdfs,
 )
 from green_paths_2.src.preprocessing.user_config_parser import UserConfig
 from green_paths_2.src.logging import setup_logger, LoggerColors

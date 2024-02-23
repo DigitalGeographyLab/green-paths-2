@@ -3,6 +3,9 @@
 import gc
 import geopandas as gpd
 from green_paths_2.src.data_utilities import determine_file_type
+from green_paths_2.src.preprocessing.spatial_operations import (
+    create_buffer_for_geometries,
+)
 
 from green_paths_2.src.preprocessing.vector_processor import (
     load_and_process_vector_data,
@@ -13,14 +16,14 @@ from green_paths_2.src.preprocessing.raster_operations import (
 )
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.config import (
-    NETWORK_COLUMNS_TO_KEEP,
-    RASTER_CELL_RESOLUTION_DEFAULT,
-    SAVE_RASTER_FILE_DEFAULT,
     USER_CONFIG_PATH,
 )
 from green_paths_2.src.preprocessing.data_types import DataTypes
 from green_paths_2.src.preprocessing.osm_network_handler import OsmNetworkHandler
-from green_paths_2.src.preprocessing.preprocessing_exceptions import ConfigDataError
+from green_paths_2.src.preprocessing.preprocessing_exceptions import (
+    ConfigDataError,
+    ConfigError,
+)
 from green_paths_2.src.preprocessing.user_config_parser import UserConfig
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
@@ -79,6 +82,12 @@ def preprocessing():
                     data_name, data_source, user_config.project_crs
                 )
 
+                # if buffer for data is defined in config, apply it
+                if data_source.get_data_buffer():
+                    cleaned_vector_gdf = create_buffer_for_geometries(
+                        data_name, cleaned_vector_gdf, data_source.get_data_buffer()
+                    )
+
                 rasterize_and_calculate_segment_values(
                     data_name=data_name,
                     vector_data_gdf=cleaned_vector_gdf,
@@ -89,6 +98,8 @@ def preprocessing():
                 )
 
             elif data_source.data_type == DataTypes.Raster.value:
+                LOG.info(f"processing datasource: {data_name} ({data_type})")
+
                 # TODO: -> tähän tää raster versio miten lasketaan juttuja...
                 # result_dask_gdf = DaskGenerator.dask_operation_generator(
                 #     main_gdf,
@@ -99,9 +110,8 @@ def preprocessing():
 
                 # Merge these new values into the main GeoDataFrame
                 # This assumes computed_new_values has an 'OSM_ID' column for merging
-                pass
             else:
-                raise ConfigDataError(
+                raise ConfigError(
                     f"Unsupported data type provided in config for {data_name}!"
                 )
 

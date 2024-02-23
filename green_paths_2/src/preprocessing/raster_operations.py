@@ -1,8 +1,11 @@
 """ Raster processing module. """
 
 import os
-import rasterio
 import geopandas as gpd
+import numpy as np
+import rasterio
+from rasterio.features import rasterize
+from rasterio.transform import from_origin
 
 from green_paths_2.src.config import (
     OSM_ID_DEFAULT_KEY,
@@ -12,11 +15,7 @@ from green_paths_2.src.config import (
     SEGMENT_SAMPLING_POINTS_KEY,
     SEGMENT_VALUES_ROUND_DECIMALS,
 )
-import numpy as np
-import geopandas as gpd
-import rasterio
-from rasterio.features import rasterize
-from rasterio.transform import from_origin
+
 
 from green_paths_2.src.logging import setup_logger, LoggerColors
 
@@ -249,3 +248,126 @@ def calculate_segment_raster_values(
         )
         # Store or use the aggregated value as needed
     return segment_raster_values
+
+
+def calculate_segment_raster_values_from_raster_file(
+    network_gdf: gpd.GeoDataFrame, raster_file_path: str
+) -> dict:
+    segment_raster_values = {}
+    with rasterio.open(raster_file_path) as src:
+        raster_data = src.read(1)  # Assuming you're interested in the first band
+        transform = src.transform
+
+        for _, row in network_gdf.iterrows():
+            values = [
+                get_raster_value_at_point(pt, raster_data, transform)
+                for pt in row[
+                    "sampling_points"
+                ]  # Ensure this is correctly set in your GDF
+            ]
+
+            # Here, implement your logic as before to aggregate and process these values...
+            value_for_segment = aggregate_values(values, method="mean")  # Example
+
+            if not np.isnan(value_for_segment):
+                osm_id = row["osm_id"]  # Adjust based on your GDF structure
+                segment_raster_values[osm_id] = round(
+                    value_for_segment, 2
+                )  # Example rounding
+
+    return segment_raster_values
+
+
+# from greenpaths 1
+# TODO: mieti miten tän vois tehdä joustavasti
+
+# kato kaikki kommentit ja koodi ja nimeämiset ja folderit jne!
+
+# pitää ehkä tehä joku folder "custom_functions" tai jotain mis voi tehä tän
+# vois kans ehk kokeilla jotain random rasteria missä ei tarvii tehdä mitään transformei jne...
+# et toimii muillakin rastereilla
+# ehkä confeihin joku "use_custom_function" ja siihen nää?
+
+
+# from logging import Logger
+# from typing import Union
+# import zipfile
+
+# TODO is this rioxarray needed?
+import rioxarray
+import xarray
+import rasterio
+import numpy as np
+
+# from rasterio import fill
+
+
+def convert_aq_nc_to_tif(dir: str, aqi_nc_name: str) -> str:
+    """Converts a netCDF file to a georeferenced raster file. xarray and rioxarray automatically
+    scale and offset each netCDF file opened with proper values from the file itself. No manual
+    scaling or adding offset required. CRS of the exported GeoTiff is set to WGS84.
+
+    Args:
+        aqi_nc_name: The filename of an nc file to be processed (in aqi_cache directory).
+            e.g. allPollutants_2019-09-11T15.nc
+    Returns:
+        The name of the exported tif file (e.g. aqi_2019-11-08T14.tif).
+    """
+    # read .nc file containing the AQI layer as a multidimensional array
+    data = xarray.open_dataset(dir + aqi_nc_name)
+
+    # retrieve AQI, AQI.data has shape (time, lat, lon)
+    # the values are automatically scaled and offset AQI values
+    aqi = data["AQI"]
+
+    # save AQI to raster (.tif geotiff file recommended)
+    aqi = aqi.rio.set_crs("epsg:4326")
+
+    # parse date & time from nc filename and export raster
+    aqi_date_str = aqi_nc_name[:-3][-13:]
+    aqi_tif_name = f"aqi_{aqi_date_str}.tif"
+    aqi.rio.to_raster(rf"{dir}{aqi_tif_name}")
+    return aqi_tif_name
+
+
+def _has_unscaled_aqi(aqi_raster) -> bool:
+    d_type = aqi_raster.dtypes[0]
+    return d_type == "int8"
+
+
+def _get_scale(aqi_raster) -> float:
+    return aqi_raster.scales[0]
+
+
+def _get_offset(aqi_raster) -> float:
+    return aqi_raster.offsets[0]
+
+
+def fix_aqi_tiff_scale_offset(aqi_filepath: str) -> bool:
+    aqi_raster = rasterio.open(aqi_filepath)
+    aqi_band = aqi_raster.read(1)
+
+    if not _has_unscaled_aqi(aqi_raster):
+        return False
+
+    scale = _get_scale(aqi_raster)
+    offset = _get_offset(aqi_raster)
+
+    aqi_band = aqi_band * scale + offset
+
+    # TODO roope -> tää salee on jo se save? eikö?
+    aqi_raster_fillna = rasterio.open(
+        aqi_filepath,
+        "w",
+        driver="GTiff",
+        height=aqi_raster.shape[0],
+        width=aqi_raster.shape[1],
+        count=1,
+        dtype="float32",
+        transform=aqi_raster.transform,
+        crs=aqi_raster.crs,
+    )
+
+    aqi_raster_fillna.write(aqi_band, 1)
+    aqi_raster_fillna.close()
+    return True

@@ -93,17 +93,24 @@ def handle_gdf_crs(
 
 @time_logger
 def create_buffer_for_geometries(
-    self, gdf: gpd.GeoDataFrame, buffer: str
+    data_name: str, gdf: gpd.GeoDataFrame, buffer_size: int
 ) -> gpd.GeoDataFrame:
     """
-    loops through user config and creates buffers for geometries
-    ::param user_config: UserConfig object
-    ::param gdf: GeoDataFrame including buffered geometries
+    Creates buffers for geometries in a GeoDataFrame.
+
+    :param data_name: Name of the data being processed.
+    :param gdf: GeoDataFrame containing the geometries to buffer.
+    :param buffer_size: Size of the buffer in meters.
+    :return: A new GeoDataFrame with buffered geometries.
     """
-    LOG.info(f"Creating {buffer}m buffer for geometries in GeoDataFrame {gdf.name}")
-    gdf = gdf.copy()
-    gdf[GDF_BUFFERED_GEOMETRY_NAME] = gdf.geometry.buffer(buffer)
-    return gdf
+    LOG.info(
+        f"Creating {buffer_size}m buffer for geometries in GeoDataFrame {data_name}"
+    )
+    # Create buffers
+    buffered_gdf = gdf.copy()
+    buffered_gdf.geometry = buffered_gdf.geometry.buffer(int(buffer_size))
+
+    return buffered_gdf
 
 
 def convert_wkt_to_geometries(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
@@ -161,62 +168,62 @@ def fix_invalid_geometries(gdf: gpd.GeoDataFrame, remove_invalid: bool = False):
     return gdf
 
 
-def spatial_join_gdfs(
-    network_gdf: gpd.GeoDataFrame, data_gdf: gpd.GeoDataFrame
-) -> gpd.GeoDataFrame:
-    """spatially join vector datas: network and polygons geometries"""
-    LOG.info("Spatial join data with network")
-    joined_gdf = gpd.sjoin(network_gdf, data_gdf, how="inner", op="intersects")
-    joined_gdf.rename_geometry("geometry_network", inplace=True)
-    joined_gdf.drop(columns=["index_right"], inplace=True)
-    return joined_gdf
+# def spatial_join_gdfs(
+#     network_gdf: gpd.GeoDataFrame, data_gdf: gpd.GeoDataFrame
+# ) -> gpd.GeoDataFrame:
+#     """spatially join vector datas: network and polygons geometries"""
+#     LOG.info("Spatial join data with network")
+#     joined_gdf = gpd.sjoin(network_gdf, data_gdf, how="inner", op="intersects")
+#     joined_gdf.rename_geometry("geometry_network", inplace=True)
+#     joined_gdf.drop(columns=["index_right"], inplace=True)
+#     return joined_gdf
 
 
-def cut_line_by_polygon(line, polygon):
-    return [seg for seg in split(line, polygon) if seg.within(polygon)]
+# def cut_line_by_polygon(line, polygon):
+#     return [seg for seg in split(line, polygon) if seg.within(polygon)]
 
 
-def process_segment(row, data_source):
-    """
-    TODO maybe remove secondary_data_source and multiple_data_strategy?
-    """
-    osm_id = row[OSM_ID_DEFAULT_KEY]
-    edge_geom = row["geometry_network"]
-    data_geom = row["geometry_data"]
-    data_column = data_source.data_column
+# def process_segment(row, data_source):
+#     """
+#     TODO maybe remove secondary_data_source and multiple_data_strategy?
+#     """
+#     osm_id = row[OSM_ID_DEFAULT_KEY]
+#     edge_geom = row["geometry_network"]
+#     data_geom = row["geometry_data"]
+#     data_column = data_source.data_column
 
-    # TODO: remove?
-    # multiple_data_strategy = hasattr(data_source, "multiple_data_strategy")
-    # if secondary_data_source and multiple_data_strategy:
-    #     LOG.info(
-    #         "Has also secondary_data_source: {secondary_data_source}, using with strategy: {multiple_data_strategy}."
-    #     )
+#     # TODO: remove?
+#     # multiple_data_strategy = hasattr(data_source, "multiple_data_strategy")
+#     # if secondary_data_source and multiple_data_strategy:
+#     #     LOG.info(
+#     #         "Has also secondary_data_source: {secondary_data_source}, using with strategy: {multiple_data_strategy}."
+#     #     )
 
-    # TODO: add point sampling!
+#     # TODO: add point sampling!
 
-    if edge_geom.intersects(data_geom):
-        LOG.info(osm_id)
-        segments = cut_line_by_polygon(edge_geom, data_geom)
-        LOG.info(segments)
-        return
+#     if edge_geom.intersects(data_geom):
+#         LOG.info(osm_id)
+#         segments = cut_line_by_polygon(edge_geom, data_geom)
+#         LOG.info(segments)
+#         return
 
-        # TODO: logic for each segment...
-        # remember to handle multiprocessing / parallel processing
+#         # TODO: logic for each segment...
+#         # remember to handle multiprocessing / parallel processing
 
-        # for segment in segments:
-        #     segment_length = segment.length
-        #     if "aasd" in my_dict:
-        #         my_dict[key] += value
-        #     else:
-        #         my_dict[key] = value
-        #     # Calculate weighted value based on db_lo, db_hi, and segment length
-        #     # Handle NaN values as per your chosen strategy
-        #     # weighted_value = calculate_weighted_value(
-        #     #     segment_length, db_lo, db_hi
-        #     # )  # Implement this function
-        #     results.append((row["osm_id"], segment_length, weighted_value))
+#         # for segment in segments:
+#         #     segment_length = segment.length
+#         #     if "aasd" in my_dict:
+#         #         my_dict[key] += value
+#         #     else:
+#         #         my_dict[key] = value
+#         #     # Calculate weighted value based on db_lo, db_hi, and segment length
+#         #     # Handle NaN values as per your chosen strategy
+#         #     # weighted_value = calculate_weighted_value(
+#         #     #     segment_length, db_lo, db_hi
+#         #     # )  # Implement this function
+#         #     results.append((row["osm_id"], segment_length, weighted_value))
 
-    # # Convert results to a DataFrame
-    # segments_df = pd.DataFrame(
-    #     results, columns=["osm_id", "segment_length", "weighted_value"]
-    # )
+#     # # Convert results to a DataFrame
+#     # segments_df = pd.DataFrame(
+#     #     results, columns=["osm_id", "segment_length", "weighted_value"]
+#     # )

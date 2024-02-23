@@ -51,29 +51,30 @@ data_sources:
   #   # data_type: vector
   #   layer_name: Helsinki_4326
   #   data_column: Gvi_Mean # mandatory
+  #   # data_buffer: 10 # optional, only for vector datas, in meters
   #   raster_cell_resolution: 20 # optional
-  #   # save_raster_file: True # optional
+  #   save_raster_file: True # optional
   #   original_crs: 3879
 
-
-  #  - name: air_quality
-  #   filepath: /Users/hcroope/omat/GP2/data/allPollutants_2023-12-15T04/allPollutants_2023-12-15T04.nc
-  #   # data_type: vector
-  #   # layer_name: Helsinki_4326
-  #   data_column: Gvi_Mean # mandatory
-  #   raster_cell_resolution: 20 # optional
-  #   # save_raster_file: True # optional
-  #   original_crs: 3879
+  # TODO: this is raster -> do raster stuff (not rasterizing but default raster stuff)
+  - name: air_quality
+    filepath: /Users/hcroope/omat/GP2/data/allPollutants_2023-12-15T04/allPollutants_2023-12-15T04.nc
+    # data_type: vector
+    # layer_name: Helsinki_4326
+    data_column: Gvi_Mean # mandatory
+    raster_cell_resolution: 20 # optional
+    # save_raster_file: True # optional
+    original_crs: 3879
 
   # TODO -> tee validaatioon checkit näistä!
-  - name: noise_helsinki
-    filepath:  /Users/hcroope/omat/GP2/data/Helsinki_noise_data_2022/Melualueet_2022_01_kadut_maant_LAeq7-22_NPM_20231116_123645.gml # mandatory
-    data_type: vector # mandatory
-    raster_cell_resolution: 20 # mandatory -> this is the resolution of the raster cells in meters (e.g. 10 = 10mx10m)
-    data_column: db_hi # mandatory
-    columns_of_interest: ["db_lo", "db_hi", "geometry"] # optional
-    original_crs: 3879 # optional
-    save_raster_file: True # optional
+  # - name: noise_helsinki
+  #   filepath:  /Users/hcroope/omat/GP2/data/Helsinki_noise_data_2022/Melualueet_2022_01_kadut_maant_LAeq7-22_NPM_20231116_123645.gml # mandatory
+  #   data_type: vector # mandatory
+  #   raster_cell_resolution: 20 # mandatory -> this is the resolution of the raster cells in meters (e.g. 10 = 10mx10m)
+  #   data_column: db_hi # mandatory
+  #   columns_of_interest: ["db_lo", "db_hi", "geometry"] # optional
+  #   original_crs: 3879 # optional
+  #   save_raster_file: True # optional
 
 
     # TODO -> ponder what would this be...
