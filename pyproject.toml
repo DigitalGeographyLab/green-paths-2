@@ -11,6 +11,8 @@ black = "^24.2.0"
 isort = "^5.13.2"
 xarray = "^2024.2.0"
 rioxarray = "^0.15.1"
+netcdf4 = "^1.6.5"
+scipy = "^1.12.0"
 
 
 [build-system]

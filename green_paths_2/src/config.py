@@ -1,12 +1,10 @@
 """ General configurations for Green Paths 2 project """
 
+import os
 import numpy as np
 
 GENERAL_ID_DEFAULT_KEY = "id"
 OSM_ID_DEFAULT_KEY = "osm_id"
-
-OSM_SEGMENTED_NETWORK_DIR_PATH = "green_paths_2/src/data/cache/osm"
-OSM_SEGMENTED_NETWORK_NAME = "segmented_network.osm.pbf"
 
 SUPPORTED_DATA_TYPES = ["point", "line", "polygon", "raster"]
 SUPPORTED_FILE_FORMATS = [
@@ -17,13 +15,30 @@ SUPPORTED_FILE_FORMATS = [
 NETWORK_COLUMNS_TO_KEEP = ["osm_id", "geometry"]
 
 # cache dir for programatically downloadable data
-DATA_CACHE_DIR_PATH: str = "green_paths_2/src/data/cache"
+DATA_CACHE_DIR_PATH: str = "green_paths_2/src/cache"
 
 OSM_CACHE_DIR_NAME: str = "osm"
 
 OSM_CACHE_SEGMENTED_DIR_NAME: str = "segmented"
 
-OSM_SEGMENTED_DEFAULT_FILE_NAME: str = "segmented_network.osm.pbf"
+OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION: str = "_segmented.osm.pbf"
+
+# DATA CACHE DIR NAME
+DATA_DIR_NAME = "data"
+
+RASTER_DIR_NAME = "raster"
+
+# TODO: are these used?
+
+# AQI (air quality index) data source
+AQI_DATA_SOURCE_NAME = "aqi.nc"
+
+AQI_DATA_CACHE_DIR_PATH = os.path.join(DATA_CACHE_DIR_PATH, RASTER_DIR_NAME)
+
+# path to AQI data source file
+AQI_DATA_SOURCE_FILE_PATH = os.path.join(
+    DATA_CACHE_DIR_PATH, DATA_DIR_NAME, AQI_DATA_SOURCE_NAME
+)
 
 # path to user configuration file which has e.g. data sources and osm network file path
 USER_CONFIG_PATH = "green_paths_2/src/user/config.yaml"
@@ -48,7 +63,7 @@ SEGMENT_POINTS_DEFAULT_SAMPLING_STRATEGY = "mean"
 
 # SEGMENT SAMPLE POINTS DEFAULT AMOUNT
 
-SEGMENT_VALUES_ROUND_DECIMALS = 2
+SEGMENT_VALUES_ROUND_DECIMALS = 5
 
 SEGMENT_SAMPLING_POINTS_KEY = "sampling_points"
 

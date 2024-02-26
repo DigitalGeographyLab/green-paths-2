@@ -8,7 +8,7 @@ from green_paths_2.src.config import (
     DATA_CACHE_DIR_PATH,
     OSM_CACHE_DIR_NAME,
     OSM_CACHE_SEGMENTED_DIR_NAME,
-    OSM_SEGMENTED_DEFAULT_FILE_NAME,
+    OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION,
 )
 from green_paths_2.src.logging import setup_logger, LoggerColors
 
@@ -90,24 +90,45 @@ class NodeCopyHandler(osmium.SimpleHandler):
         self.writer.add_node(n)
 
 
-def segment_osm_network(osm_source_path: str, name: str = None):
-    """Segment the OSM network into segments between intersections."""
+def segment_or_use_cache_osm_network(osm_source_path: str, name: str = None) -> str:
+    """
+    Segment the OSM network into segments between intersections.
+    The name is taken from the source path if not provided.
+
+    Preprocessing pipeline will search for the segmented OSM network from the cache directory.
+    Using name pattern <filename>_segmented.osm.pbf.
+
+    :param osm_source_path: Path to the OSM PBF file.
+    :param name: Name for the segmented OSM PBF file. If not provided, the default name is used.
+    :return: Path to the segmented OSM PBF file.
+    """
     LOG.info(f"Starting to segment the OSM network.")
     LOG.info(f"Using file from path: {osm_source_path}")
-    # use user provided name or default name
-    new_osm_name = name + ".osm.pbf" if name else OSM_SEGMENTED_DEFAULT_FILE_NAME
+    # use user provided name or
+    # get 'filename' from the path
+    network_name_no_extension = os.path.basename(osm_source_path).rsplit(".osm.pbf", 1)[
+        0
+    ]
+    osm_network_name = (
+        network_name_no_extension + OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION
+    )
+
     # format path from config
     OSM_PROCESSED_NETWORK_PATH = os.path.join(
         DATA_CACHE_DIR_PATH,
         OSM_CACHE_DIR_NAME,
         OSM_CACHE_SEGMENTED_DIR_NAME,
-        new_osm_name,
+        osm_network_name,
     )
+
+    LOG.info(
+        f"Checking cache for segmented OSM network from {OSM_PROCESSED_NETWORK_PATH}"
+    )
+
     if os.path.exists(OSM_PROCESSED_NETWORK_PATH):
-        LOG.error(
-            f"Segmented OSM network file already exists in cache with given (or default name). Please remove file or provide a new name for file."
-        )
-        return
+        LOG.info(f"Found segmented OSM network from cache. Skipping segmentation.")
+        return OSM_PROCESSED_NETWORK_PATH
+
     LOG.info(f"Segmenting the OSM network to path: {OSM_PROCESSED_NETWORK_PATH}")
     # Initialize writer for the new OSM PBF file
     writer = osmium.SimpleWriter(OSM_PROCESSED_NETWORK_PATH)

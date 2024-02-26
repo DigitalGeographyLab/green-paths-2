@@ -7,6 +7,10 @@ import rasterio
 from rasterio.features import rasterize
 from rasterio.transform import from_origin
 
+import rasterio
+from rasterio.enums import Resampling
+from rasterio.warp import calculate_default_transform, reproject
+
 from green_paths_2.src.config import (
     OSM_ID_DEFAULT_KEY,
     OUTPUT_RASTER_DIR_PATH,
@@ -181,7 +185,7 @@ def get_raster_value_at_point(point, raster_data, transform):
         return None  # or np.nan, or another value indicating no data
 
 
-def aggregate_values(values, method="mean") -> float:
+def aggregate_values(values: list[float | None], method="mean") -> float:
     """
     Aggregate values based on the given method.
     If all values are np.nan, the function returns np.nan.
@@ -194,7 +198,8 @@ def aggregate_values(values, method="mean") -> float:
     Returns:
     - The aggregated value | np.nan.
     """
-    if len(values) == 0 or np.all(np.isnan(values)):
+    values = np.array(values, dtype=float)
+    if len(values) == 0 or np.all(np.isnan(values)) or all(v is None for v in values):
         return np.nan
     if method == "mean":
         return np.nanmean(values)
@@ -228,6 +233,8 @@ def calculate_segment_raster_values(
             for pt in row[SEGMENT_SAMPLING_POINTS_KEY]
         ]
 
+        print(values)
+
         # Aggregate the values for the segment
         # round to 2 decimals
         value_for_segment = aggregate_values(
@@ -250,124 +257,89 @@ def calculate_segment_raster_values(
     return segment_raster_values
 
 
+def check_raster_file_crs(raster_filepath: str):
+    """Check if the raster CRS is the same as the project CRS."""
+    with rasterio.open(raster_filepath) as raster_src:
+        return raster_src.crs
+
+
+def reproject_raster_to_crs(
+    input_raster_filepath: str,
+    output_raster_filepath: str,
+    target_crs: str,
+    new_raster_resolution: int = None,
+) -> None:
+    """
+    Reproject a raster to the target CRS.
+
+    Parameters:
+    - input_raster_filepath: The path to the input raster file.
+    - output_raster_filepath: The path to the output raster file.
+    - target_crs: The target CRS.
+    """
+    try:
+        with rasterio.open(input_raster_filepath) as src:
+            # if new raster resolution is defined use it, otherwise use the original resolution
+            # this slows down the process a little bit
+            if new_raster_resolution:
+                transform, width, height = calculate_default_transform(
+                    src.crs,
+                    target_crs,
+                    src.width,
+                    src.height,
+                    *src.bounds,
+                    resolution=new_raster_resolution,
+                )
+            else:
+                transform, width, height = calculate_default_transform(
+                    src.crs, target_crs, src.width, src.height, *src.bounds
+                )
+            kwargs = src.meta.copy()
+            kwargs.update(
+                {
+                    "crs": target_crs,
+                    "transform": transform,
+                    "width": width,
+                    "height": height,
+                }
+            )
+
+            with rasterio.open(output_raster_filepath, "w", **kwargs) as dst:
+                # reproject first band
+                reproject(
+                    source=rasterio.band(src, 1),
+                    destination=rasterio.band(dst, 1),
+                    src_transform=src.transform,
+                    src_crs=src.crs,
+                    dst_transform=transform,
+                    dst_crs=target_crs,
+                    resampling=Resampling.nearest,
+                )
+    except Exception as e:
+        raise ValueError(f"Error in reprojecting raster: {e}")
+
+
+# TODO: test -> gpt4 created
 def calculate_segment_raster_values_from_raster_file(
     network_gdf: gpd.GeoDataFrame, raster_file_path: str
 ) -> dict:
-    segment_raster_values = {}
-    with rasterio.open(raster_file_path) as src:
-        raster_data = src.read(1)  # Assuming you're interested in the first band
-        transform = src.transform
+    """
+    Calculate raster values for each road segment from a raster file.
 
-        for _, row in network_gdf.iterrows():
-            values = [
-                get_raster_value_at_point(pt, raster_data, transform)
-                for pt in row[
-                    "sampling_points"
-                ]  # Ensure this is correctly set in your GDF
-            ]
+    Parameters:
+    - network_gdf: The GeoDataFrame containing the road network data.
+    - raster_file_path: The path to the raster file.
 
-            # Here, implement your logic as before to aggregate and process these values...
-            value_for_segment = aggregate_values(values, method="mean")  # Example
-
-            if not np.isnan(value_for_segment):
-                osm_id = row["osm_id"]  # Adjust based on your GDF structure
-                segment_raster_values[osm_id] = round(
-                    value_for_segment, 2
-                )  # Example rounding
-
-    return segment_raster_values
+    Returns:
+    - A dictionary containing the raster values for each road segment.
+    """
+    with rasterio.open(raster_file_path) as raster_src:
+        return calculate_segment_raster_values(
+            network_gdf, raster_src.read(1), raster_src.transform
+        )
 
 
 # from greenpaths 1
-# TODO: mieti miten tän vois tehdä joustavasti
-
+# TODO:
 # kato kaikki kommentit ja koodi ja nimeämiset ja folderit jne!
-
-# pitää ehkä tehä joku folder "custom_functions" tai jotain mis voi tehä tän
-# vois kans ehk kokeilla jotain random rasteria missä ei tarvii tehdä mitään transformei jne...
-# et toimii muillakin rastereilla
-# ehkä confeihin joku "use_custom_function" ja siihen nää?
-
-
-# from logging import Logger
-# from typing import Union
-# import zipfile
-
-# TODO is this rioxarray needed?
-import rioxarray
-import xarray
-import rasterio
-import numpy as np
-
-# from rasterio import fill
-
-
-def convert_aq_nc_to_tif(dir: str, aqi_nc_name: str) -> str:
-    """Converts a netCDF file to a georeferenced raster file. xarray and rioxarray automatically
-    scale and offset each netCDF file opened with proper values from the file itself. No manual
-    scaling or adding offset required. CRS of the exported GeoTiff is set to WGS84.
-
-    Args:
-        aqi_nc_name: The filename of an nc file to be processed (in aqi_cache directory).
-            e.g. allPollutants_2019-09-11T15.nc
-    Returns:
-        The name of the exported tif file (e.g. aqi_2019-11-08T14.tif).
-    """
-    # read .nc file containing the AQI layer as a multidimensional array
-    data = xarray.open_dataset(dir + aqi_nc_name)
-
-    # retrieve AQI, AQI.data has shape (time, lat, lon)
-    # the values are automatically scaled and offset AQI values
-    aqi = data["AQI"]
-
-    # save AQI to raster (.tif geotiff file recommended)
-    aqi = aqi.rio.set_crs("epsg:4326")
-
-    # parse date & time from nc filename and export raster
-    aqi_date_str = aqi_nc_name[:-3][-13:]
-    aqi_tif_name = f"aqi_{aqi_date_str}.tif"
-    aqi.rio.to_raster(rf"{dir}{aqi_tif_name}")
-    return aqi_tif_name
-
-
-def _has_unscaled_aqi(aqi_raster) -> bool:
-    d_type = aqi_raster.dtypes[0]
-    return d_type == "int8"
-
-
-def _get_scale(aqi_raster) -> float:
-    return aqi_raster.scales[0]
-
-
-def _get_offset(aqi_raster) -> float:
-    return aqi_raster.offsets[0]
-
-
-def fix_aqi_tiff_scale_offset(aqi_filepath: str) -> bool:
-    aqi_raster = rasterio.open(aqi_filepath)
-    aqi_band = aqi_raster.read(1)
-
-    if not _has_unscaled_aqi(aqi_raster):
-        return False
-
-    scale = _get_scale(aqi_raster)
-    offset = _get_offset(aqi_raster)
-
-    aqi_band = aqi_band * scale + offset
-
-    # TODO roope -> tää salee on jo se save? eikö?
-    aqi_raster_fillna = rasterio.open(
-        aqi_filepath,
-        "w",
-        driver="GTiff",
-        height=aqi_raster.shape[0],
-        width=aqi_raster.shape[1],
-        count=1,
-        dtype="float32",
-        transform=aqi_raster.transform,
-        crs=aqi_raster.crs,
-    )
-
-    aqi_raster_fillna.write(aqi_band, 1)
-    aqi_raster_fillna.close()
-    return True
+# folderi custom functions? Testaa muillakin rastereil mihin ei tarvi tehdä custom processingii

@@ -18,8 +18,14 @@ def filter_gdf_by_columns_if_found(
     if keeps true, keeps the parameter columns
     if keeps false drops the parameter columns.
     Default action is keep.
-    ::param columns: List of column names.
-    :: param keep: boolean if keep or drop
+
+    Parameters:
+    - target_gdf: GeoDataFrame to filter.
+    - columns: List of column names to filter by.
+    - keep: If True, keeps the given columns, else drops the rest.
+
+    Returns:
+    - The filtered GeoDataFrame.
     """
     existing_columns = [col for col in columns if col in target_gdf.columns]
     if keep:
@@ -41,9 +47,14 @@ def rename_gdf_column(
 ) -> gpd.GeoDataFrame:
     """
     Renames the given column in the GeoDataFrame.
-    ::param gdf: GeoDataFrame
-    ::param old_column_name: Old column name
-    ::param new_column_name: New column name
+
+    Parameters:
+    - gdf: The GeoDataFrame to rename the column in.
+    - old_column_name: The name of the column to be renamed.
+    - new_column_name: The new name for the column.
+
+    Returns:
+    - The GeoDataFrame with the renamed column.
     """
     updated_gdf = gdf.copy()
     updated_gdf.rename(columns={old_column_name: new_column_name}, inplace=True)
@@ -62,6 +73,7 @@ def determine_file_type(file_path: str) -> str | None:
     """
     LOG.info(f"No DataType given, determining type for {file_path}")
     # Common raster and vector file extensions
+    # TODO: are these all supported e.g. img???
     raster_extensions = [".tif", ".tiff", ".img", ".dem", ".dtm", ".nc"]
     vector_extensions = [".shp", ".geojson", ".gpkg", ".kml", ".gml"]
 

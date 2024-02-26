@@ -8,7 +8,9 @@ from green_paths_2.src.data_fetchers.osm_network_loader import (
     get_available_pyrosm_data_sources,
 )
 from green_paths_2.src.preprocessing.main import preprocessing
-from green_paths_2.src.preprocessing.osm_segmenter import segment_osm_network
+from green_paths_2.src.preprocessing.osm_segmenter import (
+    segment_or_use_cache_osm_network,
+)
 
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 
@@ -50,7 +52,7 @@ def main():
 
     # DATA LOADERS
     fetchers_parser = subparsers.add_parser(
-        "fetch_osm_network", help="Fetch data from different sources."
+        "fetch_osm_network", help="Fetch OSM network pbf from different cities."
     )
 
     fetchers_parser.add_argument(
@@ -110,7 +112,7 @@ def main():
             LOG.info(f"Fetching OSM network. Using area: {args.area}")
             download_and_move_osm_pbf(args.area)
     elif args.action == "segment_osm_network":
-        segment_osm_network(args.filepath, args.name)
+        segment_or_use_cache_osm_network(args.filepath, args.name)
     else:
         # print help if no action is given
         parser.print_help()

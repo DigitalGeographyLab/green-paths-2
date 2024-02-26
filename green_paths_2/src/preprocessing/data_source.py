@@ -19,6 +19,7 @@ class DataSource:
         save_raster_file: Optional[bool] = None,
         original_crs: Optional[str] = None,
         columns_of_interest: Optional[list[str]] = None,
+        custom_processing_function: Optional[str] = None,
         **source_specific_attributes: Any
     ):
         self.name = name
@@ -31,6 +32,7 @@ class DataSource:
         self.columns_of_interest = columns_of_interest
         self.save_raster_file = save_raster_file
         self.source_specific_attributes = source_specific_attributes
+        self.custom_processing_function = custom_processing_function
 
     def get_name(self):
         return self.name
@@ -79,6 +81,12 @@ class DataSource:
 
     def set_columns_of_interest(self, columns_of_interest: list[str]):
         self.columns_of_interest = columns_of_interest
+
+    def get_custom_processing_function(self):
+        return self.custom_processing_function
+
+    def set_custom_processing_function(self, custom_processing_function: str):
+        self.custom_processing_function = custom_processing_function
 
     def get_save_raster_file(self):
         return self.save_raster_file

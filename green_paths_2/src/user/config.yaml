@@ -39,14 +39,14 @@ project_crs: 3879
 
 osm_network:
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/london_osm_network.osm.pbf
-  osm_pbf_file_path: green_paths_2/src/cache/osm/segmented/segmented_network.osm.pbf
+  osm_pbf_file_path: green_paths_2/src/user/lintsi_pieni.osm.pbf
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/helsinki_history_pbf_osm_network.osm.pbf
   original_crs: 4326
   filter_columns: ["id"]
   segment_sampling_points_amount: 5
 
 data_sources:
-  # - name: green_points
+  # - name: gvi
   #   filepath:  /Users/hcroope/omat/GP2/data/greenery_points.gpkg
   #   # data_type: vector
   #   layer_name: Helsinki_4326
@@ -57,14 +57,16 @@ data_sources:
   #   original_crs: 3879
 
   # TODO: this is raster -> do raster stuff (not rasterizing but default raster stuff)
-  - name: air_quality
+  # TODO: test with vector data type -> should crash!?
+  - name: aqi
     filepath: /Users/hcroope/omat/GP2/data/allPollutants_2023-12-15T04/allPollutants_2023-12-15T04.nc
-    # data_type: vector
+    # data_type: raster
     # layer_name: Helsinki_4326
     data_column: Gvi_Mean # mandatory
-    raster_cell_resolution: 20 # optional
+    # raster_cell_resolution: 10 # optional
     # save_raster_file: True # optional
-    original_crs: 3879
+    original_crs: 4326
+    custom_processing_function: convert_aq_nc_to_tif_and_scale_offset
 
   # TODO -> tee validaatioon checkit näistä!
   # - name: noise_helsinki

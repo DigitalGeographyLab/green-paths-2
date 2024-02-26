@@ -168,6 +168,7 @@ def fix_invalid_geometries(gdf: gpd.GeoDataFrame, remove_invalid: bool = False):
     return gdf
 
 
+# TODO: is this needed if we are just using the raster pipeline?
 # def spatial_join_gdfs(
 #     network_gdf: gpd.GeoDataFrame, data_gdf: gpd.GeoDataFrame
 # ) -> gpd.GeoDataFrame:

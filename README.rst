@@ -16,6 +16,10 @@ Green Paths 2
 
 GREEN PATHS 2 IS UNDER CONSTRUCTION!!!
 
+Test running with e.g. make greenpaths2 preprocessing
+
+
+
 TODOS
         preprocessing:
 
