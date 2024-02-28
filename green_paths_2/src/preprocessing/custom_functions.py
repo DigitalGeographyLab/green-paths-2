@@ -64,8 +64,16 @@ def convert_aq_nc_to_tif_and_scale_offset(data_source: dict) -> str:
 
 
 # TODO: edit docstrings etc.
+# TODO: if using interpolation, skip fillna...
+
+# TODO: for some reason 1.0 is no data, i guess it's because of the modelled AQI data specs
+
+
 def convert_raster_nc_to_tif(
-    input_raster_file_path: str, output_tif_filepath: str, original_crs: str | int
+    input_raster_file_path: str,
+    output_tif_filepath: str,
+    original_crs: str | int,
+    fill_na_value: float = 1.0,
 ) -> str:
     """
     Converts a netCDF file to a georeferenced raster file. xarray and rioxarray automatically
@@ -88,14 +96,17 @@ def convert_raster_nc_to_tif(
         # the values are automatically scaled and offset AQI values
         aqi = data["AQI"]
 
+        # Fill NaN values with the specified fill value
+        aqi_filled = aqi.fillna(fill_na_value)
+
         # save AQI to raster (.tif geotiff file recommended)
-        aqi = aqi.rio.set_crs(original_crs)  # "epsg:4326"
+        aqi_filled = aqi_filled.rio.set_crs(original_crs)  # "epsg:4326"
 
         # parse date & time from nc filename and export raster
         # aqi_date_str = aqi_nc_name[:-3][-13:]
         # aqi_tif_name = f"aqi_{aqi_date_str}.tif"
 
-        aqi.rio.to_raster(output_tif_filepath)
+        aqi_filled.rio.to_raster(output_tif_filepath)
 
         return output_tif_filepath
     except Exception as e:
@@ -147,3 +158,72 @@ def fix_aqi_tiff_scale_offset(aqi_filepath: str) -> bool:
         return aqi_raster.crs
     except Exception as e:
         raise ValueError(f"Error in fixing scale and offset for the AQI tif file: {e}")
+
+
+# # TODO: do we want to interpolate?
+
+# def fillna_in_raster(
+# dir: str,
+# aqi_tif_name: str,
+# na_val: float = 1.0,
+# log: Logger = None
+# ) -> bool:
+# """Fills nodata values in a raster by interpolating values from surrounding cells.
+# Value 1.0 is considered as nodata. If no nodata is found with that value, a small offset
+# will be applied, as sometimes the nodata value is slightly higher than 1.0 (assumably
+# due to inaccuracy in netcdf to geotiff conversion).
+
+# Args:
+#     aqi_tif_name: The name of a raster file to be processed (in aqi_cache directory).
+#     na_val: A value that represents nodata in the raster.
+# """
+# # open AQI band from AQI raster file
+# aqi_filepath = dir + aqi_tif_name
+# aqi_raster = rasterio.open(aqi_filepath)
+# aqi_band = aqi_raster.read(1)
+
+# if _has_unscaled_aqi(aqi_raster):
+#     raise ValueError('AQI values are still unscaled')
+
+# na_offsets = [0.0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.1, 0.12]
+# na_thresholds = [na_val + offset for offset in na_offsets]
+
+# for na_threshold in na_thresholds:
+#     nodata_count = np.sum(aqi_band <= na_threshold)
+#     if log:
+#         log.info(f'Nodata threshold: {na_threshold} / nodata count: {nodata_count}')
+#     # check if nodata values can be mapped with the current offset
+#     if nodata_count > 180000:
+#         break
+# if nodata_count < 180000:
+#     if log:
+#         log.info(f'Failed to set nodata values in the AQI tif, nodata count: {nodata_count}')
+
+# # fill nodata in aqi_band using nodata mask
+# aqi_nodata_mask = np.where(aqi_band <= na_threshold, 0, aqi_band)
+# aqi_band_fillna = fill.fillnodata(aqi_band, mask=aqi_nodata_mask)
+
+# # validate AQI values after na fill
+# invalid_count = np.sum(aqi_band_fillna < 1.0)
+
+# if invalid_count > 0:
+#     if log:
+#         log.warning(f'AQI band has {invalid_count} below 1.0 AQI values after na fill')
+
+# # write raster with filled nodata
+# aqi_raster_fillna = rasterio.open(
+#     aqi_filepath,
+#     'w',
+#     driver='GTiff',
+#     height=aqi_raster.shape[0],
+#     width=aqi_raster.shape[1],
+#     count=1,
+#     dtype='float32',
+#     transform=aqi_raster.transform,
+#     crs=aqi_raster.crs
+# )
+
+# aqi_raster_fillna.write(aqi_band_fillna, 1)
+# aqi_raster_fillna.close()
+
+# return True

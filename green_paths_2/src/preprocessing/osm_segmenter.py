@@ -11,6 +11,7 @@ from green_paths_2.src.config import (
     OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION,
 )
 from green_paths_2.src.logging import setup_logger, LoggerColors
+from green_paths_2.src.timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.RED.value)
 
@@ -90,7 +91,8 @@ class NodeCopyHandler(osmium.SimpleHandler):
         self.writer.add_node(n)
 
 
-def segment_or_use_cache_osm_network(osm_source_path: str, name: str = None) -> str:
+@time_logger
+def segment_or_use_cache_osm_network(osm_source_path: str) -> str:
     """
     Segment the OSM network into segments between intersections.
     The name is taken from the source path if not provided.
@@ -109,9 +111,12 @@ def segment_or_use_cache_osm_network(osm_source_path: str, name: str = None) -> 
     network_name_no_extension = os.path.basename(osm_source_path).rsplit(".osm.pbf", 1)[
         0
     ]
-    osm_network_name = (
-        network_name_no_extension + OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION
-    )
+    if not "_segmented" in network_name_no_extension:
+        osm_network_name = (
+            network_name_no_extension + OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION
+        )
+    else:
+        osm_network_name = network_name_no_extension + ".osm.pbf"
 
     # format path from config
     OSM_PROCESSED_NETWORK_PATH = os.path.join(

@@ -19,8 +19,26 @@ LOG = setup_logger(__name__, LoggerColors.PURPLE.value)
 
 
 class UserConfig:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, config_path: str) -> None:
+        self.config_path = config_path
+
+    def parse_config(self):
+        """
+        Parse config file and populate attributes.
+
+        :param config_path: Path to the configuration file.
+        """
+        try:
+            config = self._load_config(self.config_path)
+            self._validate_config(config)
+            self.set_attributes(config)
+            self.set_defaults()
+        # handle possible errors
+        # except FileNotFoundError:
+        #     raise ConfigError(f"Configuration file not found at {config_path}")
+        except yaml.YAMLError:
+            raise ConfigError("Error parsing YAML configuration file.")
+        return self
 
     def _load_config(self, config_path: str) -> dict:
         """
@@ -45,30 +63,12 @@ class UserConfig:
         self.validate_osm_pbf_network_file(config)
         self.validate_data_sources(config)
 
-    def parse_config(self, config_path: str):
-        """
-        Parse config file and populate attributes.
-
-        :param config_path: Path to the configuration file.
-        """
-        try:
-            config = self._load_config(config_path)
-            self._validate_config(config)
-            self.set_attributes(config)
-            self.set_defaults()
-        # handle possible errors
-        # except FileNotFoundError:
-        #     raise ConfigError(f"Configuration file not found at {config_path}")
-        except yaml.YAMLError:
-            raise ConfigError("Error parsing YAML configuration file.")
-        return self
-
     def set_attributes(self, config: dict) -> None:
         """Set valid attributes from the given configuration."""
         for key, value in config.items():
             if isinstance(value, dict):
                 # create a sub-config for nested dictionaries
-                sub_config = UserConfig()
+                sub_config = UserConfig(self.config_path)
                 sub_config.set_attributes(value)
                 setattr(self, key, sub_config)
             # TODO: handle list?

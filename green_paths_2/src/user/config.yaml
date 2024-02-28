@@ -39,27 +39,26 @@ project_crs: 3879
 
 osm_network:
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/london_osm_network.osm.pbf
-  osm_pbf_file_path: green_paths_2/src/user/lintsi_pieni.osm.pbf
+  osm_pbf_file_path: green_paths_2/src/cache/osm/segmented/helsinki_network_segmented.osm.pbf
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/helsinki_history_pbf_osm_network.osm.pbf
   original_crs: 4326
   filter_columns: ["id"]
   segment_sampling_points_amount: 5
 
 data_sources:
-  # - name: gvi
-  #   filepath:  /Users/hcroope/omat/GP2/data/greenery_points.gpkg
-  #   # data_type: vector
-  #   layer_name: Helsinki_4326
-  #   data_column: Gvi_Mean # mandatory
-  #   # data_buffer: 10 # optional, only for vector datas, in meters
-  #   raster_cell_resolution: 20 # optional
-  #   save_raster_file: True # optional
-  #   original_crs: 3879
+  - name: gvi
+    filepath: green_paths_2/src/user/data/greenery_points.gpkg
+    # data_type: vector
+    layer_name: Helsinki_4326
+    data_column: Gvi_Mean # mandatory
+    # data_buffer: 10 # optional, only for vector datas, in meters
+    raster_cell_resolution: 10 # optional
+    # save_raster_file: True # optional
+    original_crs: 3879
 
-  # TODO: this is raster -> do raster stuff (not rasterizing but default raster stuff)
   # TODO: test with vector data type -> should crash!?
   - name: aqi
-    filepath: /Users/hcroope/omat/GP2/data/allPollutants_2023-12-15T04/allPollutants_2023-12-15T04.nc
+    filepath: green_paths_2/src/user/data/allPollutants_2023-12-15T04.nc
     # data_type: raster
     # layer_name: Helsinki_4326
     data_column: Gvi_Mean # mandatory

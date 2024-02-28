@@ -17,6 +17,9 @@ class UserDataHandler:
     def get_data_source_by_name(self, name):
         return self.data_sources.get(name)
 
+    def get_data_source_names(self):
+        return list(self.data_sources.keys())
+
     def set_data_sources(self, data_sources):
         self.data_sources = data_sources
 

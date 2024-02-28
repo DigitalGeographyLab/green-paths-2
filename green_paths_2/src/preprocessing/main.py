@@ -35,6 +35,8 @@ from green_paths_2.src.preprocessing.preprocessing_exceptions import (
     ConfigError,
 )
 from green_paths_2.src.preprocessing.user_config_parser import UserConfig
+from green_paths_2.src.segment_value_store import SegmentValueStore
+from green_paths_2.src.timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 
@@ -43,94 +45,25 @@ LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 # TODO: -> move all methods to a better place!!!
 
 
-def parse_config(config_path: str) -> UserConfig:
-    """
-    Get and parse user configuration file.
-
-    :param config_path: Path to the configuration file.
-    :return: UserConfig object.
-    """
-    user_config = UserConfig()
-    user_config.parse_config(config_path)
-    return user_config
-
-
-# TODO: add this to a new class e.g. ExposureDataManager
-
-# adding values
-# getting geometries from network
-# calculating normalised values
-
-
-# maybe test -> dict could be faster, and then just converting to gdf?
-# maybe do a fast comparison! -> dict vs gdf -> @timelogger?
-
-# def merge_segment_values(
-#     master_segment_values: gpd.GeoDataFrame,
-#     segment_values_current_data: dict,
-#     data_name: str,
-# ) -> gpd.GeoDataFrame:
-
-#     for (
-#         data_name,
-#         data_values,
-#     ) in segment_values_current_data:  # loop_data yields data name and values
-#         # Convert data_values dict to DataFrame for merge
-#         temp_df = pd.DataFrame(list(data_values.items()), columns=["osm_id", data_name])
-#         gdf = gdf.merge(temp_df, on="osm_id", how="left")
-
-
-# TODO: move to better place!
-# def merge_segment_values(
-#     master_segment_values: dict, segment_values_current_data: dict, data_name: str
-# ) -> dict:
+# def parse_config(config_path: str) -> UserConfig:
 #     """
-#     Merge segment values from current data to master segment values.
+#     Get and parse user configuration file.
 
-#     Parameters:
-#     - master_segment_values: The master segment values dictionary.
-#     - segment_values_current_data: The segment values from the current data.
-#     - data_name: The name of the data source.
-
-#     Returns:
-#     - The updated master segment values dictionary.
+#     :param config_path: Path to the configuration file.
+#     :return: UserConfig object.
 #     """
-#     for osm_id, value in segment_values_current_data.items():
-#         if osm_id not in master_segment_values:
-#             master_segment_values[osm_id] = {}
-#         master_segment_values[osm_id][data_name] = value
-#     return master_segment_values
-
-
-# maybe this for converting from dict to gdf:
-# import geopandas as gpd
-# import pandas as pd
-# from shapely.geometry import Point
-
-# # Example nested dict: {123: {'noise_data': 1.5, 'geometry': 'POINT(1 2)'}}
-# nested_dict = {
-#     123: {'noise_data': 1.5, 'air_quality': 2.0, 'geometry': Point(1, 2)},
-#     # Add more entries as needed
-# }
-
-# # Convert nested dict to DataFrame
-# df = pd.DataFrame.from_dict(nested_dict, orient='index')
-
-# # Convert geometry column to GeoSeries
-# geometries = gpd.GeoSeries(df.pop('geometry'))
-
-# # Convert DataFrame to GeoDataFrame
-# gdf = gpd.GeoDataFrame(df, geometry=geometries)
-
-# print(gdf)
+#     user_config = UserConfig()
+#     user_config.parse_config(config_path)
+#     return user_config
 
 
 # TODO: rename
-def preprocessing():
+@time_logger
+def preprocessing_pipeline():
     try:
         LOG.info("Starting preprocessing")
         # parse and validate user configurations
-        user_config = parse_config(USER_CONFIG_PATH)
+        user_config = UserConfig(USER_CONFIG_PATH).parse_config()
 
         # segment OSM network or use existing segmented network from cache
         # if the name matches with the source file name
@@ -151,11 +84,8 @@ def preprocessing():
         data_handler.populate_data_sources(data_sources=user_config.data_sources)
         osm_network_gdf: gpd.GeoDataFrame = network.get_network_gdf()
 
-        # kaikki tää tulis lopuks siirtää esim vector handlerii? -> tms jonnekki muualle!
-        # mainissa tulis olla vaan kutsuja luokkiin ja metodeihin ei itsessään mitään logiikkaa
-        # !!!
-
-        master_segment_values = {}
+        # TODO: if confs -> populate with geometries? or should this be done always?
+        segment_store = SegmentValueStore()
 
         for data_name, data_source in data_handler.data_sources.items():
             data_conf_filepath = data_source.get_filepath()
@@ -163,7 +93,7 @@ def preprocessing():
                 data_conf_filepath
             )
 
-            LOG.info(f"processing datasource: {data_name} ({data_type})")
+            LOG.info(f"Processing datasource: {data_name} ({data_type})")
 
             if data_type == DataTypes.Vector.value:
                 LOG.info(f"Found vector data source")
@@ -187,7 +117,7 @@ def preprocessing():
                     save_raster_file=data_source.get_save_raster_file(),
                 )
 
-                print(segment_values)
+                segment_store.save_segment_values(segment_values, data_name)
 
             elif data_type == DataTypes.Raster.value:
                 LOG.info(f"Found raster data source")
@@ -228,12 +158,22 @@ def preprocessing():
                     raster_file_path=raster_path,
                 )
 
-                print(segment_values)
+                segment_store.save_segment_values(segment_values, data_name)
 
-            LOG.info("Preprocessing working so far roope")
-            # delete current data and free memory
-            del data_source
-            gc.collect()
+        # -1000000034089
+        # -1000000027725
+        # -1000000020694
+
+        all_data_name_keys = data_handler.get_data_source_names()
+        segment_store.save_normalized_values_to_store(all_data_name_keys)
+
+        print(segment_store.get_segment_values("-1000000018889"))
+
+        LOG.info("End of preprocessing pipeline.")
+
+        # delete current data and free memory
+        del data_source
+        gc.collect()
 
     except ConfigDataError as e:
         LOG.error(f"Config error occurred: {e}")

@@ -233,8 +233,6 @@ def calculate_segment_raster_values(
             for pt in row[SEGMENT_SAMPLING_POINTS_KEY]
         ]
 
-        print(values)
-
         # Aggregate the values for the segment
         # round to 2 decimals
         value_for_segment = aggregate_values(

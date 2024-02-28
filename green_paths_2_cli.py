@@ -7,12 +7,17 @@ from green_paths_2.src.data_fetchers.osm_network_loader import (
     download_and_move_osm_pbf,
     get_available_pyrosm_data_sources,
 )
-from green_paths_2.src.preprocessing.main import preprocessing
+from green_paths_2.src.preprocessing.main import preprocessing_pipeline
 from green_paths_2.src.preprocessing.osm_segmenter import (
     segment_or_use_cache_osm_network,
 )
 
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
+
+# NOTE: this is a temporary solution to ignore FutureWarnings from geopandas from pyrosm
+import warnings
+
+warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
 def main():
@@ -96,7 +101,7 @@ def main():
 
     if args.action == "preprocessing":
         LOG.info("Running preprocessing pipeline. \n\n")
-        preprocessing()
+        preprocessing_pipeline()
     elif args.action == "route":
         print("TODO: create routing")
     elif args.action == "fetch_osm_network":
@@ -112,7 +117,7 @@ def main():
             LOG.info(f"Fetching OSM network. Using area: {args.area}")
             download_and_move_osm_pbf(args.area)
     elif args.action == "segment_osm_network":
-        segment_or_use_cache_osm_network(args.filepath, args.name)
+        segment_or_use_cache_osm_network(args.filepath)
     else:
         # print help if no action is given
         parser.print_help()
