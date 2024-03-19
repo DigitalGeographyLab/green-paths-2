@@ -2,6 +2,7 @@
 
 import geopandas as gpd
 from pyrosm import OSM
+import osmium
 
 from green_paths_2.src.config import (
     GENERAL_ID_DEFAULT_KEY,
@@ -58,7 +59,7 @@ class OsmNetworkHandler:
 
     @time_logger
     def convert_network_to_gdf(self) -> None:
-        """TODO"""
+        """Converts the OSM network to a GeoDataFrame."""
         LOG.info("converting OSM network to gdf")
         osm_network = OSM(self.osm_pbf_file)
         # TODO:  -> laita tää ottamaan vaa esim pyöräiltävät tai käveltävät tms.? -> ei vältsii ettei lähe liikaa kamaa pois?
@@ -172,8 +173,8 @@ class OsmNetworkHandler:
 
         self.rename_column(GENERAL_ID_DEFAULT_KEY, OSM_ID_DEFAULT_KEY)
         self.handle_crs(project_crs, original_crs)
-        self.handle_invalid_geometries()
         self.network_filter_by_columns(NETWORK_COLUMNS_TO_KEEP)
         self.handle_invalid_geometries()
+        # self.handle_invalid_geometries()
         self.generate_sampling_points(segment_sampling_points_amount)
         return self.get_network_gdf()

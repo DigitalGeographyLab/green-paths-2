@@ -26,6 +26,8 @@ from green_paths_2.src.preprocessing.raster_operations import (
 )
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.config import (
+    RASTER_FILE_SUFFIX,
+    REPROJECTED_RASTER_FILE_SUFFIX,
     USER_CONFIG_PATH,
 )
 from green_paths_2.src.preprocessing.data_types import DataTypes
@@ -117,6 +119,9 @@ def preprocessing_pipeline():
                     save_raster_file=data_source.get_save_raster_file(),
                 )
 
+                LOG.debug(f"network crs: {osm_network_gdf.crs}")
+                LOG.debug(f"vector data crs: {cleaned_vector_gdf.crs}")
+
                 segment_store.save_segment_values(segment_values, data_name)
 
             elif data_type == DataTypes.Raster.value:
@@ -137,21 +142,21 @@ def preprocessing_pipeline():
                     LOG.info(
                         f"Raster not in project crs. Reprojecting {raster_path} to project crs: {user_config.project_crs}"
                     )
-                    # TODO: confeihin
-                    reprojected_filepath = raster_path.replace(
-                        ".tif", "_reprojected.tif"
+
+                    reprojected_raster_filepath = raster_path.replace(
+                        RASTER_FILE_SUFFIX, REPROJECTED_RASTER_FILE_SUFFIX
                     )
 
                     reproject_raster_to_crs(
                         input_raster_filepath=raster_path,
-                        output_raster_filepath=reprojected_filepath,
+                        output_raster_filepath=reprojected_raster_filepath,
                         target_crs=user_config.project_crs,
                         new_raster_resolution=data_source.get_raster_cell_resolution(),
                     )
 
                 # use reprojected file if it was created or exists
-                if os.path.exists(reprojected_filepath):
-                    raster_path = reprojected_filepath
+                if os.path.exists(reprojected_raster_filepath):
+                    raster_path = reprojected_raster_filepath
 
                 segment_values = calculate_segment_raster_values_from_raster_file(
                     network_gdf=osm_network_gdf,
@@ -160,14 +165,35 @@ def preprocessing_pipeline():
 
                 segment_store.save_segment_values(segment_values, data_name)
 
-        # -1000000034089
-        # -1000000027725
-        # -1000000020694
+        # all_data_name_keys = data_handler.get_data_source_names()
 
-        all_data_name_keys = data_handler.get_data_source_names()
-        segment_store.save_normalized_values_to_store(all_data_name_keys)
+        all_data_sources = data_handler.get_data_sources()
 
-        print(segment_store.get_segment_values("-1000000018889"))
+        all_osm_ids = segment_store.get_all_segment_osmids()
+
+        if not all_osm_ids or len(all_osm_ids) == 0:
+            raise ConfigDataError(
+                "No data was found from the datasources for any of the segments."
+            )
+
+        # TODO: säädä checkeri joka kattoo kuinka suuri osa datasta / teistä sai arvoja!
+
+        # TODO: ehkä tähän pitäis ottaa joku checki jos on tullu null arvoja teiltä?
+        # eli poistaa jos on vaiks -999 tms.?
+
+        # check if user defined min and max values are valid
+        segment_store.validate_user_min_max_values(all_data_sources)
+
+        # save normalized values to the master segment store
+        segment_store.save_normalized_values_to_store(all_data_sources)
+
+        # use some osmid which is found from data
+        some_test_osmid = list(segment_store.get_all_segment_osmids())[0]
+        some_test_osmid_2 = list(segment_store.get_all_segment_osmids())[-1]
+
+        # print(segment_store.get_segment_values(all_osm_ids))
+        print(segment_store.get_segment_values(some_test_osmid))
+        print(segment_store.get_segment_values(some_test_osmid_2))
 
         LOG.info("End of preprocessing pipeline.")
 

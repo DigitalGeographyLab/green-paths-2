@@ -5,7 +5,7 @@ import geopandas as gpd
 
 from green_paths_2.src.logging import setup_logger, LoggerColors
 
-LOG = setup_logger(__name__, LoggerColors.RED.value)
+LOG = setup_logger(__name__, LoggerColors.CYAN.value)
 
 
 def filter_gdf_by_columns_if_found(
@@ -64,6 +64,7 @@ def rename_gdf_column(
 def determine_file_type(file_path: str) -> str | None:
     """
     Determine DataType from file extension.
+    This is not a foolproof method, but it should work for most cases.
 
     Parameters:
     - file_path: Path to the file as a string.
@@ -71,7 +72,7 @@ def determine_file_type(file_path: str) -> str | None:
     Returns:
     - A string indicating the file type ('raster', 'vector', or 'unknown').
     """
-    LOG.info(f"No DataType given, determining type for {file_path}")
+    LOG.info(f"Determining data_type for {file_path}")
     # Common raster and vector file extensions
     # TODO: are these all supported e.g. img???
     raster_extensions = [".tif", ".tiff", ".img", ".dem", ".dtm", ".nc"]

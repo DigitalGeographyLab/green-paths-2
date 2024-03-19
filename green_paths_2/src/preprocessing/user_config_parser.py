@@ -19,8 +19,19 @@ LOG = setup_logger(__name__, LoggerColors.PURPLE.value)
 
 
 class UserConfig:
-    def __init__(self, config_path: str) -> None:
+    def __init__(self, config_path: str, skip_validation: bool = False) -> None:
+        """Initialize UserConfig object.
+
+        Parameters
+        ----------
+        config_path : str
+            Path to the configuration file.
+        skip_validation : bool
+            Skip validation of the configuration file. Default is False.
+            Should be used only for testing purposes and in Describer.
+        """
         self.config_path = config_path
+        self.skip_validation = skip_validation
 
     def parse_config(self):
         """
@@ -30,14 +41,18 @@ class UserConfig:
         """
         try:
             config = self._load_config(self.config_path)
-            self._validate_config(config)
+            if not self.skip_validation:
+                self.validate_config(config)
             self.set_attributes(config)
             self.set_defaults()
-        # handle possible errors
-        # except FileNotFoundError:
-        #     raise ConfigError(f"Configuration file not found at {config_path}")
+        except FileNotFoundError:
+            LOG.error(f"Configuration file not found at {self.config_path}. Exiting!")
+            exit(1)
         except yaml.YAMLError:
-            raise ConfigError("Error parsing YAML configuration file.")
+            LOG.error(
+                "Error parsing YAML configuration file, please check the formatting of the file. Use e.g. yamllint or some online tool to check the file. Exiting!"
+            )
+            exit(1)
         return self
 
     def _load_config(self, config_path: str) -> dict:
@@ -53,7 +68,7 @@ class UserConfig:
             config = yaml.safe_load(file)
         return config
 
-    def _validate_config(self, config: dict) -> None:
+    def validate_config(self, config: dict) -> None:
         """
         Validate the user configuration.
         :param config: A dictionary containing the user configuration.
@@ -132,12 +147,15 @@ class UserConfig:
         """
         data_sources_config = config.get("data_sources", [])
         for data in data_sources_config:
+            # init all the values using enum names
             name = data.get(DataSourceModel.Name.value)
             filepath = data.get(DataSourceModel.Filepath.value)
-            data_type = data.get(DataSourceModel.Datatype.value) or determine_file_type(
-                filepath
-            )
+            data_type = data.get(DataSourceModel.Datatype.value)
             data_column = data.get(DataSourceModel.Datacolumn.value)
+            data_buffer = data.get(DataSourceModel.DataBuffer.value)
+            min_data_value = data.get(DataSourceModel.MinDataValue.value)
+            max_data_value = data.get(DataSourceModel.MaxDataValue.value)
+            good_exposure = data.get(DataSourceModel.GoodExposure.value)
             raster_cell_resolution = data.get(
                 DataSourceModel.Rastercellresolution.value
             )
@@ -145,26 +163,113 @@ class UserConfig:
             columns_of_interest = data.get(DataSourceModel.Columnsofinterest.value)
             save_raster_file = data.get(DataSourceModel.Saverasterfile.value)
 
-            # validate optional data source attributes if provided
-            # skip validating those optional attributes which are not provided
-            if data_column and not isinstance(data_column, str):
+            # see if given dataType is what expected
+            determined_data_type = determine_file_type(filepath)
+            # print heavy errors if the data type is not what expected
+            # we don't want to crash though because the determined data type might not be correct
+            if data_type and determined_data_type and data_type != determined_data_type:
+                LOG.warning("\n")
+                LOG.warning("! ! !")
+                LOG.warning(
+                    "Data type in config file does not match determined file extension."
+                )
+                LOG.warning("IF THE DATATYPE IS WRONG, IT WILL CAUSE ERRORS LATER ON.")
+                LOG.warning("! ! !")
+                LOG.warning("\n")
+
+            # if data type not given, use the determined
+            if not data_type:
+                data_type = determined_data_type
+
+            # data name
+            if not name or not isinstance(name, str):
+                raise ConfigDataError("Invalid or missing data name configuration.")
+
+            # filepath
+            if not filepath or not os.path.exists(filepath):
+                raise ConfigDataError(f"Invalid or missing filepath configuration.")
+
+            #  data type, mandatory (but if missing, try to determine from file extension)
+            if data_type not in [dt.value for dt in DataTypes]:
                 raise ConfigDataError(
-                    "Invalid data column configuration. Should be string. This optional attribute can be left empty."
+                    f"Invalid or not supported datatype configuration."
                 )
 
-            if raster_cell_resolution and not isinstance(raster_cell_resolution, int):
+            # data column for vector data, mandatory
+            if data_type == DataTypes.Vector.value and not data_column:
                 raise ConfigDataError(
-                    "Invalid raster cell resolution configuration. Should be integer. This optional attribute can be left empty."
+                    "Invalid or missing data column configuration for vector data."
                 )
 
+            # data column for raster data, optional
+            if data_column == DataTypes.Raster.value and (
+                data_column and not isinstance(data_column, str)
+            ):
+                raise ConfigDataError(
+                    "Invalid data column configuration. Should be string. This optional attribute can be left empty. If provided, it should be string."
+                )
+
+            # data buffer, optional
+            if data_buffer and not isinstance(data_buffer, int):
+                raise ConfigDataError(
+                    "Invalid data buffer configuration. Should be integer. This optional attribute can be left empty, if provided, it should be integer."
+                )
+
+            # min normalized, mandatory
+            if min_data_value is None or (not isinstance(min_data_value, (int, float))):
+                raise ConfigDataError(
+                    "Invalid min normalized configuration. Should be float or integer."
+                )
+
+            # max normalized, mandatory
+            if not max_data_value or not (
+                isinstance(max_data_value, int) or isinstance(max_data_value, float)
+            ):
+                raise ConfigDataError(
+                    "Invalid max normalized configuration. Should be float or integer."
+                )
+
+            if min_data_value >= max_data_value:
+                raise ConfigDataError(
+                    "Invalid min normalized and max normalized configuration. Max normalized should be greater than min normalized."
+                )
+
+            # good exposure, mandatory
+            if not good_exposure and not isinstance(good_exposure, bool):
+                raise ConfigDataError(
+                    "Invalid or missing good exposure configuration. Should be boolean."
+                )
+
+            # raster cell resolution, mandatory for vector data, optional for raster data
+
+            # for vector data, mandatory
+            if data_type == DataTypes.Vector.value and (
+                not raster_cell_resolution
+                or not isinstance(raster_cell_resolution, int)
+            ):
+                raise ConfigDataError(
+                    "Invalid or missing raster cell resolution configuration for vector data. Should be integer. Mandatory for vector data. if provided, it should be integer."
+                )
+
+            # for raster data, optional
+            if (
+                data_type == DataTypes.Raster.value
+                and raster_cell_resolution
+                and not isinstance(raster_cell_resolution, int)
+            ):
+                raise ConfigDataError(
+                    "Invalid raster cell resolution configuration. Should be integer. Optional for raster data."
+                )
+
+            # original crs, optional
             if original_crs and not (
                 isinstance(original_crs, int) or isinstance(original_crs, str)
             ):
                 raise ConfigDataError(
-                    "Invalid original crs configuration. Should be integer or string. This optional attribute can be left empty."
+                    "Invalid original crs configuration. Should be integer or string. This optional attribute can be left empty. If provided, it should be integer or string."
                 )
 
-            # test if columns of interest is list of strings
+            # columns of interest, optional
             if (
                 columns_of_interest and not (isinstance(columns_of_interest, list))
             ) or (
@@ -172,17 +277,11 @@ class UserConfig:
                 and not all(isinstance(column, str) for column in columns_of_interest)
             ):
                 raise ConfigDataError(
-                    "Invalid columns of interest configuration. Should be list of strings. This optional attribute can be left empty."
+                    "Invalid columns of interest configuration. Should be list of strings. This optional attribute can be left empty. If provided, it should be list of strings."
                 )
 
+            # save raster file, optional
             if save_raster_file and not isinstance(save_raster_file, bool):
                 raise ConfigDataError(
-                    "Invalid save raster file configuration. Should be boolean. This optional attribute can be left empty."
+                    "Invalid save raster file configuration. Should be boolean. This optional attribute can be left empty. If provided, it should be boolean."
                 )
-
-            if (
-                not name
-                or not filepath
-                or data_type not in [dt.value for dt in DataTypes]
-            ):
-                raise ConfigDataError("Invalid data source configuration.")

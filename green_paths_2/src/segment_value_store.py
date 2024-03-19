@@ -5,6 +5,7 @@ import geopandas as gpd
 from green_paths_2.src.config import SEGMENT_VALUES_ROUND_DECIMALS
 
 from green_paths_2.src.logging import setup_logger, LoggerColors
+from green_paths_2.src.preprocessing.data_source import DataSource
 
 
 LOG = setup_logger(__name__, LoggerColors.RED.value)
@@ -66,7 +67,23 @@ class SegmentValueStore:
         """Populate master segment GeoDataFrame with geometries from PBF file."""
         pass
 
-    def save_normalized_values_to_store(self, data_keys: list[str]) -> list[str]:
+    def validate_user_min_max_values(self, data_sources: list[DataSource]) -> None:
+        """Validate user defined min and max values."""
+        values_not_in_range = []
+        for data_key, data_source in data_sources.items():
+            for osm_id, data in self.master_segment_store.items():
+                if data_key in data:
+                    if (
+                        data[data_key] < data_source.min_data_value
+                        or data[data_key] > data_source.max_data_value
+                    ):
+                        values_not_in_range.append(osm_id, data[data_key])
+        if values_not_in_range:
+            LOG.warning(
+                f"WARNING: {len(values_not_in_range)} values are not within the user defined min and max values. Values: {values_not_in_range}. They will be fitted to the user defined min and max values."
+            )
+
+    def save_normalized_values_to_store(self, data_sources) -> list[str]:
         """
         Save normalized values to the master segment store.
 
@@ -77,33 +94,67 @@ class SegmentValueStore:
         - List of normalized data keys.
         """
         normalized_data_keys = []
-        for data_key in data_keys:
+        for data_key, data_source in data_sources.items():
             normalized_data_key = f"{data_key}_normalized"
-            normalized_values = self.calculate_normalised_values(data_key)
+            normalized_values = self.calculate_normalised_values(
+                data_key,
+                data_source.good_exposure,
+                data_source.min_data_value,
+                data_source.max_data_value,
+            )
             self.save_segment_values(normalized_values, normalized_data_key)
             normalized_data_keys.append(normalized_data_key)
         return normalized_data_keys
 
-    def calculate_normalised_values(self, data_key: str) -> dict[str, float]:
+    def calculate_normalised_values(
+        self,
+        data_key: str,
+        data_good_exposure: bool,
+        min_data_value: float | int,
+        max_data_value: float | int,
+    ) -> dict[str, float]:
         """
         Calculate normalised values for each segment.
 
         Parameters:
         - data_key: The key of the data source in the segment store.
+        - data_good_exposure: TODO
 
         Returns:
         - Dictionary with the OSM IDs as keys and the normalised values as values.
         """
-        meta_data = self.get_data_info_from_segment_store(data_key)
-        min_val, max_val = meta_data["min"], meta_data["max"]
-
+        # meta_data = self.get_data_info_from_segment_store(data_key)
+        # min_val, max_val = meta_data["min"], meta_data["max"]
         normalized_values = {}
 
         # Iterate through each segment in the master segment store
         for osm_id, data in self.master_segment_store.items():
             if data_key in data:
+
+                # make sure that the data is within the min and max values
+                if data[data_key] < min_data_value:
+                    exposure_data = min_data_value
+                elif data[data_key] > max_data_value:
+                    exposure_data = max_data_value
+                else:
+                    exposure_data = data[data_key]
+
                 # Calculate the normalized value, use min-max formula
-                normalized_value = (data[data_key] - min_val) / (max_val - min_val)
+                normalized_value = (exposure_data - min_data_value) / (
+                    max_data_value - min_data_value
+                )
+
+                # Ensure the normalized value is within 0-1
+                normalized_value = max(0, min(normalized_value, 1))
+
+                # if data is good exposure, set to normalized value to negative
+                # good exposure should make the cost factor smaller (Dijkstra's algorithm)
+                # e.g. cheaper road to take in routing
+                # negative exposures should be avoided (e.g. noise, air pollution, etc.)
+                # by having the cost factor positive, which will increase the cost of the road
+                if data_good_exposure:
+                    normalized_value = -normalized_value
+
                 # Round and store to store
                 normalized_values[osm_id] = round(
                     normalized_value, SEGMENT_VALUES_ROUND_DECIMALS

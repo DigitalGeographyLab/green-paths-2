@@ -13,6 +13,7 @@ xarray = "^2024.2.0"
 rioxarray = "^0.15.1"
 netcdf4 = "^1.6.5"
 scipy = "^1.12.0"
+ruamel-yaml = "^0.18.6"
 
 
 [build-system]

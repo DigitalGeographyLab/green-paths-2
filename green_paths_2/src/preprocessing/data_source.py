@@ -12,7 +12,10 @@ class DataSource:
         self,
         name: str,
         filepath: str,
-        data_column: str,
+        good_exposure: bool,
+        min_data_value: float,
+        max_data_value: float,
+        data_column: Optional[str] = None,
         data_buffer: Optional[int] = None,
         raster_cell_resolution: Optional[int] = None,
         data_type: Optional[str] = None,
@@ -24,6 +27,9 @@ class DataSource:
     ):
         self.name = name
         self.filepath = filepath
+        self.good_exposure = good_exposure
+        self.min_data_value = min_data_value
+        self.max_data_value = max_data_value
         self.data_type = data_type
         self.data_column = data_column
         self.data_buffer = data_buffer
@@ -45,6 +51,24 @@ class DataSource:
 
     def set_filepath(self, filepath: str):
         self.filepath = filepath
+
+    def get_good_exposure(self):
+        return self.good_exposure
+
+    def set_good_exposure(self, good_exposure: bool):
+        self.good_exposure = good_exposure
+
+    def get_min_data_value(self):
+        return self.min_data_value
+
+    def set_min_data_value(self, min_data_value: float):
+        self.min_data_value = min_data_value
+
+    def get_max_data_value(self):
+        return self.max_data_value
+
+    def set_max_data_value(self, max_data_value: float):
+        self.max_data_value = max_data_value
 
     def get_data_type(self):
         return self.data_type

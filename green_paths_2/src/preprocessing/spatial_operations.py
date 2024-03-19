@@ -1,6 +1,7 @@
 """ Spatial operations for GeoDataFrames. """
 
 import geopandas as gpd
+import rasterio
 import shapely
 from green_paths_2.src.preprocessing.data_source import DataSource
 from green_paths_2.src.data_utilities import rename_gdf_column
@@ -11,7 +12,7 @@ from shapely import wkt
 from pyproj import CRS
 
 import geopandas as gpd
-from shapely.geometry import LineString
+from shapely.geometry import LineString, box
 from shapely.ops import split
 
 
@@ -167,6 +168,49 @@ def fix_invalid_geometries(gdf: gpd.GeoDataFrame, remove_invalid: bool = False):
 
     return gdf
 
+
+def check_if_vector_data_and_network_extends_overlap(
+    data_gdf: gpd.GeoDataFrame, network_gdf: gpd.GeoDataFrame
+) -> bool:
+    """
+    Check if the extent of the vector and the network data overlap.
+
+    Parameters:
+    - vector_extent: The extent of the vector data.
+    - network_gdf: The GeoDataFrame containing the road network data.
+
+    Returns:
+    - True if the extent of the vector and the network data overlap, False otherwise.
+    """
+    data_extent = gpd.GeoDataFrame(
+        {"geometry": [data_gdf.unary_union]}, crs=data_gdf.crs
+    )
+    return data_extent.intersects(network_gdf.unary_union).any()
+
+
+def check_if_raster_and_network_extends_overlap(
+    raster_data_filepath: str, network_gdf: gpd.GeoDataFrame
+) -> bool:
+    """
+    Check if the extent of the raster and the network data overlap.
+
+    Parameters:
+    - raster_extent: The extent of the raster data.
+    - network_gdf: The GeoDataFrame containing the road network data.
+
+    Returns:
+    - True if the extent of the raster and the network data overlap, False otherwise.
+    """
+
+    # Open raster and get bounds
+    with rasterio.open(raster_data_filepath) as src:
+        bounds = src.bounds
+        raster_extent = gpd.GeoDataFrame({"geometry": [box(*bounds)]}, crs=src.crs)
+
+    return raster_extent.intersects(network_gdf.unary_union).any()
+
+
+# TODO: old, what is this???
 
 # TODO: is this needed if we are just using the raster pipeline?
 # def spatial_join_gdfs(

@@ -39,33 +39,59 @@ project_crs: 3879
 
 osm_network:
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/london_osm_network.osm.pbf
-  osm_pbf_file_path: green_paths_2/src/cache/osm/segmented/helsinki_network_segmented.osm.pbf
+  # osm_pbf_file_path: green_paths_2/src/cache/osm/segmented/helsinki_network_segmented.osm.pbf
+  # osm_pbf_file_path: green_paths_2/src/cache/osm/hki_metropolitan_ish.osm.pbf
+
+  # TODO: test whith this! 
+  # helsinki metropolitan area from pyrosm
+  # osm_pbf_file_path: green_paths_2/src/cache/osm/helsinki_network.osm.pbf
+
+  # osm_pbf_file_path: /Users/hcroope/omat/GP2/data/joteborgi.oms.pbf
+
+  osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/green_paths_2/src/cache/osm/lintsi_pieni.osm.pbf
+  # osm_pbf_file_path:   /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/green_paths_2/src/cache/osm/joteborg_smaller.osm.pbf
+  
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/helsinki_history_pbf_osm_network.osm.pbf
   original_crs: 4326
   filter_columns: ["id"]
   segment_sampling_points_amount: 5
 
 data_sources:
+
+  # - name: shade
+  #   filepath: /Users/hcroope/omat/GP2/data/robertin_shadow.tif
+  #   data_type: raster
+  #   min_data_value: 0 # mandatory 
+  #   max_data_value: 0.3333333432674408 # mandatory
+  #   good_exposure: True # mandatory
+
   - name: gvi
     filepath: green_paths_2/src/user/data/greenery_points.gpkg
     # data_type: vector
     layer_name: Helsinki_4326
     data_column: Gvi_Mean # mandatory
+    min_data_value: 0.0096875 # mandatory
+    max_data_value: 86.28875 # mandatory
+    good_exposure: True # mandatory
     # data_buffer: 10 # optional, only for vector datas, in meters
-    raster_cell_resolution: 10 # optional
+    raster_cell_resolution: 10 # mandatory
     # save_raster_file: True # optional
     original_crs: 3879
 
   # TODO: test with vector data type -> should crash!?
   - name: aqi
     filepath: green_paths_2/src/user/data/allPollutants_2023-12-15T04.nc
-    # data_type: raster
+    data_type: raster
     # layer_name: Helsinki_4326
     data_column: Gvi_Mean # mandatory
-    # raster_cell_resolution: 10 # optional
+    min_data_value: 0 # mandatory
+    max_data_value: 5 # mandatory
+    good_exposure: False # mandatory
+    raster_cell_resolution: 10 # optional for raster
     # save_raster_file: True # optional
     original_crs: 4326
     custom_processing_function: convert_aq_nc_to_tif_and_scale_offset
+
 
   # TODO -> tee validaatioon checkit näistä!
   # - name: noise_helsinki

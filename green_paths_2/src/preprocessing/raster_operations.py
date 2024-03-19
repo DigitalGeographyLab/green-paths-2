@@ -6,6 +6,7 @@ import numpy as np
 import rasterio
 from rasterio.features import rasterize
 from rasterio.transform import from_origin
+from shapely.geometry import box
 
 import rasterio
 from rasterio.enums import Resampling
@@ -341,3 +342,28 @@ def calculate_segment_raster_values_from_raster_file(
 # TODO:
 # kato kaikki kommentit ja koodi ja nimeämiset ja folderit jne!
 # folderi custom functions? Testaa muillakin rastereil mihin ei tarvi tehdä custom processingii
+
+
+def describe_raster_data(filepath: str) -> tuple[float, float, int]:
+    """
+    Describe the raster data.
+
+    Parameters:
+    - filepath: Path to the raster file.
+
+    Returns:
+    - min_value: Minimum value in the raster.
+    - max_value: Maximum value in the raster.
+    - count: Count of non-NaN values in the raster.
+    """
+    with rasterio.open(filepath) as src:
+        # read only 1st band
+        array = src.read(1)
+        crs = src.crs
+        min_value = array.min()
+        max_value = array.max()
+        # count non-nan values
+        non_nan_count = np.count_nonzero(~np.isnan(array))
+        # count nan-values
+        nan_count = np.count_nonzero(np.isnan(array))
+    return crs, min_value, max_value, non_nan_count, nan_count

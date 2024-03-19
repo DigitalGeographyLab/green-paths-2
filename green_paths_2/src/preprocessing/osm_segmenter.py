@@ -119,7 +119,7 @@ def segment_or_use_cache_osm_network(osm_source_path: str) -> str:
         osm_network_name = network_name_no_extension + ".osm.pbf"
 
     # format path from config
-    OSM_PROCESSED_NETWORK_PATH = os.path.join(
+    OSM_SEGMENTED_NETWORK_PATH = os.path.join(
         DATA_CACHE_DIR_PATH,
         OSM_CACHE_DIR_NAME,
         OSM_CACHE_SEGMENTED_DIR_NAME,
@@ -127,16 +127,16 @@ def segment_or_use_cache_osm_network(osm_source_path: str) -> str:
     )
 
     LOG.info(
-        f"Checking cache for segmented OSM network from {OSM_PROCESSED_NETWORK_PATH}"
+        f"Checking cache for segmented OSM network from {OSM_SEGMENTED_NETWORK_PATH}"
     )
 
-    if os.path.exists(OSM_PROCESSED_NETWORK_PATH):
+    if os.path.exists(OSM_SEGMENTED_NETWORK_PATH):
         LOG.info(f"Found segmented OSM network from cache. Skipping segmentation.")
-        return OSM_PROCESSED_NETWORK_PATH
+        return OSM_SEGMENTED_NETWORK_PATH
 
-    LOG.info(f"Segmenting the OSM network to path: {OSM_PROCESSED_NETWORK_PATH}")
+    LOG.info(f"Segmenting the OSM network to path: {OSM_SEGMENTED_NETWORK_PATH}")
     # Initialize writer for the new OSM PBF file
-    writer = osmium.SimpleWriter(OSM_PROCESSED_NETWORK_PATH)
+    writer = osmium.SimpleWriter(OSM_SEGMENTED_NETWORK_PATH)
     node_handler = NodeCopyHandler(writer)
     # Process the OSM file with the node handler
     node_handler.apply_file(osm_source_path)
@@ -168,4 +168,48 @@ def segment_or_use_cache_osm_network(osm_source_path: str) -> str:
         # write the way to the new OSM PBF file
         writer.add_way(way)
     writer.close()
+
+    # simple check that osm.pbf is valid
+    # TODO: commented the validity check out...
+    # if not osm_pbf_is_valid(OSM_SEGMENTED_NETWORK_PATH, max_ways=1000):
+    #     raise ValueError(
+    #         f"Segmented OSM network file {OSM_SEGMENTED_NETWORK_PATH} is not valid."
+    #     )
     LOG.info(f"Segmenting the OSM network finished.")
+
+
+# OSM PBF SIMPLE VALIDATION
+
+# TODO: remove this?
+
+
+class OSMValidationHandler(osmium.SimpleHandler):
+    def __init__(self, max_ways=1000):
+        super().__init__()
+        self.max_ways = max_ways
+        self.num_ways_processed = 0
+        self.is_valid = True
+
+    def way(self, w):
+        if self.num_ways_processed >= self.max_ways:
+            # maximum number of ways reached
+            return
+
+        if not self.is_way_valid(w):
+            self.is_valid = False
+            return
+
+        self.num_ways_processed += 1
+
+    def is_way_valid(self, way):
+        return "osm_id" in way.tags and "parent_id" in way.tags and len(way.nodes) >= 2
+
+    def report(self):
+        print(f"OSM PBF validator processed {self.num_ways_processed} ways.")
+
+
+def osm_pbf_is_valid(filepath: str, max_ways=1000) -> bool:
+    handler = OSMValidationHandler(max_ways=max_ways)
+    handler.apply_file(filepath, locations=False)
+    handler.report()
+    return handler.is_valid

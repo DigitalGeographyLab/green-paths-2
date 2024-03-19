@@ -2,10 +2,15 @@
 
 import argparse
 
+from green_paths_2.src.cache_cleaner import clear_cache_dirs
+from green_paths_2.src.config_validator import validate_user_config
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.data_fetchers.osm_network_loader import (
     download_and_move_osm_pbf,
     get_available_pyrosm_data_sources,
+)
+from green_paths_2.src.preprocessing.data_descriptor import (
+    DataDescriptor,
 )
 from green_paths_2.src.preprocessing.main import preprocessing_pipeline
 from green_paths_2.src.preprocessing.osm_segmenter import (
@@ -97,9 +102,45 @@ def main():
         required=False,
     )
 
+    # Subparser for validation module
+    validation_parsers = subparsers.add_parser(
+        "validate", help="Validate user configuration"
+    )
+
+    # Subparser for descriptor module
+    description_parsers = subparsers.add_parser(
+        "describe", help="Validate user configuration"
+    )
+
+    description_parsers.add_argument(
+        "-sf",
+        "--save_to_file",
+        help="If flag is given, save the description to a txt file to cache folder. Otherwise print to console.",
+        action="store_true",
+    )
+
+    # Subparser for descriptor module
+    cache_parsers = subparsers.add_parser(
+        "clear_cache", help="Clear cache directories based on the given folder names."
+    )
+
+    cache_parsers.add_argument(
+        "-d",
+        "--dirs",
+        help="Specify one or more folder names. Use all to empty all cache folders. Example: -d osm raster visualizations. See possible folder names from the cache folder under src/cache.",
+        nargs="+",
+        required=True,
+    )
+
     args = parser.parse_args()
 
-    if args.action == "preprocessing":
+    if args.action == "validate":
+        validate_user_config()
+    elif args.action == "describe":
+        DataDescriptor().describe(args.save_to_file)
+    elif args.action == "clear_cache":
+        clear_cache_dirs(args.dirs)
+    elif args.action == "preprocessing":
         LOG.info("Running preprocessing pipeline. \n\n")
         preprocessing_pipeline()
     elif args.action == "route":

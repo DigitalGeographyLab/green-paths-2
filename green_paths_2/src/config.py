@@ -23,10 +23,21 @@ OSM_CACHE_SEGMENTED_DIR_NAME: str = "segmented"
 
 OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION: str = "_segmented.osm.pbf"
 
+# DESCRIPTOR FILENAME
+DESCRIPTOR_FILE_NAME = "data_description.txt"
+
 # DATA CACHE DIR NAME
 DATA_DIR_NAME = "data"
 
 RASTER_DIR_NAME = "raster"
+
+LOGS_DIR_NAME = "logs"
+
+# RASTER FILE NAMES
+
+RASTER_FILE_SUFFIX = ".tif"
+
+REPROJECTED_RASTER_FILE_SUFFIX = "_reprojected.tif"
 
 # TODO: are these used?
 
