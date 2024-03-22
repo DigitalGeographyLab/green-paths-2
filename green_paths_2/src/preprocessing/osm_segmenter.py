@@ -10,6 +10,7 @@ from green_paths_2.src.config import (
     OSM_CACHE_SEGMENTED_DIR_NAME,
     OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION,
 )
+from green_paths_2.src.data_utilities import construct_osm_segmented_network_name
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.timer import time_logger
 
@@ -106,37 +107,15 @@ def segment_or_use_cache_osm_network(osm_source_path: str) -> str:
     """
     LOG.info(f"Starting to segment the OSM network.")
     LOG.info(f"Using file from path: {osm_source_path}")
-    # use user provided name or
-    # get 'filename' from the path
-    network_name_no_extension = os.path.basename(osm_source_path).rsplit(".osm.pbf", 1)[
-        0
-    ]
-    if not "_segmented" in network_name_no_extension:
-        osm_network_name = (
-            network_name_no_extension + OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION
-        )
-    else:
-        osm_network_name = network_name_no_extension + ".osm.pbf"
+    osm_segmented_network_path = construct_osm_segmented_network_name(osm_source_path)
 
-    # format path from config
-    OSM_SEGMENTED_NETWORK_PATH = os.path.join(
-        DATA_CACHE_DIR_PATH,
-        OSM_CACHE_DIR_NAME,
-        OSM_CACHE_SEGMENTED_DIR_NAME,
-        osm_network_name,
-    )
-
-    LOG.info(
-        f"Checking cache for segmented OSM network from {OSM_SEGMENTED_NETWORK_PATH}"
-    )
-
-    if os.path.exists(OSM_SEGMENTED_NETWORK_PATH):
+    if os.path.exists(osm_segmented_network_path):
         LOG.info(f"Found segmented OSM network from cache. Skipping segmentation.")
-        return OSM_SEGMENTED_NETWORK_PATH
+        return osm_segmented_network_path
 
-    LOG.info(f"Segmenting the OSM network to path: {OSM_SEGMENTED_NETWORK_PATH}")
+    LOG.info(f"Segmenting the OSM network to path: {osm_segmented_network_path}")
     # Initialize writer for the new OSM PBF file
-    writer = osmium.SimpleWriter(OSM_SEGMENTED_NETWORK_PATH)
+    writer = osmium.SimpleWriter(osm_segmented_network_path)
     node_handler = NodeCopyHandler(writer)
     # Process the OSM file with the node handler
     node_handler.apply_file(osm_source_path)
@@ -152,6 +131,9 @@ def segment_or_use_cache_osm_network(osm_source_path: str) -> str:
 
     for i, segment in enumerate(creator.segments):
         unique_new_id = generate_new_id(i)
+
+        segment["tags"]["osm_id"] = str(unique_new_id)
+
         way = osmium.osm.mutable.Way(
             segment,
             id=unique_new_id,
@@ -176,6 +158,7 @@ def segment_or_use_cache_osm_network(osm_source_path: str) -> str:
     #         f"Segmented OSM network file {OSM_SEGMENTED_NETWORK_PATH} is not valid."
     #     )
     LOG.info(f"Segmenting the OSM network finished.")
+    return osm_segmented_network_path
 
 
 # OSM PBF SIMPLE VALIDATION

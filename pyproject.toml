@@ -14,6 +14,7 @@ rioxarray = "^0.15.1"
 netcdf4 = "^1.6.5"
 scipy = "^1.12.0"
 ruamel-yaml = "^0.18.6"
+r5py = {git = "https://github.com/DigitalGeographyLab/r5py_gp2.git"}
 
 
 [build-system]

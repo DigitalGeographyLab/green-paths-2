@@ -3,6 +3,16 @@
 import os
 import numpy as np
 
+# GREEN PATSH 2 PATCHED R5 JAR FILE PATH
+# R5_JAR_FILE_PATH = "https://github.com/DigitalGeographyLab/r5/releases/download/v7.1-gp2-1/r5-v7.1-gp2-2-gd8134d8-all.jar"
+
+# TODO: roope testaa
+R5_JAR_FILE_PATH = (
+    "/Users/hcroope/omat/r5_dgl/r5/build/libs/r5-v7.1-gp2-1.dirty-all.jar"
+)
+
+JAVA_PATH = "/Users/hcroope/miniconda3/envs/r5py_Gp2/lib/jvm"
+
 GENERAL_ID_DEFAULT_KEY = "id"
 OSM_ID_DEFAULT_KEY = "osm_id"
 
@@ -16,6 +26,11 @@ NETWORK_COLUMNS_TO_KEEP = ["osm_id", "geometry"]
 
 # cache dir for programatically downloadable data
 DATA_CACHE_DIR_PATH: str = "green_paths_2/src/cache"
+
+# SEGMENT STORE CACHE DIR NAME
+SEGMENT_STORE_CACHE_DIR_NAME: str = "exposure_datas"
+
+SEGMENT_STORE_GPKG_FILE_NAME: str = "segment_store.gpkg"
 
 OSM_CACHE_DIR_NAME: str = "osm"
 
@@ -86,3 +101,12 @@ DEFAULT_CONFIGURATION_VALUES = {
     "raster_cell_resolution": 10,
     "save_raster_file": False,
 }
+
+SEGMENT_STORE_GDF_CACHE_PATH = os.path.join(
+    DATA_CACHE_DIR_PATH,
+    SEGMENT_STORE_CACHE_DIR_NAME,
+    SEGMENT_STORE_GPKG_FILE_NAME,
+)
+
+# NORMALIZED DATA SUFFIX
+NORMALIZED_DATA_SUFFIX = "_normalized"

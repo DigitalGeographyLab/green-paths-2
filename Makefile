@@ -87,6 +87,7 @@ install: clean ## install the package to the active Python's site-packages
 	poetry install
 
 greenpaths2:
-	poetry run python green_paths_2_cli.py $(filter-out $@,$(MAKECMDGOALS))
+	poetry run python green_paths_2_cli.py $(ARGS)
+
 %:
 	@:

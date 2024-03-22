@@ -2,7 +2,10 @@
 
 import pandas as pd
 import geopandas as gpd
-from green_paths_2.src.config import SEGMENT_VALUES_ROUND_DECIMALS
+from green_paths_2.src.config import (
+    NORMALIZED_DATA_SUFFIX,
+    SEGMENT_VALUES_ROUND_DECIMALS,
+)
 
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.preprocessing.data_source import DataSource
@@ -23,8 +26,14 @@ class SegmentValueStore:
     def get_store(self) -> dict[str, dict[str, float]]:
         return self.master_segment_store
 
+    def get_all_store_data_keys(self) -> list[str]:
+        return list(self.master_segment_store.values())[0].keys()
+
     def set_store(self, master_segment_store: dict[str, dict[str, float]]):
         self.master_segment_store = master_segment_store
+
+    def set_master_segment_gdf(self, master_segment_gdf: gpd.GeoDataFrame):
+        self.master_segment_gdf = master_segment_gdf
 
     def get_segment_values(
         self, segment_osmids: str | int | list[str | int], drop_osm_id: bool = False
@@ -63,9 +72,68 @@ class SegmentValueStore:
         """
         return list(self.master_segment_store.keys())
 
-    def populate_master_segment_gdf_with_geometries_from_pbf(self, pbf_file_path: str):
+    def remove_all_rows_without_exposure_data(
+        self, segment_store_gdf: gpd.GeoDataFrame
+    ) -> gpd.GeoDataFrame:
+        data_keys = self.get_all_store_data_keys()
+
+        # remote all data_key (column) rows without data or with NaN or False
+        for data_key in data_keys:
+            segment_store_gdf = segment_store_gdf[
+                segment_store_gdf[data_key].notna() & segment_store_gdf[data_key]
+            ]
+        return segment_store_gdf
+
+    def combine_exposures_to_geometries(
+        self, osm_network_gdf: gpd.GeoDataFrame
+    ) -> gpd.GeoDataFrame:
         """Populate master segment GeoDataFrame with geometries from PBF file."""
-        pass
+        LOG.info("Combining exposures to geometries to master_segment_gdf.")
+        try:
+            self.master_segment_gdf = osm_network_gdf.copy()
+            # filter gdf to only keep "osm_id" and "geometry" columns
+            self.master_segment_gdf = self.master_segment_gdf[["osm_id", "geometry"]]
+            # apply each element in master_segment_store to the master_segment_gdf and use the osm_id as the key
+            for osm_id, data in self.master_segment_store.items():
+                self.master_segment_gdf.loc[
+                    self.master_segment_gdf["osm_id"] == osm_id, data.keys()
+                ] = data.values()
+
+            self.set_master_segment_gdf(self.master_segment_gdf)
+            return self.master_segment_gdf
+        except Exception as e:
+            LOG.error(f"Error combining exposures to geometries: {e}")
+            return False
+
+    # TODO: maybe crash -> or put to configurations that will crash?
+    def validate_data_coverage(
+        self, data_sources: list[DataSource], osm_network_segment_count: int
+    ) -> None:
+        """Validate that the data covers the entire network."""
+        for data_name, _ in data_sources.items():
+            data_items_found = len(self.master_segment_store)
+            # loop through the master segment store and check if the data is found by data_name as key in datasource items
+            # get the length of the data found
+            data_found_count = 0
+            for _, data in self.master_segment_store.items():
+                if data_name in data.keys():
+                    data_found_count += 1
+
+            data_coverage_percentage = round(
+                (data_found_count / osm_network_segment_count) * 100, 2
+            )
+
+            LOG.info(
+                f"Data coverage (data/segments) for {data_name} is: {data_found_count}/{osm_network_segment_count} = {data_coverage_percentage}%."
+            )
+            # TODO -> should we crash of fail here if too low %???
+
+            if data_coverage_percentage < 25:
+                LOG.warning(f"WARNING: Data coverage for {data_name} is less than 25%.")
+            elif data_coverage_percentage < 50:
+                LOG.warning(f"WARNING: Data coverage for {data_name} is less than 50%.")
+            elif data_coverage_percentage < 75:
+                LOG.warning(f"WARNING: Data coverage for {data_name} is less than 75%.")
 
     def validate_user_min_max_values(self, data_sources: list[DataSource]) -> None:
         """Validate user defined min and max values."""
@@ -95,7 +163,7 @@ class SegmentValueStore:
         """
         normalized_data_keys = []
         for data_key, data_source in data_sources.items():
-            normalized_data_key = f"{data_key}_normalized"
+            normalized_data_key = f"{data_key}{NORMALIZED_DATA_SUFFIX}"
             normalized_values = self.calculate_normalised_values(
                 data_key,
                 data_source.good_exposure,
@@ -118,11 +186,18 @@ class SegmentValueStore:
 
         Parameters:
         - data_key: The key of the data source in the segment store.
-        - data_good_exposure: TODO
+        - data_good_exposure:
+            If True, good exposure is considered as negative values, which makes the traversing cost smaller.
+            If False, good exposure is considered as positive values, which makes the traversing cost larger.
+            So negative values mean that the segment is bad for traversing and should be avoided, and vice versa.
+        - min_data_value: The minimum value of the data source.
+        - max_data_value: The maximum value of the data source.
+
 
         Returns:
         - Dictionary with the OSM IDs as keys and the normalised values as values.
         """
+        # TODO: if we want to support scaling with min and max according to the data -> maybe remove?
         # meta_data = self.get_data_info_from_segment_store(data_key)
         # min_val, max_val = meta_data["min"], meta_data["max"]
         normalized_values = {}
@@ -147,11 +222,6 @@ class SegmentValueStore:
                 # Ensure the normalized value is within 0-1
                 normalized_value = max(0, min(normalized_value, 1))
 
-                # if data is good exposure, set to normalized value to negative
-                # good exposure should make the cost factor smaller (Dijkstra's algorithm)
-                # e.g. cheaper road to take in routing
-                # negative exposures should be avoided (e.g. noise, air pollution, etc.)
-                # by having the cost factor positive, which will increase the cost of the road
                 if data_good_exposure:
                     normalized_value = -normalized_value
 

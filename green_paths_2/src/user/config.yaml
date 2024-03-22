@@ -49,6 +49,7 @@ osm_network:
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/data/joteborgi.oms.pbf
 
   osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/green_paths_2/src/cache/osm/lintsi_pieni.osm.pbf
+
   # osm_pbf_file_path:   /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/green_paths_2/src/cache/osm/joteborg_smaller.osm.pbf
   
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/helsinki_history_pbf_osm_network.osm.pbf
@@ -64,6 +65,7 @@ data_sources:
   #   min_data_value: 0 # mandatory 
   #   max_data_value: 0.3333333432674408 # mandatory
   #   good_exposure: True # mandatory
+  #   original_crs: 3007
 
   - name: gvi
     filepath: green_paths_2/src/user/data/greenery_points.gpkg
@@ -83,7 +85,7 @@ data_sources:
     filepath: green_paths_2/src/user/data/allPollutants_2023-12-15T04.nc
     data_type: raster
     # layer_name: Helsinki_4326
-    data_column: Gvi_Mean # mandatory
+    # data_column:  # mandatory
     min_data_value: 0 # mandatory
     max_data_value: 5 # mandatory
     good_exposure: False # mandatory
@@ -102,6 +104,18 @@ data_sources:
   #   columns_of_interest: ["db_lo", "db_hi", "geometry"] # optional
   #   original_crs: 3879 # optional
   #   save_raster_file: True # optional
+
+# TODO: lisää validointiin...
+
+routing:
+  - name: aqi
+    sensitivity: 5
+    allow_missing_data: True
+
+  - name: gvi
+    sensitivity: 10
+
+
 
 
     # TODO -> ponder what would this be...

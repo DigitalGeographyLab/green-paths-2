@@ -243,7 +243,7 @@ def calculate_segment_raster_values(
         # do not store nan values
         # this most likely means that the segment is outside of the raster
         # or no raster data was found for any of the segment sample points
-        if value_for_segment is np.nan:
+        if not value_for_segment or value_for_segment is np.nan:
             continue
 
         osm_id = row[OSM_ID_DEFAULT_KEY]
@@ -266,6 +266,7 @@ def reproject_raster_to_crs(
     input_raster_filepath: str,
     output_raster_filepath: str,
     target_crs: str,
+    original_crs: str,
     new_raster_resolution: int = None,
 ) -> None:
     """
@@ -282,7 +283,7 @@ def reproject_raster_to_crs(
             # this slows down the process a little bit
             if new_raster_resolution:
                 transform, width, height = calculate_default_transform(
-                    src.crs,
+                    original_crs,
                     target_crs,
                     src.width,
                     src.height,
@@ -291,7 +292,7 @@ def reproject_raster_to_crs(
                 )
             else:
                 transform, width, height = calculate_default_transform(
-                    src.crs, target_crs, src.width, src.height, *src.bounds
+                    original_crs, target_crs, src.width, src.height, *src.bounds
                 )
             kwargs = src.meta.copy()
             kwargs.update(
@@ -309,7 +310,7 @@ def reproject_raster_to_crs(
                     source=rasterio.band(src, 1),
                     destination=rasterio.band(dst, 1),
                     src_transform=src.transform,
-                    src_crs=src.crs,
+                    src_crs=original_crs,
                     dst_transform=transform,
                     dst_crs=target_crs,
                     resampling=Resampling.nearest,

@@ -2,7 +2,9 @@
 
 import argparse
 
+from green_paths_2.pipeline_controller import handle_pipelines
 from green_paths_2.src.cache_cleaner import clear_cache_dirs
+from green_paths_2.src.config import USER_CONFIG_PATH
 from green_paths_2.src.config_validator import validate_user_config
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.data_fetchers.osm_network_loader import (
@@ -12,10 +14,12 @@ from green_paths_2.src.data_fetchers.osm_network_loader import (
 from green_paths_2.src.preprocessing.data_descriptor import (
     DataDescriptor,
 )
-from green_paths_2.src.preprocessing.main import preprocessing_pipeline
+
 from green_paths_2.src.preprocessing.osm_segmenter import (
     segment_or_use_cache_osm_network,
 )
+from green_paths_2.src.preprocessing.user_config_parser import UserConfig
+from green_paths_2.src.routing.main import routing_pipeline
 
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 
@@ -26,7 +30,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
 def main():
-    print(
+    LOG.info(
         "\n\n  \033[95m Greetings traveller! Welcome to Green paths 2 cli user interface. Please provide an action. \n\n (Use 'action' --help' for information on each actions arguments.) \033[0m"
     )
     parser = argparse.ArgumentParser(
@@ -36,8 +40,19 @@ def main():
     subparsers = parser.add_subparsers(dest="action", help="")
 
     # Subparser for preprocessing
+    all_pipeline_parser = subparsers.add_parser(
+        "all", help="Run the whole/all pipeline."
+    )
+    all_pipeline_parser.add_argument(
+        "-uc",
+        "--use_exposure_cache",
+        help="If flag is given, use exposure data cache if found from data/cache directory.",
+        action="store_true",
+    )
+
+    # Subparser for preprocessing
     preprocessing_parser = subparsers.add_parser(
-        "preprocessing", help="Run the whole preprocessing pipeline."
+        "preprocessing", help="Run the preprocessing pipeline."
     )
     preprocessing_parser.add_argument(
         "-nc",
@@ -48,7 +63,7 @@ def main():
 
     # Subparser for routing
     routing_parsers = subparsers.add_parser(
-        "route", help="Run the whole routing pipeline."
+        "routing", help="Run the whole routing pipeline."
     )
     # Add arguments specific to action2 if needed
 
@@ -142,9 +157,13 @@ def main():
         clear_cache_dirs(args.dirs)
     elif args.action == "preprocessing":
         LOG.info("Running preprocessing pipeline. \n\n")
-        preprocessing_pipeline()
-    elif args.action == "route":
-        print("TODO: create routing")
+        handle_pipelines("preprocessing")
+    elif args.action == "routing":
+        LOG.info("Running routing pipeline.")
+        handle_pipelines("routing")
+    elif args.action == "all":
+        LOG.info("Running the all pipeline.")
+        handle_pipelines("all", args.use_exposure_cache)
     elif args.action == "fetch_osm_network":
         if args.list_available_cities:
             LOG.info(f"Available cities (pyrosm): \n\n")

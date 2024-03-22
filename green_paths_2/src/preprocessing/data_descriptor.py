@@ -262,8 +262,7 @@ class DataDescriptor:
                         f"Data name: {data_name}",
                     )
 
-                    self._write_new_line_to_data_description_text
-                    (f"Data CRS: {crs}",)
+                    self._write_new_line_to_data_description_text(f"Data CRS: {crs}")
 
                     self._write_new_line_to_data_description_text(
                         f"Min value: {min}",
@@ -294,6 +293,7 @@ class DataDescriptor:
                             input_raster_filepath=raster_path,
                             output_raster_filepath=reprojected_raster_filepath,
                             target_crs=user_config.project_crs,
+                            original_crs=data_source.get_original_crs(),
                             new_raster_resolution=data_source.get_raster_cell_resolution(),
                         )
 

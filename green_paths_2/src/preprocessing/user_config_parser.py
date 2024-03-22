@@ -146,6 +146,11 @@ class UserConfig:
         :return: A list of dictionaries, each containing the data name, filepath, and type.
         """
         data_sources_config = config.get("data_sources", [])
+        if not data_sources_config:
+            raise ConfigError(
+                "Invalid or missing data sources configuration. See that atleast one data source is provided in user_config.yaml."
+            )
+
         for data in data_sources_config:
             # init all the values using enum names
             name = data.get(DataSourceModel.Name.value)

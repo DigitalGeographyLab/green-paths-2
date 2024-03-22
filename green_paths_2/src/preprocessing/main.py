@@ -26,8 +26,12 @@ from green_paths_2.src.preprocessing.raster_operations import (
 )
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.config import (
+    DATA_CACHE_DIR_PATH,
     RASTER_FILE_SUFFIX,
     REPROJECTED_RASTER_FILE_SUFFIX,
+    SEGMENT_STORE_CACHE_DIR_NAME,
+    SEGMENT_STORE_GDF_CACHE_PATH,
+    SEGMENT_STORE_GPKG_FILE_NAME,
     USER_CONFIG_PATH,
 )
 from green_paths_2.src.preprocessing.data_types import DataTypes
@@ -37,6 +41,7 @@ from green_paths_2.src.preprocessing.preprocessing_exceptions import (
     ConfigError,
 )
 from green_paths_2.src.preprocessing.user_config_parser import UserConfig
+from green_paths_2.src.routing.main import routing_pipeline
 from green_paths_2.src.segment_value_store import SegmentValueStore
 from green_paths_2.src.timer import time_logger
 
@@ -61,30 +66,41 @@ LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 
 # TODO: rename
 @time_logger
-def preprocessing_pipeline():
+def preprocessing_pipeline(
+    osm_network_gdf: gpd.GeoDataFrame,
+    data_handler: UserDataHandler,
+    user_config: UserConfig,
+):
+    """
+    Run the whole preprocessing pipeline.
+
+    Parameters
+    ----------
+    osm_network_gdf : gpd.GeoDataFrame
+        OSM network data.
+    user_config : UserConfig
+        User configuration object.
+
+
+    Raises
+    ------
+    ConfigDataError
+        If no data was found from the datasources for any of the segments.
+    """
     try:
-        LOG.info("Starting preprocessing")
+        LOG.info("\n\n\nStarting preprocessing pipeline\n\n\n")
         # parse and validate user configurations
-        user_config = UserConfig(USER_CONFIG_PATH).parse_config()
+
+        # if parameter use_exposure_cache is True, use the existing segment store from cache
+        # and call the routing pipeline from here
+        # this is only used as part of the whole pipeline
+
+        # if use_exposure_cache and os.path.exists(SEGMENT_STORE_GDF_CACHE_PATH):
+        #     LOG.info("Call routing pipeline from preprocessing pipeline.")
+        #     routing_pipeline(SEGMENT_STORE_GDF_CACHE_PATH, user_config)
 
         # segment OSM network or use existing segmented network from cache
         # if the name matches with the source file name
-        osm_network_pbf_file_path = segment_or_use_cache_osm_network(
-            user_config.osm_network.osm_pbf_file_path
-        )
-
-        network = OsmNetworkHandler(osm_pbf_file=osm_network_pbf_file_path)
-
-        network.process_osm_network(
-            project_crs=user_config.project_crs,
-            original_crs=user_config.osm_network.original_crs,
-            segment_sampling_points_amount=user_config.osm_network.segment_sampling_points_amount,
-        )
-        # use the same network for all data sources
-
-        data_handler = UserDataHandler()
-        data_handler.populate_data_sources(data_sources=user_config.data_sources)
-        osm_network_gdf: gpd.GeoDataFrame = network.get_network_gdf()
 
         # TODO: if confs -> populate with geometries? or should this be done always?
         segment_store = SegmentValueStore()
@@ -151,6 +167,7 @@ def preprocessing_pipeline():
                         input_raster_filepath=raster_path,
                         output_raster_filepath=reprojected_raster_filepath,
                         target_crs=user_config.project_crs,
+                        original_crs=data_source.get_original_crs(),
                         new_raster_resolution=data_source.get_raster_cell_resolution(),
                     )
 
@@ -172,11 +189,12 @@ def preprocessing_pipeline():
         all_osm_ids = segment_store.get_all_segment_osmids()
 
         if not all_osm_ids or len(all_osm_ids) == 0:
+            LOG.error("no exposure data found for any segments!")
             raise ConfigDataError(
-                "No data was found from the datasources for any of the segments."
+                "No data was found from the datasources for any of the segments. Check the data sources (e.g. CRS's) and try again."
             )
 
-        # TODO: säädä checkeri joka kattoo kuinka suuri osa datasta / teistä sai arvoja!
+        segment_store.validate_data_coverage(all_data_sources, len(osm_network_gdf))
 
         # TODO: ehkä tähän pitäis ottaa joku checki jos on tullu null arvoja teiltä?
         # eli poistaa jos on vaiks -999 tms.?
@@ -187,20 +205,39 @@ def preprocessing_pipeline():
         # save normalized values to the master segment store
         segment_store.save_normalized_values_to_store(all_data_sources)
 
+        # TODO: remove these test prints...
         # use some osmid which is found from data
         some_test_osmid = list(segment_store.get_all_segment_osmids())[0]
         some_test_osmid_2 = list(segment_store.get_all_segment_osmids())[-1]
-
-        # print(segment_store.get_segment_values(all_osm_ids))
         print(segment_store.get_segment_values(some_test_osmid))
         print(segment_store.get_segment_values(some_test_osmid_2))
 
-        LOG.info("End of preprocessing pipeline.")
+        print("tää pitäs olla nan/FALSE")
+        print(segment_store.get_segment_values(-1000000034693))
 
+        # TODO: maybe move this to some other part of code?
+        segment_store_gdf = segment_store.combine_exposures_to_geometries(
+            osm_network_gdf
+        )
+
+        no_data_rows_removed_segment_store_gdf = (
+            segment_store.remove_all_rows_without_exposure_data(segment_store_gdf)
+        )
+
+        if (
+            isinstance(no_data_rows_removed_segment_store_gdf, gpd.GeoDataFrame)
+            and not no_data_rows_removed_segment_store_gdf.empty
+        ):
+            # save the segment store to a gpkg file
+            no_data_rows_removed_segment_store_gdf.to_file(
+                SEGMENT_STORE_GDF_CACHE_PATH,
+                driver="GPKG",
+            )
+
+        LOG.info("End of preprocessing pipeline.")
         # delete current data and free memory
         del data_source
         gc.collect()
-
     except ConfigDataError as e:
         LOG.error(f"Config error occurred: {e}")
 

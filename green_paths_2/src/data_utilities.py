@@ -3,6 +3,14 @@
 import os
 import geopandas as gpd
 
+from green_paths_2.src.config import (
+    DATA_CACHE_DIR_PATH,
+    OSM_CACHE_DIR_NAME,
+    OSM_CACHE_SEGMENTED_DIR_NAME,
+    OSM_ID_DEFAULT_KEY,
+    OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION,
+    SEGMENT_STORE_GDF_CACHE_PATH,
+)
 from green_paths_2.src.logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.CYAN.value)
@@ -88,3 +96,45 @@ def determine_file_type(file_path: str) -> str | None:
         return "vector"
     else:
         return None
+
+
+def _get_exposure_data_from_cache_as_gdf() -> gpd.GeoDataFrame:
+    """
+    Get exposure data from cache. Read .gpkg file from data/cache directory.
+    """
+    try:
+        exposure_gdf = gpd.read_file(SEGMENT_STORE_GDF_CACHE_PATH)
+        # index the gdf with osm_id
+        exposure_gdf.set_index(OSM_ID_DEFAULT_KEY, inplace=True)
+        return exposure_gdf
+    except:
+        LOG.error("Failed to read exposure data from cache.")
+        return {}
+
+
+def get_exposure_data_dict(data_source_names: list[str]) -> dict:
+    """
+    Convert exposure data to dictionary, drop geometry.
+    """
+    exposure_data_gdf = _get_exposure_data_from_cache_as_gdf()
+    # keep only data_source_names columns
+    exposure_data_gdf = filter_gdf_by_columns_if_found(
+        exposure_data_gdf, data_source_names, keep=True
+    )
+    return exposure_data_gdf.to_dict(orient="dict")
+
+
+def construct_osm_segmented_network_name(osm_source_path: str) -> str:
+    """Constructs the name for the segmented OSM network file."""
+    network_name_no_extension = os.path.basename(osm_source_path).rsplit(".osm.pbf", 1)[
+        0
+    ]
+    osm_file_name = (
+        network_name_no_extension + OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION
+    )
+    return os.path.join(
+        DATA_CACHE_DIR_PATH,
+        OSM_CACHE_DIR_NAME,
+        OSM_CACHE_SEGMENTED_DIR_NAME,
+        osm_file_name,
+    )

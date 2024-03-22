@@ -1,5 +1,6 @@
 """ For dealing with OSM network related operations. """
 
+import os
 import geopandas as gpd
 from pyrosm import OSM
 import osmium
@@ -8,6 +9,7 @@ from green_paths_2.src.config import (
     GENERAL_ID_DEFAULT_KEY,
     NETWORK_COLUMNS_TO_KEEP,
     OSM_ID_DEFAULT_KEY,
+    OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION,
     SEGMENT_SAMPLING_POINTS_KEY,
 )
 from green_paths_2.src.data_utilities import (
@@ -16,6 +18,10 @@ from green_paths_2.src.data_utilities import (
 )
 from green_paths_2.src.logging import setup_logger
 from green_paths_2.src.logging import setup_logger, LoggerColors
+from green_paths_2.src.preprocessing.osm_segmenter import (
+    segment_or_use_cache_osm_network,
+)
+from green_paths_2.src.preprocessing.user_config_parser import UserConfig
 from green_paths_2.src.timer import time_logger
 
 
@@ -27,10 +33,6 @@ from green_paths_2.src.preprocessing.spatial_operations import (
 
 
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
-
-
-# TODO: remove this :D
-ROOPE_DEVELOPMENT = False
 
 
 class OsmNetworkHandler:
@@ -155,6 +157,15 @@ class OsmNetworkHandler:
             lambda x: self.sample_points(x, segment_sampling_points_amount)
         )
 
+    def calculate_lengts_of_segments(self) -> gpd.GeoDataFrame:
+        """
+        Calculate the length of each road segment.
+
+        Returns:
+        - GeoDataFrame with a new column for the length of each road segment.
+        """
+        self.network_gdf["length"] = self.network_gdf.geometry.apply(lambda x: x.length)
+
     def process_osm_network(
         self, project_crs: int, original_crs: int, segment_sampling_points_amount: int
     ) -> gpd.GeoDataFrame:
@@ -166,15 +177,10 @@ class OsmNetworkHandler:
         """
         LOG.info("Processing OSM network.")
         self.convert_network_to_gdf()
-        if ROOPE_DEVELOPMENT:
-            # ota sata ekeaa rivii vaan
-            dev_gdf = self.get_network_gdf().iloc[:100]
-            self.set_network_gdf(dev_gdf)
-
         self.rename_column(GENERAL_ID_DEFAULT_KEY, OSM_ID_DEFAULT_KEY)
         self.handle_crs(project_crs, original_crs)
         self.network_filter_by_columns(NETWORK_COLUMNS_TO_KEEP)
         self.handle_invalid_geometries()
-        # self.handle_invalid_geometries()
         self.generate_sampling_points(segment_sampling_points_amount)
+        self.calculate_lengts_of_segments()
         return self.get_network_gdf()
