@@ -278,6 +278,7 @@ def reproject_raster_to_crs(
     - target_crs: The target CRS.
     """
     try:
+        LOG.info(f"Reprojecting raster from {original_crs} to {target_crs}.")
         with rasterio.open(input_raster_filepath) as src:
             # if new raster resolution is defined use it, otherwise use the original resolution
             # this slows down the process a little bit
@@ -340,7 +341,6 @@ def calculate_segment_raster_values_from_raster_file(
 
 
 # from greenpaths 1
-# TODO:
 # kato kaikki kommentit ja koodi ja nimeämiset ja folderit jne!
 # folderi custom functions? Testaa muillakin rastereil mihin ei tarvi tehdä custom processingii
 

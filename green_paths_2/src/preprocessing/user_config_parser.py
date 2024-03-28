@@ -10,7 +10,12 @@ from green_paths_2.src.preprocessing.preprocessing_exceptions import (
     ConfigDataError,
     ConfigError,
 )
-from green_paths_2.src.preprocessing.data_types import DataSourceModel, DataTypes
+from green_paths_2.src.preprocessing.data_types import (
+    DataSourceModel,
+    DataTypes,
+    RoutingComputers,
+    TravelModes,
+)
 
 
 LOG = setup_logger(__name__, LoggerColors.PURPLE.value)
@@ -37,7 +42,10 @@ class UserConfig:
         """
         Parse config file and populate attributes.
 
-        :param config_path: Path to the configuration file.
+        Parameters
+        ----------
+        config_path : str
+            Path to the configuration file.
         """
         try:
             config = self._load_config(self.config_path)
@@ -59,8 +67,15 @@ class UserConfig:
         """
         Load user configuration from the given path.
 
-        :param config_path: Path to the configuration file.
-        :return: A dictionary containing the user configuration.
+        Parameters
+        ----------
+        config_path : str
+            Path to the configuration file.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the user configuration.
         """
         LOG.info(f"Reading configuration file from {config_path}")
         # read config yaml
@@ -71,15 +86,28 @@ class UserConfig:
     def validate_config(self, config: dict) -> None:
         """
         Validate the user configuration.
-        :param config: A dictionary containing the user configuration.
+
+        Parameters
+        ----------
+        config : dict
+            A dictionary containing the user configuration.
         """
         LOG.info("Validating user config")
-        self.validate_crs(config)
-        self.validate_osm_pbf_network_file(config)
-        self.validate_data_sources(config)
+        self._validate_crs(config)
+        self._validate_osm_pbf_network_file(config)
+        self._validate_data_sources(config)
+        self._validate_routing_config(config)
 
     def set_attributes(self, config: dict) -> None:
-        """Set valid attributes from the given configuration."""
+        """
+        Set valid attributes from the given configuration.
+
+        Parameters
+        ----------
+        config : dict
+            A dictionary containing the user configuration.
+
+        """
         for key, value in config.items():
             if isinstance(value, dict):
                 # create a sub-config for nested dictionaries
@@ -103,7 +131,7 @@ class UserConfig:
             if not hasattr(self, key):
                 setattr(self, key, default_value)
 
-    def validate_osm_pbf_network_file(self, config: dict) -> None:
+    def _validate_osm_pbf_network_file(self, config: dict) -> None:
         """
         Validate osm_pdb_path from the given configuration.
 
@@ -121,8 +149,9 @@ class UserConfig:
             raise ConfigError(
                 f"Invalid osm_pdb_path in data config file. Should be X.osm.pbf Path was {osm_pbf_path}"
             )
+        LOG.info("OSM PBF configurations validated.")
 
-    def validate_crs(self, config: dict) -> None:
+    def _validate_crs(self, config: dict) -> None:
         """
         Parse crs from the given configuration.
 
@@ -138,7 +167,9 @@ class UserConfig:
                 "Invalid project crs. Project crs should use meters as units. Most of projected CRS's use meters as units, opposed to geographic CRS's which use degrees."
             )
 
-    def validate_data_sources(self, config: dict) -> list[dict[str, str]]:
+        LOG.info("CRS configurations validated.")
+
+    def _validate_data_sources(self, config: dict) -> None:
         """
         Parse data sources from the given configuration.
 
@@ -290,3 +321,83 @@ class UserConfig:
                 raise ConfigDataError(
                     "Invalid save raster file configuration. Should be boolean. This optional attribute can be left empty. If provided, it should be boolean."
                 )
+
+            LOG.info("Data sources configurations validated.")
+
+    def _validate_routing_config(self, config: dict) -> None:
+        """
+        Validate routing configuration.
+
+        :param config: A dictionary containing configuration data.
+        """
+        routing_config = config.get("routing", {})
+        if not routing_config:
+            raise ConfigError(
+                "Invalid or missing routing configuration. See that atleast one data source is provided in user_config.yaml."
+            )
+
+        computer: str = routing_config.get(DataSourceModel.Computer.value)
+        transport_mode: str = routing_config.get(DataSourceModel.TransportMode.value)
+        od_pairs_path: str = routing_config.get(
+            DataSourceModel.Origins_destinations.value
+        )
+        exposure_parameters: list[dict] = routing_config.get(
+            DataSourceModel.ExposureParameters.value
+        )
+
+        if (
+            not computer
+            or not isinstance(computer, str)
+            or computer not in [rc.value for rc in RoutingComputers]
+        ):
+            raise ConfigDataError(
+                "Invalid or missing computer configuration in routing parameters. Should be matrix or detailed."
+            )
+
+        if (
+            not transport_mode
+            or not isinstance(transport_mode, str)
+            or transport_mode not in [tm.value for tm in TravelModes]
+        ):
+            raise ConfigDataError(
+                "Invalid or missing travel mode configuration in routing parameters. Should be walking or cycling."
+            )
+
+        if (
+            not od_pairs_path
+            or not isinstance(od_pairs_path, str)
+            or not os.path.exists(od_pairs_path)
+        ):
+            raise ConfigDataError(
+                "Invalid or missing od pairs path configuration in routing parameters."
+            )
+
+        for exposure_param in exposure_parameters:
+            name = exposure_param.get(DataSourceModel.Name.value)
+            sensitivity = exposure_param.get(DataSourceModel.Sensitivity.value)
+            allow_missing_data = exposure_param.get(
+                DataSourceModel.AllowMissingData.value
+            )
+            if not name or not isinstance(name, str):
+                raise ConfigDataError(
+                    "Invalid or missing exposure parameter name configuration."
+                )
+
+            preprocessing_data_sources_names = [
+                data.get(DataSourceModel.Name.value)
+                for data in config.get("data_sources")
+            ]
+
+            if name not in preprocessing_data_sources_names:
+                raise ConfigDataError(
+                    "Routing Exposure parameter name not found in Preprocessing data sources. Check that the name matches with the data source name."
+                )
+            if not sensitivity or not isinstance(sensitivity, (int, float)):
+                raise ConfigDataError(
+                    "Invalid sensitivity configuration in routing parameters. Should be float or integer."
+                )
+            if allow_missing_data and not isinstance(allow_missing_data, bool):
+                raise ConfigDataError(
+                    "Invalid allow missing data configuration in routing parameters. Should be boolean if set."
+                )
+            LOG.info("Routing configuration validated.")

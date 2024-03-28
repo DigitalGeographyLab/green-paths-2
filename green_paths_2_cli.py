@@ -2,7 +2,7 @@
 
 import argparse
 
-from green_paths_2.pipeline_controller import handle_pipelines
+from green_paths_2.src.pipeline_controller import handle_pipelines
 from green_paths_2.src.cache_cleaner import clear_cache_dirs
 from green_paths_2.src.config import USER_CONFIG_PATH
 from green_paths_2.src.config_validator import validate_user_config
@@ -62,9 +62,7 @@ def main():
     )
 
     # Subparser for routing
-    routing_parsers = subparsers.add_parser(
-        "routing", help="Run the whole routing pipeline."
-    )
+    routing_parsers = subparsers.add_parser("routing", help="Run the routing pipeline.")
     # Add arguments specific to action2 if needed
 
     # TODO: add cache to routing?
@@ -73,6 +71,11 @@ def main():
         "--router_cache",
         help="ROOPE TODO",
         action="store_true",
+    )
+
+    # Subparser for exposure analysing
+    analysing_parsers = subparsers.add_parser(
+        "analysing", help="Run the analysing pipeline."
     )
 
     # DATA LOADERS
@@ -147,7 +150,7 @@ def main():
         required=True,
     )
 
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
 
     if args.action == "validate":
         validate_user_config()
@@ -161,6 +164,9 @@ def main():
     elif args.action == "routing":
         LOG.info("Running routing pipeline.")
         handle_pipelines("routing")
+    elif args.action == "analysing":
+        LOG.info("Running exposure analysing pipeline.")
+        handle_pipelines("analysing")
     elif args.action == "all":
         LOG.info("Running the all pipeline.")
         handle_pipelines("all", args.use_exposure_cache)

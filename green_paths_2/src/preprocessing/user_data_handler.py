@@ -9,7 +9,7 @@ LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 
 class UserDataHandler:
     def __init__(self):
-        self.data_sources = {}
+        self.data_sources: dict[str, DataSource] = {}
 
     def get_data_sources(self):
         return self.data_sources

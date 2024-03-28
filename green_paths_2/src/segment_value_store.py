@@ -26,11 +26,14 @@ class SegmentValueStore:
     def get_store(self) -> dict[str, dict[str, float]]:
         return self.master_segment_store
 
+    def set_store(self, master_segment_store: dict[str, dict[str, float]]):
+        self.master_segment_store = master_segment_store
+
     def get_all_store_data_keys(self) -> list[str]:
         return list(self.master_segment_store.values())[0].keys()
 
-    def set_store(self, master_segment_store: dict[str, dict[str, float]]):
-        self.master_segment_store = master_segment_store
+    def get_master_segment_gdf(self) -> gpd.GeoDataFrame:
+        return self.master_segment_gdf
 
     def set_master_segment_gdf(self, master_segment_gdf: gpd.GeoDataFrame):
         self.master_segment_gdf = master_segment_gdf
@@ -84,23 +87,26 @@ class SegmentValueStore:
             ]
         return segment_store_gdf
 
-    def combine_exposures_to_geometries(
-        self, osm_network_gdf: gpd.GeoDataFrame
-    ) -> gpd.GeoDataFrame:
-        """Populate master segment GeoDataFrame with geometries from PBF file."""
+    def combine_exposures_to_geometries_and_lenghts(
+        self,
+        osm_network_gdf: gpd.GeoDataFrame,
+    ) -> None:
+        """Add geometries to segment store from OSM network GeoDataFrame."""
         LOG.info("Combining exposures to geometries to master_segment_gdf.")
         try:
-            self.master_segment_gdf = osm_network_gdf.copy()
-            # filter gdf to only keep "osm_id" and "geometry" columns
-            self.master_segment_gdf = self.master_segment_gdf[["osm_id", "geometry"]]
-            # apply each element in master_segment_store to the master_segment_gdf and use the osm_id as the key
-            for osm_id, data in self.master_segment_store.items():
-                self.master_segment_gdf.loc[
-                    self.master_segment_gdf["osm_id"] == osm_id, data.keys()
-                ] = data.values()
+            exposure_dict = self.get_store()
+            # set network_gdf index to osm_id
+            osm_network_gdf = osm_network_gdf.set_index("osm_id")
+            for osm_id, _ in exposure_dict.items():
+                # set value "osm_id" to the exposure_dict with the key osm_id
+                exposure_dict[osm_id]["osm_id"] = osm_id
+                # set value "geometry" to the exposure_dict with the key osm_id
+                exposure_dict[osm_id]["geometry"] = osm_network_gdf.loc[
+                    osm_id, "geometry"
+                ]
+                exposure_dict[osm_id]["length"] = osm_network_gdf.loc[osm_id, "length"]
 
-            self.set_master_segment_gdf(self.master_segment_gdf)
-            return self.master_segment_gdf
+            self.set_store(exposure_dict)
         except Exception as e:
             LOG.error(f"Error combining exposures to geometries: {e}")
             return False
@@ -145,7 +151,7 @@ class SegmentValueStore:
                         data[data_key] < data_source.min_data_value
                         or data[data_key] > data_source.max_data_value
                     ):
-                        values_not_in_range.append(osm_id, data[data_key])
+                        values_not_in_range.append(f"{osm_id}: {data[data_key]}")
         if values_not_in_range:
             LOG.warning(
                 f"WARNING: {len(values_not_in_range)} values are not within the user defined min and max values. Values: {values_not_in_range}. They will be fitted to the user defined min and max values."
@@ -254,7 +260,9 @@ class SegmentValueStore:
     #     123: {'noise_data': 1.5, 'air_quality': 2.0, 'geometry': Point(1, 2)},
     #     # Add more entries as needed
     # }
-    def convert_segment_store_to_gdf(self) -> gpd.GeoDataFrame:
+
+    # TODO: maybe remove the geometry check -> should always have geometry???
+    def convert_segment_store_to_gdf(self) -> None:
         """
         Convert segment store to GeoDataFrame.
 
@@ -262,14 +270,18 @@ class SegmentValueStore:
         - GeoDataFrame with segment geometries and values.
         """
         try:
-            segment_store = self.get_master_segment_store()
+            segment_store = self.get_store()
             # Convert segment store to DataFrame
             df = pd.DataFrame.from_dict(segment_store, orient="index")
-            # Convert geometry column to GeoSeries
-            geometries = gpd.GeoSeries(df.pop("geometry"))
-            # Convert DataFrame to GeoDataFrame
-            gdf = gpd.GeoDataFrame(df, geometry=geometries)
-            return gdf
+            # handle geometry if gdf has geometry
+            if "geometry" in df.columns:
+                # Convert geometry column to GeoSeries
+                geometries = gpd.GeoSeries(df.pop("geometry"))
+                # Convert DataFrame to GeoDataFrame
+                gdf = gpd.GeoDataFrame(df, geometry=geometries)
+            else:
+                gdf = gpd.GeoDataFrame(df)
+            self.set_master_segment_gdf(gdf)
         except Exception as e:
             LOG.error(f"Error converting segment store to GeoDataFrame: {e}")
 

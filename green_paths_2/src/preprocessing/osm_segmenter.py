@@ -105,58 +105,74 @@ def segment_or_use_cache_osm_network(osm_source_path: str) -> str:
     :param name: Name for the segmented OSM PBF file. If not provided, the default name is used.
     :return: Path to the segmented OSM PBF file.
     """
-    LOG.info(f"Starting to segment the OSM network.")
-    LOG.info(f"Using file from path: {osm_source_path}")
-    osm_segmented_network_path = construct_osm_segmented_network_name(osm_source_path)
-
-    if os.path.exists(osm_segmented_network_path):
-        LOG.info(f"Found segmented OSM network from cache. Skipping segmentation.")
-        return osm_segmented_network_path
-
-    LOG.info(f"Segmenting the OSM network to path: {osm_segmented_network_path}")
-    # Initialize writer for the new OSM PBF file
-    writer = osmium.SimpleWriter(osm_segmented_network_path)
-    node_handler = NodeCopyHandler(writer)
-    # Process the OSM file with the node handler
-    node_handler.apply_file(osm_source_path)
-
-    # Load intersection nodes
-    collector = IntersectionCollector()
-    collector.apply_file(osm_source_path)
-    intersection_nodes = collector.intersection_nodes
-
-    # Create segments based on the collected intersection nodes
-    creator = SegmentCreator(intersection_nodes)
-    creator.apply_file(osm_source_path)
-
-    for i, segment in enumerate(creator.segments):
-        unique_new_id = generate_new_id(i)
-
-        segment["tags"]["osm_id"] = str(unique_new_id)
-
-        way = osmium.osm.mutable.Way(
-            segment,
-            id=unique_new_id,
-            version=1,
-            visible=True,
-            changeset=1,
-            timestamp=datetime.datetime.now(),
-            uid=1,
-            user="GreenPaths2",
-            tags=dict(segment["tags"]),
-            nodes=list(segment["nodes"]),
+    try:
+        LOG.info(f"Starting to segment the OSM network.")
+        LOG.info(f"Using file from path: {osm_source_path}")
+        osm_segmented_network_path = construct_osm_segmented_network_name(
+            osm_source_path
         )
 
-        # write the way to the new OSM PBF file
-        writer.add_way(way)
-    writer.close()
+        if os.path.exists(osm_segmented_network_path):
+            LOG.info(f"Found segmented OSM network from cache, checking if valid.")
+            if not osm_pbf_is_valid(osm_segmented_network_path, max_ways=1000):
+                raise ValueError(
+                    f"Segmented OSM network file {osm_segmented_network_path} is not valid."
+                )
+            LOG.info(
+                f"Found valid segmented OSM network from cache. Skipping segmentation."
+            )
+            return osm_segmented_network_path
+
+        LOG.info(f"Segmenting the OSM network to path: {osm_segmented_network_path}")
+        # Initialize writer for the new OSM PBF file
+        writer = osmium.SimpleWriter(osm_segmented_network_path)
+        node_handler = NodeCopyHandler(writer)
+        # Process the OSM file with the node handler
+        node_handler.apply_file(osm_source_path)
+
+        # Load intersection nodes
+        collector = IntersectionCollector()
+        collector.apply_file(osm_source_path)
+        intersection_nodes = collector.intersection_nodes
+
+        # Create segments based on the collected intersection nodes
+        creator = SegmentCreator(intersection_nodes)
+        creator.apply_file(osm_source_path)
+
+        for i, segment in enumerate(creator.segments):
+            unique_new_id = generate_new_id(i)
+
+            segment["tags"]["gp2_osm_id"] = str(unique_new_id)
+
+            way = osmium.osm.mutable.Way(
+                segment,
+                id=unique_new_id,
+                version=1,
+                visible=True,
+                changeset=1,
+                timestamp=datetime.datetime.now(),
+                uid=1,
+                user="GreenPaths2",
+                tags=dict(segment["tags"]),
+                nodes=list(segment["nodes"]),
+            )
+
+            # write the way to the new OSM PBF file
+            writer.add_way(way)
+        writer.close()
+    except Exception as e:
+        # if something goes wrong, remove the file
+        if os.path.exists(osm_segmented_network_path):
+            os.remove(osm_segmented_network_path)
+        LOG.error(f"Segmentation failed with error: {e}")
+        raise e
 
     # simple check that osm.pbf is valid
     # TODO: commented the validity check out...
-    # if not osm_pbf_is_valid(OSM_SEGMENTED_NETWORK_PATH, max_ways=1000):
-    #     raise ValueError(
-    #         f"Segmented OSM network file {OSM_SEGMENTED_NETWORK_PATH} is not valid."
-    #     )
+    if not osm_pbf_is_valid(osm_segmented_network_path, max_ways=1000):
+        raise ValueError(
+            f"Segmented OSM network file {osm_segmented_network_path} is not valid."
+        )
     LOG.info(f"Segmenting the OSM network finished.")
     return osm_segmented_network_path
 
@@ -185,10 +201,14 @@ class OSMValidationHandler(osmium.SimpleHandler):
         self.num_ways_processed += 1
 
     def is_way_valid(self, way):
-        return "osm_id" in way.tags and "parent_id" in way.tags and len(way.nodes) >= 2
+        return (
+            "gp2_osm_id" in way.tags and "parent_id" in way.tags and len(way.nodes) >= 2
+        )
 
     def report(self):
-        print(f"OSM PBF validator processed {self.num_ways_processed} ways.")
+        LOG.info(
+            f"OSM PBF validator checked validity for: {self.num_ways_processed} ways."
+        )
 
 
 def osm_pbf_is_valid(filepath: str, max_ways=1000) -> bool:

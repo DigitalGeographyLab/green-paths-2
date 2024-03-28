@@ -21,3 +21,23 @@ class DataSourceModel(Enum):
     MaxDataValue = "max_data_value"
     Columnsofinterest = "columns_of_interest"
     Saverasterfile = "save_raster_file"
+    Computer = "computer"
+    Origins_destinations = "origins_destinations"
+    Sensitivity = "sensitivity"
+    AllowMissingData = "allow_missing_data"
+    ExposureParameters = "exposure_parameters"
+    TransportMode = "transport_mode"
+
+
+# TODO: maybe rename this file?
+
+
+class RoutingComputers(Enum):
+    Matrix: str = "matrix"
+    Detailed: str = "detailed"
+
+
+# TODO -> should there be CAR here?
+class TravelModes(Enum):
+    Walking: str = "walking"
+    Cycling: str = "cycling"

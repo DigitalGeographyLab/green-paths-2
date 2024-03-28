@@ -46,9 +46,14 @@ osm_network:
   # helsinki metropolitan area from pyrosm
   # osm_pbf_file_path: green_paths_2/src/cache/osm/helsinki_network.osm.pbf
 
-  # osm_pbf_file_path: /Users/hcroope/omat/GP2/data/joteborgi.oms.pbf
+  # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/green_paths_2/src/cache/osm/lintsi_pieni.osm.pbf
 
-  osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/green_paths_2/src/cache/osm/lintsi_pieni.osm.pbf
+  osm_pbf_file_path: green_paths_2/src/cache/osm/hki_medium.osm.pbf
+
+    # osm_pbf_file_path: /Users/hcroope/omat/GP2/data/joteborgi.oms.pbf
+
+  # osm_pbf_file_path: /Users/hcroope/Downloads/planet_-22.003,64.009_-21.652,64.193.osm.pbf
+
 
   # osm_pbf_file_path:   /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/green_paths_2/src/cache/osm/joteborg_smaller.osm.pbf
   
@@ -67,18 +72,37 @@ data_sources:
   #   good_exposure: True # mandatory
   #   original_crs: 3007
 
-  - name: gvi
-    filepath: green_paths_2/src/user/data/greenery_points.gpkg
-    # data_type: vector
-    layer_name: Helsinki_4326
-    data_column: Gvi_Mean # mandatory
-    min_data_value: 0.0096875 # mandatory
-    max_data_value: 86.28875 # mandatory
-    good_exposure: True # mandatory
-    # data_buffer: 10 # optional, only for vector datas, in meters
-    raster_cell_resolution: 10 # mandatory
-    # save_raster_file: True # optional
-    original_crs: 3879
+
+  # - name: aqi_iceland
+  #   filepath:   /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/green_paths_2/src/user/data/nordicwelfair_nordic_emission_inventory_iceland.nc
+  #   data_type: raster
+  #   min_data_value: 0 # mandatory 
+  #   max_data_value: 100 # mandatory
+  #   good_exposure: True # mandatory
+  #   original_crs: 3035
+  #   custom_processing_function: convert_aq_nc_to_tif_and_scale_offset
+
+  # - name: aqi_iceland_2
+  #   filepath: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/green_paths_2/src/user/data/test_co_iceland_raster.tif
+  #   data_type: raster
+  #   min_data_value: 0 # mandatory 
+  #   max_data_value: 100 # mandatory
+  #   good_exposure: True # mandatory
+  #   original_crs: 3035
+    # custom_processing_function: convert_aq_nc_to_tif_and_scale_offset
+
+  # - name: gvi
+  #   filepath: green_paths_2/src/user/data/greenery_points.gpkg
+  #   # data_type: vector
+  #   layer_name: Helsinki_4326
+  #   data_column: Gvi_Mean # mandatory
+  #   min_data_value: 0.0096875 # mandatory
+  #   max_data_value: 86.28875 # mandatory
+  #   good_exposure: True # mandatory
+  #   # data_buffer: 10 # optional, only for vector datas, in meters
+  #   raster_cell_resolution: 10 # mandatory
+  #   # save_raster_file: True # optional
+  #   original_crs: 3879
 
   # TODO: test with vector data type -> should crash!?
   - name: aqi
@@ -107,13 +131,21 @@ data_sources:
 
 # TODO: lisää validointiin...
 
-routing:
-  - name: aqi
-    sensitivity: 5
-    allow_missing_data: True
+# TODO: lisää koodiin kans nää
 
-  - name: gvi
-    sensitivity: 10
+routing:
+    computer: matrix
+    # computer: detailed
+    transport_mode: walking
+    # travel_mode: cycling
+    origins_destinations: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
+    exposure_parameters:
+      - name: aqi
+        sensitivity: 1.5
+        allow_missing_data: True
+
+      # - name: gvi
+      #   sensitivity: 1.25
 
 
 

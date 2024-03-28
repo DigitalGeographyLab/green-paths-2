@@ -3,7 +3,11 @@
 import os
 import gc
 import geopandas as gpd
-from green_paths_2.src.data_utilities import determine_file_type
+from green_paths_2.src.data_utilities import (
+    determine_file_type,
+    filter_gdf_by_columns_if_found,
+    save_gdf_to_cache_as_gpkg,
+)
 from green_paths_2.src.preprocessing.custom_functions import (
     apply_custom_processing_function,
 )
@@ -26,19 +30,14 @@ from green_paths_2.src.preprocessing.raster_operations import (
 )
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.config import (
-    DATA_CACHE_DIR_PATH,
+    OSM_NETWORK_GDF_CACHE_PATH,
     RASTER_FILE_SUFFIX,
     REPROJECTED_RASTER_FILE_SUFFIX,
-    SEGMENT_STORE_CACHE_DIR_NAME,
     SEGMENT_STORE_GDF_CACHE_PATH,
-    SEGMENT_STORE_GPKG_FILE_NAME,
-    USER_CONFIG_PATH,
 )
 from green_paths_2.src.preprocessing.data_types import DataTypes
-from green_paths_2.src.preprocessing.osm_network_handler import OsmNetworkHandler
 from green_paths_2.src.preprocessing.preprocessing_exceptions import (
     ConfigDataError,
-    ConfigError,
 )
 from green_paths_2.src.preprocessing.user_config_parser import UserConfig
 from green_paths_2.src.routing.main import routing_pipeline
@@ -155,10 +154,6 @@ def preprocessing_pipeline(
                 # check raster crs and reproject if needed
 
                 if check_raster_file_crs(raster_path) != user_config.project_crs:
-                    LOG.info(
-                        f"Raster not in project crs. Reprojecting {raster_path} to project crs: {user_config.project_crs}"
-                    )
-
                     reprojected_raster_filepath = raster_path.replace(
                         RASTER_FILE_SUFFIX, REPROJECTED_RASTER_FILE_SUFFIX
                     )
@@ -215,24 +210,25 @@ def preprocessing_pipeline(
         print("tää pitäs olla nan/FALSE")
         print(segment_store.get_segment_values(-1000000034693))
 
-        # TODO: maybe move this to some other part of code?
-        segment_store_gdf = segment_store.combine_exposures_to_geometries(
-            osm_network_gdf
+        # combine exposures to geometries and convert the segment store to a GeoDataFrame
+        segment_store.combine_exposures_to_geometries_and_lenghts(osm_network_gdf)
+        segment_store.convert_segment_store_to_gdf()
+        segment_store_gdf_with_exposure = segment_store.get_master_segment_gdf()
+
+        # construct a gpkg from osm network with
+        # osm_network_gdf.set_index("osm_id", inplace=True)
+
+        filtered_osm_network_gdf = filter_gdf_by_columns_if_found(
+            osm_network_gdf,
+            ["osm_id", "geometry", "length"],
+            keep=True,
         )
 
-        no_data_rows_removed_segment_store_gdf = (
-            segment_store.remove_all_rows_without_exposure_data(segment_store_gdf)
+        save_gdf_to_cache_as_gpkg(
+            segment_store_gdf_with_exposure, SEGMENT_STORE_GDF_CACHE_PATH
         )
 
-        if (
-            isinstance(no_data_rows_removed_segment_store_gdf, gpd.GeoDataFrame)
-            and not no_data_rows_removed_segment_store_gdf.empty
-        ):
-            # save the segment store to a gpkg file
-            no_data_rows_removed_segment_store_gdf.to_file(
-                SEGMENT_STORE_GDF_CACHE_PATH,
-                driver="GPKG",
-            )
+        save_gdf_to_cache_as_gpkg(filtered_osm_network_gdf, OSM_NETWORK_GDF_CACHE_PATH)
 
         LOG.info("End of preprocessing pipeline.")
         # delete current data and free memory

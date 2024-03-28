@@ -94,6 +94,8 @@ def convert_raster_nc_to_tif(
 
         # retrieve AQI, AQI.data has shape (time, lat, lon)
         # the values are automatically scaled and offset AQI values
+
+        # TODO: do we need to check if AQI exists or allow using other key values?
         aqi = data["AQI"]
 
         # Fill NaN values with the specified fill value
