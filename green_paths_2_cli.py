@@ -69,7 +69,7 @@ def main():
     routing_parsers.add_argument(
         "-rc",
         "--router_cache",
-        help="ROOPE TODO",
+        help="Flag for using cached exposure datas for routing",
         action="store_true",
     )
 

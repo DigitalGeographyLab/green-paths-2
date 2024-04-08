@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 PLOT_DESTINATION_PATH = "src/visualizations"
 
 
-# TODO: maybe remove geometry_column_names and just use default geometry for one gdf?
 def simple_plot_gdfs(
     gdf: gpd.GeoDataFrame, title: str = None, geometry_column_names: list = None
 ) -> None:

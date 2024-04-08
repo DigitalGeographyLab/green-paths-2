@@ -5,7 +5,6 @@ import rasterio
 import shapely
 from green_paths_2.src.preprocessing.data_source import DataSource
 from green_paths_2.src.data_utilities import rename_gdf_column
-from green_paths_2.src.config import GDF_BUFFERED_GEOMETRY_NAME, OSM_ID_DEFAULT_KEY
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.timer import time_logger
 from shapely import wkt
@@ -232,7 +231,7 @@ def check_if_raster_and_network_extends_overlap(
 #     """
 #     TODO maybe remove secondary_data_source and multiple_data_strategy?
 #     """
-#     osm_id = row[OSM_ID_DEFAULT_KEY]
+#     osm_id = row[OSM_ID_KEY]
 #     edge_geom = row["geometry_network"]
 #     data_geom = row["geometry_data"]
 #     data_column = data_source.data_column

@@ -8,6 +8,9 @@ class DataTypes(Enum):
     Raster = "raster"
 
 
+# TODO: mieti pitäskö olla muissakin kun datasourcemodelissa ne mitkä ei sinne kuulu...
+
+
 class DataSourceModel(Enum):
     Name = "name"
     Filepath = "filepath"
@@ -27,6 +30,8 @@ class DataSourceModel(Enum):
     AllowMissingData = "allow_missing_data"
     ExposureParameters = "exposure_parameters"
     TransportMode = "transport_mode"
+    KeepGeometry = "keep_geometry"
+    CumulativeRanges = "cumulative_ranges"
 
 
 # TODO: maybe rename this file?

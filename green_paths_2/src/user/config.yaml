@@ -32,25 +32,25 @@
 #                   format supported by OMat, including GeoPackage,
 #                   GeoTIFF, and PNG.
 #
-# TODO:  add more
 
 # europe e.g. 3035
 project_crs: 3879
 
+# save_to_cache: "True"
+
 osm_network:
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/london_osm_network.osm.pbf
-  # osm_pbf_file_path: green_paths_2/src/cache/osm/segmented/helsinki_network_segmented.osm.pbf
   # osm_pbf_file_path: green_paths_2/src/cache/osm/hki_metropolitan_ish.osm.pbf
 
   # TODO: test whith this! 
   # helsinki metropolitan area from pyrosm
   # osm_pbf_file_path: green_paths_2/src/cache/osm/helsinki_network.osm.pbf
 
-  # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/green_paths_2/src/cache/osm/lintsi_pieni.osm.pbf
+  osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/green_paths_2/src/cache/osm/lintsi_pieni.osm.pbf
 
-  osm_pbf_file_path: green_paths_2/src/cache/osm/hki_medium.osm.pbf
+  # osm_pbf_file_path: green_paths_2/src/cache/osm/hki_medium.osm.pbf
 
-    # osm_pbf_file_path: /Users/hcroope/omat/GP2/data/joteborgi.oms.pbf
+  # osm_pbf_file_path: /Users/hcroope/omat/GP2/data/joteborgi.oms.pbf
 
   # osm_pbf_file_path: /Users/hcroope/Downloads/planet_-22.003,64.009_-21.652,64.193.osm.pbf
 
@@ -91,35 +91,37 @@ data_sources:
   #   original_crs: 3035
     # custom_processing_function: convert_aq_nc_to_tif_and_scale_offset
 
-  # - name: gvi
-  #   filepath: green_paths_2/src/user/data/greenery_points.gpkg
-  #   # data_type: vector
-  #   layer_name: Helsinki_4326
-  #   data_column: Gvi_Mean # mandatory
-  #   min_data_value: 0.0096875 # mandatory
-  #   max_data_value: 86.28875 # mandatory
-  #   good_exposure: True # mandatory
-  #   # data_buffer: 10 # optional, only for vector datas, in meters
-  #   raster_cell_resolution: 10 # mandatory
-  #   # save_raster_file: True # optional
-  #   original_crs: 3879
+
+
+
+  - name: gvi
+    filepath: green_paths_2/src/user/data/greenery_points.gpkg
+    # data_type: vector
+    layer_name: Helsinki_4326
+    data_column: Gvi_Mean # mandatory
+    min_data_value: 0.0096875 # mandatory
+    max_data_value: 86.28875 # mandatory
+    good_exposure: True # mandatory
+    # data_buffer: 10 # optional, only for vector datas, in meters
+    raster_cell_resolution: 20 # mandatory
+    # save_raster_file: True # optional
+    original_crs: 3879
 
   # TODO: test with vector data type -> should crash!?
   - name: aqi
     filepath: green_paths_2/src/user/data/allPollutants_2023-12-15T04.nc
     data_type: raster
     # layer_name: Helsinki_4326
-    # data_column:  # mandatory
+    data_column: AQI  # mandatory
     min_data_value: 0 # mandatory
     max_data_value: 5 # mandatory
     good_exposure: False # mandatory
-    raster_cell_resolution: 10 # optional for raster
+    # raster_cell_resolution: 20 # optional for raster
     # save_raster_file: True # optional
     original_crs: 4326
     custom_processing_function: convert_aq_nc_to_tif_and_scale_offset
 
 
-  # TODO -> tee validaatioon checkit näistä!
   # - name: noise_helsinki
   #   filepath:  /Users/hcroope/omat/GP2/data/Helsinki_noise_data_2022/Melualueet_2022_01_kadut_maant_LAeq7-22_NPM_20231116_123645.gml # mandatory
   #   data_type: vector # mandatory
@@ -129,9 +131,12 @@ data_sources:
   #   original_crs: 3879 # optional
   #   save_raster_file: True # optional
 
-# TODO: lisää validointiin...
 
-# TODO: lisää koodiin kans nää
+  # - name: test_data_source
+  #   filepath:  "not_a_file.gpkg"
+  #   data_type: raster
+
+
 
 routing:
     computer: matrix
@@ -140,48 +145,20 @@ routing:
     # travel_mode: cycling
     origins_destinations: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
     exposure_parameters:
+      - name: gvi
+        sensitivity: 1.25
+
       - name: aqi
         sensitivity: 1.5
-        allow_missing_data: True
-
-      # - name: gvi
-      #   sensitivity: 1.25
+        # allow_missing_data: True
 
 
-
-
-    # TODO -> ponder what would this be...
-    # optional and should only be used if know what doing -> calculate only the means...
-    # use_only_simple_exposure: True
-
-  # - name: test_data_source
-  #   filepath:  "not_a_file.gpkg"
-  #   data_type: raster
-
-# TODO: noiden data_sourcesien yhdistäminen -> vihreys e.g. points mut jos ei oo niin layer etc.
-# pitäis varmaankin tehdä ns. "preprocessing" jälkeen -> eli konfeissa "mikä lasketaan mitenkin yhteen indexiin?!
-# pitäis käyttää value nimiä ja formuloita eli miten lasketaan mitenkin 
-# pitä varmaan olla joku hierarkia missä katotaan et jos ei oo jotain niin mee seuraavaan ja sit seuraavassa jos ei niin mee seuraavaan
-# ja sit jos on niin pitää laskee yhteen ne mitä on -> muista et pitää olla joustava ja universaali
-
-
-
-# e.g. formula like this:
-# formula: "(db_lo + db_hi) / 2"  # Mean of db_lo and db_hi 
-
-
-# TODO:
-
-# -> this the logic for choosing the actions to be applied to the data sources
-# Predefined actions
-# actions = {
-#     "sum": lambda x: x.sum(),
-#     "mean": lambda x: x.mean(),
-#     "force": lambda gdf, formula: gdf.eval(formula),
-#     "minus": lambda x: x.iloc[:, 0] - x.iloc[:, 1:].sum(axis=1),
-#     # Add more actions as needed
-# }
-
-# # Function to apply action
-# def apply_action(gdf, action, columns):
-#     return actions[action](gdf[columns])
+analysing:
+  keep_geometry: True
+  cumulative_ranges:
+    gvi:
+      # - [0, 0.99]
+      # - [1, 1.99]
+      # - [2, 2.99]
+      # - [3, 3.99]
+      - [4, 5]

@@ -6,10 +6,10 @@ from pyrosm import OSM
 import osmium
 
 from green_paths_2.src.config import (
-    GENERAL_ID_DEFAULT_KEY,
+    ID_KEY,
+    OSM_ID_KEY,
     NETWORK_COLUMNS_TO_KEEP,
-    OSM_ID_DEFAULT_KEY,
-    OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION,
+    OSM_ID_KEY,
     SEGMENT_SAMPLING_POINTS_KEY,
 )
 from green_paths_2.src.data_utilities import (
@@ -177,7 +177,7 @@ class OsmNetworkHandler:
         """
         LOG.info("Processing OSM network.")
         self.convert_network_to_gdf()
-        self.rename_column(GENERAL_ID_DEFAULT_KEY, OSM_ID_DEFAULT_KEY)
+        self.rename_column(ID_KEY, OSM_ID_KEY)
         self.handle_crs(project_crs, original_crs)
         self.network_filter_by_columns(NETWORK_COLUMNS_TO_KEEP)
         self.handle_invalid_geometries()

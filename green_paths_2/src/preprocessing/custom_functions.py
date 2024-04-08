@@ -9,10 +9,9 @@ import numpy as np
 from green_paths_2.src.config import (
     AQI_DATA_CACHE_DIR_PATH,
     RASTER_NO_DATA_VALUE,
+    TIF_FILE_EXTENSION,
 )
-
-
-# TODO add checking if function exists in globals
+from green_paths_2.src.green_paths_exceptions import SpatialOperationError
 
 
 def validate_function_in_globals(custom_function_name: str) -> bool:
@@ -47,13 +46,13 @@ def apply_custom_processing_function(
 
 
 def convert_aq_nc_to_tif_and_scale_offset(data_source: dict) -> str:
-    # TODO: name needs to be dynamical?
-    aqi_tif_name = f"{data_source.get_name()}.tif"
+    aqi_tif_name = f"{data_source.get_name()}{TIF_FILE_EXTENSION}"
     output_tif_filepath = os.path.join(AQI_DATA_CACHE_DIR_PATH, aqi_tif_name)
     raster_filepath = data_source.get_filepath()
     original_crs = data_source.get_original_crs()
+    data_column = data_source.get_data_column()
     created_tif_filepath = convert_raster_nc_to_tif(
-        raster_filepath, output_tif_filepath, original_crs
+        raster_filepath, output_tif_filepath, original_crs, data_column
     )
 
     fix_aqi_tiff_scale_offset(created_tif_filepath)
@@ -62,10 +61,7 @@ def convert_aq_nc_to_tif_and_scale_offset(data_source: dict) -> str:
 
 # CUSTOM FUNCTIONS FOR .NC RASTER CONVERSION TO TIF AND FIXING SCALE AND OFFSET
 
-
-# TODO: edit docstrings etc.
 # TODO: if using interpolation, skip fillna...
-
 # TODO: for some reason 1.0 is no data, i guess it's because of the modelled AQI data specs
 
 
@@ -73,20 +69,31 @@ def convert_raster_nc_to_tif(
     input_raster_file_path: str,
     output_tif_filepath: str,
     original_crs: str | int,
+    data_column: str,
     fill_na_value: float = 1.0,
 ) -> str:
     """
+    Mainly from Green Paths 1 with some modifications.
+    https://github.com/DigitalGeographyLab/green-path-server
+
+
     Converts a netCDF file to a georeferenced raster file. xarray and rioxarray automatically
     scale and offset each netCDF file opened with proper values from the file itself. No manual
     scaling or adding offset required. CRS of the exported GeoTiff is set to WGS84.
 
     Parameters:
+    ------------
     - input_raster_file_path: The filename of an nc file to be processed from cache e.g. allPollutants_2019-09-11T15.nc.
     - output_tif_filepath: The name of the exported tif file (e.g. aqi_2019-11-08T14.tif).
     - original_crs: The original CRS of the raster file.
 
     Returns:
+    ------------
     - The name of the exported tif file (e.g. aqi_2019-11-08T14.tif).
+
+    Raises:
+    ------------
+    - SpatialOperationError: If an error occurs during the conversion process.
     """
     try:
         # read .nc file containing the AQI layer as a multidimensional array
@@ -95,8 +102,7 @@ def convert_raster_nc_to_tif(
         # retrieve AQI, AQI.data has shape (time, lat, lon)
         # the values are automatically scaled and offset AQI values
 
-        # TODO: do we need to check if AQI exists or allow using other key values?
-        aqi = data["AQI"]
+        aqi = data[data_column]
 
         # Fill NaN values with the specified fill value
         aqi_filled = aqi.fillna(fill_na_value)
@@ -111,8 +117,8 @@ def convert_raster_nc_to_tif(
         aqi_filled.rio.to_raster(output_tif_filepath)
 
         return output_tif_filepath
-    except Exception as e:
-        raise ValueError(f"Error in converting AQI nc to tif: {e}")
+    except SpatialOperationError as e:
+        raise SpatialOperationError(f"Error in converting AQI nc to tif: {e}")
 
 
 def _has_unscaled_aqi(aqi_raster) -> bool:
@@ -158,11 +164,14 @@ def fix_aqi_tiff_scale_offset(aqi_filepath: str) -> bool:
             aqi_raster_fillna.write(aqi_band_scaled, 1)
 
         return aqi_raster.crs
-    except Exception as e:
-        raise ValueError(f"Error in fixing scale and offset for the AQI tif file: {e}")
+    except SpatialOperationError as e:
+        raise SpatialOperationError(
+            f"Error in fixing scale and offset for the AQI tif file: {e}"
+        )
 
 
 # # TODO: do we want to interpolate?
+# If not TODO: remove
 
 # def fillna_in_raster(
 # dir: str,

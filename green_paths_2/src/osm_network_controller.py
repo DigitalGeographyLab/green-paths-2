@@ -1,4 +1,4 @@
-""" TODO """
+""" This module contains the OSM network controller. """
 
 import geopandas as gpd
 from green_paths_2.src.preprocessing.osm_network_handler import OsmNetworkHandler

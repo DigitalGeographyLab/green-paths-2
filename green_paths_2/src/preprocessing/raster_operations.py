@@ -3,6 +3,7 @@
 import os
 import geopandas as gpd
 import numpy as np
+from pyproj import CRS
 import rasterio
 from rasterio.features import rasterize
 from rasterio.transform import from_origin
@@ -13,7 +14,7 @@ from rasterio.enums import Resampling
 from rasterio.warp import calculate_default_transform, reproject
 
 from green_paths_2.src.config import (
-    OSM_ID_DEFAULT_KEY,
+    OSM_ID_KEY,
     OUTPUT_RASTER_DIR_PATH,
     RASTER_NO_DATA_VALUE,
     SEGMENT_POINTS_DEFAULT_SAMPLING_STRATEGY,
@@ -22,6 +23,7 @@ from green_paths_2.src.config import (
 )
 
 
+from green_paths_2.src.green_paths_exceptions import SpatialOperationError
 from green_paths_2.src.logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.PURPLE.value)
@@ -246,7 +248,7 @@ def calculate_segment_raster_values(
         if not value_for_segment or value_for_segment is np.nan:
             continue
 
-        osm_id = row[OSM_ID_DEFAULT_KEY]
+        osm_id = row[OSM_ID_KEY]
 
         # round and store value
         segment_raster_values[osm_id] = round(
@@ -279,6 +281,14 @@ def reproject_raster_to_crs(
     """
     try:
         LOG.info(f"Reprojecting raster from {original_crs} to {target_crs}.")
+
+        # convert crs to CRS object for transformation
+        # sometimes crashes if the crs is inputted as int
+        if isinstance(original_crs, int):
+            original_crs = CRS({"init": f"EPSG:{original_crs}"})
+        if isinstance(target_crs, int):
+            target_crs = CRS({"init": f"EPSG:{target_crs}"})
+
         with rasterio.open(input_raster_filepath) as src:
             # if new raster resolution is defined use it, otherwise use the original resolution
             # this slows down the process a little bit
@@ -316,7 +326,7 @@ def reproject_raster_to_crs(
                     dst_crs=target_crs,
                     resampling=Resampling.nearest,
                 )
-    except Exception as e:
+    except SpatialOperationError as e:
         raise ValueError(f"Error in reprojecting raster: {e}")
 
 

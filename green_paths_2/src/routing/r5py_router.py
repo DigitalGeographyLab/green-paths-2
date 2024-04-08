@@ -24,8 +24,9 @@ from green_paths_2.src.logging import setup_logger, LoggerColors
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 
 
-# set_environment_and_import_r5py()
-import r5py
+set_environment_and_import_r5py()
+
+# import r5py
 from r5py import (
     CustomCostTransportNetwork,
     DetailedItinerariesComputer,
@@ -139,18 +140,6 @@ def _build_custom_cost_networks_params(
         )
 
     return names, sensitivities, custom_cost_segment_weight_factors, allow_missing_datas
-
-
-# # TODO: remove???
-# def _get_data_metadata_with_data_name(name: str, routing_config: UserConfig) -> float:
-#     for routing_config_item in routing_config:
-#         # Check if the name is in your dictionary
-#         if routing_config_item["name"] in name:
-#             sensitivity = routing_config_item.get("sensitivity")
-#             # Check if the sensitivity is provided in user_config
-#             # If not, return the default value True for allowing missing values
-#             allow_missing_data = routing_config_item.get("allow_missing_data", True)
-#     return sensitivity, allow_missing_data
 
 
 @time_logger

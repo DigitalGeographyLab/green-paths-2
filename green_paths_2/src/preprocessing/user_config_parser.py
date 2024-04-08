@@ -6,7 +6,7 @@ from green_paths_2.src.config import DEFAULT_CONFIGURATION_VALUES
 from green_paths_2.src.data_utilities import determine_file_type
 from green_paths_2.src.preprocessing.spatial_operations import crs_uses_meters
 from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.preprocessing.preprocessing_exceptions import (
+from green_paths_2.src.green_paths_exceptions import (
     ConfigDataError,
     ConfigError,
 )
@@ -37,6 +37,7 @@ class UserConfig:
         """
         self.config_path = config_path
         self.skip_validation = skip_validation
+        self.data_source_names = []
 
     def parse_config(self):
         """
@@ -94,9 +95,11 @@ class UserConfig:
         """
         LOG.info("Validating user config")
         self._validate_crs(config)
+        self._validate_project_configs(config)
         self._validate_osm_pbf_network_file(config)
         self._validate_data_sources(config)
         self._validate_routing_config(config)
+        self._validate_analysing_config(config)
 
     def set_attributes(self, config: dict) -> None:
         """
@@ -130,6 +133,14 @@ class UserConfig:
         for key, default_value in DEFAULT_CONFIGURATION_VALUES.items():
             if not hasattr(self, key):
                 setattr(self, key, default_value)
+
+    def _validate_project_configs(self, config: dict) -> None:
+        """Validate project configurations."""
+        save_to_cache = config.get("save_to_cache")
+        if save_to_cache and not isinstance(save_to_cache, bool):
+            raise ConfigError(
+                "Invalid save to cache config, should be bool, True or False."
+            )
 
     def _validate_osm_pbf_network_file(self, config: dict) -> None:
         """
@@ -185,6 +196,7 @@ class UserConfig:
         for data in data_sources_config:
             # init all the values using enum names
             name = data.get(DataSourceModel.Name.value)
+            self.data_source_names.append(name)
             filepath = data.get(DataSourceModel.Filepath.value)
             data_type = data.get(DataSourceModel.Datatype.value)
             data_column = data.get(DataSourceModel.Datacolumn.value)
@@ -322,11 +334,11 @@ class UserConfig:
                     "Invalid save raster file configuration. Should be boolean. This optional attribute can be left empty. If provided, it should be boolean."
                 )
 
-            LOG.info("Data sources configurations validated.")
+        LOG.info("Data sources configurations validated.")
 
     def _validate_routing_config(self, config: dict) -> None:
         """
-        Validate routing configuration.
+        Validate routing configurations.
 
         :param config: A dictionary containing configuration data.
         """
@@ -401,3 +413,61 @@ class UserConfig:
                     "Invalid allow missing data configuration in routing parameters. Should be boolean if set."
                 )
             LOG.info("Routing configuration validated.")
+
+    def _validate_analysing_config(self, config: dict) -> None:
+        """
+        Validate analysing configurations.
+
+        :param config: A dictionary containing configuration data.
+        """
+        analysing_config = config.get("analysing", {})
+
+        if not analysing_config:
+            return
+
+        cumulative_ranges = analysing_config.get(DataSourceModel.CumulativeRanges.value)
+
+        if not cumulative_ranges:
+            return
+
+        cumulative_keys_valid = [
+            key for key in cumulative_ranges.keys() if key in self.data_source_names
+        ]
+
+        if not cumulative_keys_valid:
+            raise ConfigDataError(
+                "Invalid cumulative ranges in analysing parameters. No valid data source names found, cumulative values might have keys that aren't datasources."
+            )
+
+        for data_name in self.data_source_names:
+            cumulative_ranges_data = cumulative_ranges.get(data_name)
+            if not cumulative_ranges_data:
+                # not all data sources might have cumulative ranges
+                continue
+
+            if cumulative_ranges_data:
+
+                if not isinstance(cumulative_ranges_data, list):
+                    raise ConfigDataError(
+                        "Invalid cumulative ranges in analysing parameters. Should be list of float or integers."
+                    )
+
+                for range_value_pair in cumulative_ranges_data:
+                    if not isinstance(range_value_pair, list):
+                        raise ConfigDataError(
+                            "Invalid cumulative ranges in analysing parameters. Should be list of float or integers."
+                        )
+                    for single_range_value in range_value_pair:
+                        if not isinstance(single_range_value, (int, float)):
+                            raise ConfigDataError(
+                                "Invalid cumulative ranges in analysing parameters. Should be list of float or integers."
+                            )
+
+            LOG.info("Analysing configuration validated.")
+
+        keep_geometry: bool = analysing_config.get(DataSourceModel.KeepGeometry.value)
+
+        if keep_geometry and not isinstance(keep_geometry, bool):
+            raise ConfigDataError(
+                "Invalid keep_geometry in analysing parameters. Should be boolean True or False."
+            )

@@ -1,86 +1,97 @@
 """ Routing pipeline for Green Paths 2. """
 
-# setting JAVA_HOME environment variable, important!
-import os
-from green_paths_2.src.cache_cleaner import clear_cache_dirs
+# DISCLAIMER:
+# WE NEED TO RUN _set_environment_and_import_r5py()
+# WHICH SETS ENVIRONMENT VARIABLES AND IMPORTS GREEN PATHS 2 PATCH VERSION OF R5PY
+# LIKE THIS BEFORE OTHER IMPORTS DUE TO NEED FOR --r5-classpath ARGUMENT BEFORE R5PY IMPORTS
+# IT IS DIRTY, AND THERE MIGHT BE A BETTER WAY TO DO THIS
+
 from green_paths_2.src.config import (
-    JAVA_PATH,
-    OSM_ID_DEFAULT_KEY,
+    OSM_ID_KEY,
     ROUTING_CACHE_DIR_NAME,
     ROUTING_RESULTS_CSV_CACHE_PATH,
     ROUTING_RESULTS_GDF_CACHE_PATH,
+    SAVE_TO_CACHE_KEY,
     SEGMENT_STORE_GDF_CACHE_PATH,
     TRAVEL_TIMES_CSV_CACHE_PATH,
 )
-from green_paths_2.src.preprocessing.data_types import RoutingComputers
 
-os.environ["JAVA_HOME"] = JAVA_PATH
+from green_paths_2.src.routing.routing_utilities import (
+    set_environment_and_import_r5py,
+)
+
+# this code is ran before any other codes in routing module
+if not set_environment_and_import_r5py():
+    raise R5pyError(
+        "Failed to set environment variables and import r5py. Exiting routing!"
+    )
+
+
+from green_paths_2.src.green_paths_exceptions import PipeLineRuntimeError, R5pyError
+from green_paths_2.src.logging import setup_logger, LoggerColors
+
+LOG = setup_logger(__name__, LoggerColors.GREEN.value)
+
 
 import geopandas as gpd
+from green_paths_2.src.timer import time_logger
+from green_paths_2.src.cache_cleaner import clear_cache_dirs
+from green_paths_2.src.preprocessing.data_types import RoutingComputers
+
 from green_paths_2.src.data_utilities import (
+    convert_gdf_to_dict,
     convert_travel_times_dicts_to_gdf,
-    filter_gdf_by_columns_if_found,
     get_and_convert_gdf_to_dict,
     prepare_gdf_for_saving,
-    save_gdf_to_cache_as_gpkg,
+    save_gdf_to_cache,
 )
-from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.preprocessing.user_config_parser import UserConfig
 from green_paths_2.src.preprocessing.user_data_handler import UserDataHandler
 from green_paths_2.src.routing.router_controller import route_green_paths_2_paths
 from green_paths_2.src.routing.routing_utilities import (
     get_normalized_data_source_names,
-    set_environment_and_import_r5py,
     test_2_init_single_hki_od_points,
     test_init_ods,
     validate_segmented_osm_network_path,
 )
-from green_paths_2.src.timer import time_logger
-
-LOG = setup_logger(__name__, LoggerColors.GREEN.value)
-
-set_environment_and_import_r5py()
-
-
-# def set_environment_and_import_r5py() -> bool:
-#     """Set environment variables and import Green Paths 2 patch version of r5py."""
-#     try:
-#         import os, sys
-
-#         # Set environment variables
-#         os.environ["JAVA_HOME"] = JAVA_PATH
-#         # Correctly use extend to add R5 classpath argument
-#         sys.argv.extend(["--r5-classpath", R5_JAR_FILE_PATH])
-
-#         # Now, dynamically import r5py and make it global
-#         global r5py, CustomCostTransportNetwork, TravelTimeMatrixComputer, DetailedItinerariesComputer
-#         import r5py
-#         from r5py import CustomCostTransportNetwork
-#         from r5py.r5.detailed_itineraries_computer import DetailedItinerariesComputer
-#         from r5py.r5.travel_time_matrix_computer import TravelTimeMatrixComputer
-
-#         return True
-#     except Exception as e:
-#         LOG.error(
-#             f"Failed to set environment variables or import Green Paths 2 patch version of r5py. Error: {e}"
-#         )
-#         return False
 
 
 @time_logger
-def routing_pipeline(data_handler: UserDataHandler, user_config: UserConfig):
-    """Run the routing pipeline."""
+def routing_pipeline(
+    data_handler: UserDataHandler,
+    user_config: UserConfig,
+    exposure_gdf: gpd.GeoDataFrame = None,
+):
+    """
+    Run the routing pipeline.
+
+    Parameters:
+    ----------
+    data_handler : UserDataHandler
+        The UserDataHandler object.
+    user_config : UserConfig
+        The UserConfig object.
+    exposure_gdf : gpd.GeoDataFrame, optional
+        The exposure data as a GeoDataFrame. Defaults to None.
+
+    Returns:
+    ----------
+    gpd.GeoDataFrame
+        The routing results as a GeoDataFrame.
+    dict
+        The actual travel times as a dictionary.
+
+    Raises:
+    ----------
+    PipeLineRuntimeError
+        If the routing pipeline fails.
+    """
+
     LOG.info("\n\n\nStarting routing pipeline\n\n\n")
     try:
 
         # clear routing cache
         clear_cache_dirs([ROUTING_CACHE_DIR_NAME])
-
-        # import r5py and set environment variables dynamically
-        if not set_environment_and_import_r5py():
-            raise Exception(
-                "Failed to set environment variables and import r5py. Exiting routing!"
-            )
 
         osm_segmented_network_path = validate_segmented_osm_network_path(
             user_config.osm_network.osm_pbf_file_path
@@ -91,11 +102,17 @@ def routing_pipeline(data_handler: UserDataHandler, user_config: UserConfig):
             data_source_names
         )
 
-        exposure_dict = get_and_convert_gdf_to_dict(
-            SEGMENT_STORE_GDF_CACHE_PATH,
-            OSM_ID_DEFAULT_KEY,
-            normalized_data_source_names,
-        )
+        # get exposure data, from parameter or cache if in parameters
+        if exposure_gdf is not None:
+            LOG.info("Using parameter exposure data for routing.")
+            exposure_dict = convert_gdf_to_dict(exposure_gdf)
+        else:
+            LOG.info("Loading data from cache for routing pipeline")
+            exposure_dict = get_and_convert_gdf_to_dict(
+                SEGMENT_STORE_GDF_CACHE_PATH,
+                OSM_ID_KEY,
+                normalized_data_source_names,
+            )
 
         # origins, destinations = test_init_ods()
         origins, destinations = test_2_init_single_hki_od_points()
@@ -119,7 +136,7 @@ def routing_pipeline(data_handler: UserDataHandler, user_config: UserConfig):
 
         travel_times_gdf = convert_travel_times_dicts_to_gdf(actual_travel_times)
 
-        saveable_route_results = prepare_gdf_for_saving(
+        saveable_routing_results = prepare_gdf_for_saving(
             green_paths_route_results, user_config.routing.computer
         )
 
@@ -128,11 +145,16 @@ def routing_pipeline(data_handler: UserDataHandler, user_config: UserConfig):
         elif user_config.routing.computer == RoutingComputers.Detailed.value:
             cache_file_path = ROUTING_RESULTS_GDF_CACHE_PATH
 
-        save_gdf_to_cache_as_gpkg(saveable_route_results, cache_file_path)
+        # TODO: do we need / are we using travel_times_gdf?
 
-        save_gdf_to_cache_as_gpkg(travel_times_gdf, TRAVEL_TIMES_CSV_CACHE_PATH)
+        has_save_to_cache = hasattr(user_config, SAVE_TO_CACHE_KEY)
+
+        if has_save_to_cache and user_config.save_to_cache:
+            save_gdf_to_cache(saveable_routing_results, cache_file_path)
+            save_gdf_to_cache(travel_times_gdf, TRAVEL_TIMES_CSV_CACHE_PATH)
 
         LOG.info("Green Paths 2 routing pipeline completed.")
-    except Exception as e:
+        return saveable_routing_results, actual_travel_times
+    except PipeLineRuntimeError as e:
         LOG.error(f"Routing pipeline failed with error: {e}")
         raise e

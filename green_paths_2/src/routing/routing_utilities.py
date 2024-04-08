@@ -4,6 +4,7 @@ import os
 from green_paths_2.src.config import JAVA_PATH, NORMALIZED_DATA_SUFFIX, R5_JAR_FILE_PATH
 import geopandas as gpd
 from green_paths_2.src.data_utilities import construct_osm_segmented_network_name
+from green_paths_2.src.green_paths_exceptions import R5pyError
 from green_paths_2.src.preprocessing.user_data_handler import UserDataHandler
 
 from green_paths_2.src.logging import setup_logger, LoggerColors
@@ -12,15 +13,31 @@ from green_paths_2.src.logging import setup_logger, LoggerColors
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 
 
-def set_environment_and_import_r5py() -> bool:
-    """Set environment variables and import Green Paths 2 patch version of r5py."""
+def set_environment_and_import_r5py(set_environmental_variables: bool = True) -> bool:
+    """
+    Set environment variables according to param flag and import Green Paths 2 patch version of r5py.
+
+    Parameters
+    ----------
+    set_environmental_variables : bool, optional
+        If True, set environmental variables, by default True
+
+    Returns
+    -------
+    bool
+        True if successful, False otherwise.
+    """
     try:
-        import sys
+        if set_environmental_variables:
+            import sys
 
-        # Correctly use extend to add R5 classpath argument
-        sys.argv.extend(["--r5-classpath", R5_JAR_FILE_PATH])
+            # Correctly use extend to add R5 classpath argument
+            sys.argv.extend(["--r5-classpath", R5_JAR_FILE_PATH])
 
-        # Now, dynamically import r5py and make it global
+            # Set environment variables
+            os.environ["JAVA_HOME"] = JAVA_PATH
+
+        # TODO: dynamically import r5py and make it global -> is this working???
         global r5py, CustomCostTransportNetwork, TravelTimeMatrixComputer, DetailedItinerariesComputer
         import r5py
         from r5py import CustomCostTransportNetwork
@@ -28,7 +45,7 @@ def set_environment_and_import_r5py() -> bool:
         from r5py.r5.travel_time_matrix_computer import TravelTimeMatrixComputer
 
         return True
-    except Exception as e:
+    except R5pyError as e:
         LOG.error(
             f"Failed to set environment variables or import Green Paths 2 patch version of r5py. Error: {e}"
         )
@@ -144,6 +161,8 @@ from shapely.geometry import Point
 
 # TODO TODO: not using anywhere atm...
 # TODO: ROOPE TODO säädä tää kuntoon ku tiietää mitä kaikkia halutaan tukea...
+
+
 def load_spatial_data_autodetect(file_path, target_crs="EPSG:4326"):
     # Extract file extension
     file_extension = os.path.splitext(file_path)[-1].lower()

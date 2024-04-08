@@ -5,11 +5,12 @@ import geopandas as gpd
 from green_paths_2.src.config import (
     DATA_CACHE_DIR_PATH,
     DESCRIPTOR_FILE_NAME,
-    LOGS_DIR_NAME,
+    LOGS_CACHE_DIR_NAME,
     USER_CONFIG_PATH,
 )
 from green_paths_2.src.config_validator import validate_user_config
 from green_paths_2.src.data_utilities import determine_file_type
+from green_paths_2.src.green_paths_exceptions import PipeLineRuntimeError
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.preprocessing.custom_functions import (
     apply_custom_processing_function,
@@ -65,6 +66,11 @@ class DataDescriptor:
         ----------
         save_to_file : bool, optional
             If True, will save the data description to a file, by default False
+
+        Raises
+        ------
+        PipeLineRuntimeError
+            If the descriptor fails.
         """
 
         if not validate_user_config():
@@ -320,7 +326,7 @@ class DataDescriptor:
 
             if save_to_file:
                 save_file_path = os.path.join(
-                    DATA_CACHE_DIR_PATH, LOGS_DIR_NAME, DESCRIPTOR_FILE_NAME
+                    DATA_CACHE_DIR_PATH, LOGS_CACHE_DIR_NAME, DESCRIPTOR_FILE_NAME
                 )
                 LOG.info(f"Saving data description to file: {save_file_path}")
                 # will override the file if it exists
@@ -330,8 +336,8 @@ class DataDescriptor:
                 LOG.info("Logging data description to console.")
                 LOG.info(self.data_description_text)
 
-        except Exception as e:
-            LOG.error(e)
+        except PipeLineRuntimeError as e:
+            LOG.error(f"Data descriptor failed with error {e}.")
             raise e
 
         LOG.info("Data descriptor finished.")

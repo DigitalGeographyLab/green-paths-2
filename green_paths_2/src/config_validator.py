@@ -1,6 +1,7 @@
 """ Validation module for user configuration. """
 
 from green_paths_2.src.config import USER_CONFIG_PATH
+from green_paths_2.src.green_paths_exceptions import ConfigError
 from green_paths_2.src.preprocessing.user_config_parser import UserConfig
 from green_paths_2.src.logging import setup_logger, LoggerColors
 
@@ -19,7 +20,7 @@ def validate_user_config() -> bool | None:
         UserConfig(USER_CONFIG_PATH).parse_config()
         LOG.info("VALIDATING...\n\n\n")
         LOG_SUCCESS.info("CONFIGURATION VALID.")
-    except Exception as e:
+    except ConfigError as e:
         LOG.info("VALIDATING...\n\n\n")
         LOG_ERROR.error(f"USER CONFIGURATION INVALID")
         LOG_ERROR.error(f"FOUND ERROR: {str(e)}")

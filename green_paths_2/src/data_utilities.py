@@ -1,20 +1,19 @@
-""" TODO """
+""" General data utilities for managing data. """
 
-from enum import Enum
 import os
 import geopandas as gpd
 import pandas as pd
 
 from green_paths_2.src.config import (
     DATA_CACHE_DIR_PATH,
+    FROM_ID_KEY,
     OSM_CACHE_DIR_NAME,
     OSM_CACHE_SEGMENTED_DIR_NAME,
-    OSM_ID_DEFAULT_KEY,
-    OSM_IDS_DEFAULT_KEY,
+    OSM_IDS_KEY,
     OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION,
-    ROUTING_RESULTS_CSV_CACHE_PATH,
-    SEGMENT_STORE_GDF_CACHE_PATH,
+    TO_ID_KEY,
 )
+from green_paths_2.src.green_paths_exceptions import DataManagingError
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.preprocessing.data_types import RoutingComputers
 from green_paths_2.src.timer import time_logger
@@ -46,7 +45,6 @@ def filter_gdf_by_columns_if_found(
         target_gdf = target_gdf[existing_columns]
     else:
         target_gdf.drop(
-            # TODO: ROOPE OTIN TOST IN -> NOT POIS
             columns=[
                 column for column in target_gdf.columns if column in existing_columns
             ],
@@ -87,8 +85,7 @@ def determine_file_type(file_path: str) -> str | None:
     """
     LOG.info(f"Determining data_type for {file_path}")
     # Common raster and vector file extensions
-    # TODO: are these all supported e.g. img???
-    raster_extensions = [".tif", ".tiff", ".img", ".dem", ".dtm", ".nc"]
+    raster_extensions = [".tif", ".tiff", ".dem", ".dtm", ".nc"]
     vector_extensions = [".shp", ".geojson", ".gpkg", ".kml", ".gml"]
 
     # Get the file extension
@@ -104,7 +101,7 @@ def determine_file_type(file_path: str) -> str | None:
 
 
 def get_gpkg_from_cache_as_gdf(
-    file_path: str, set_index_column: str = None
+    file_path: str,  # , set_index_column: str = None
 ) -> gpd.GeoDataFrame:
     """
     Get exposure data from cache. Read .gpkg file from data/cache directory.
@@ -115,10 +112,11 @@ def get_gpkg_from_cache_as_gdf(
             return gpd.GeoDataFrame()
 
         exposure_gdf = gpd.read_file(file_path)
+
         # index the gdf with osm_id if found in columns
         # if not in columns, the osm_id is already the index
-        if set_index_column and set_index_column in exposure_gdf.columns:
-            exposure_gdf.set_index(set_index_column, inplace=True)
+        # if set_index_column and set_index_column in exposure_gdf.columns:
+        #     exposure_gdf.set_index(set_index_column, inplace=True)
 
         return exposure_gdf
     except:
@@ -137,8 +135,12 @@ def get_and_convert_gdf_to_dict(
     Convert exposure data to dictionary, drop geometry.
     """
     LOG.info(f"Getting and converting GeoDataFrame to dictionary from path: {path}")
+    if not os.path.exists(path):
+        LOG.error(f"Cache might be empty, file not found for path: {path}.")
+        raise ValueError("Exposure data GeoDataFrame from cache is empty.")
+
     if ".gpkg" in path:
-        exposure_data_gdf = get_gpkg_from_cache_as_gdf(path, set_index_column)
+        exposure_data_gdf = get_gpkg_from_cache_as_gdf(path)
     elif ".csv" in path:
         exposure_data_gdf = pd.read_csv(path)
 
@@ -152,7 +154,24 @@ def get_and_convert_gdf_to_dict(
             exposure_data_gdf, data_source_names, keep=True
         )
 
-    return exposure_data_gdf.to_dict(orient=orient)
+    return convert_gdf_to_dict(exposure_data_gdf, set_index_column, orient)
+
+
+def convert_gdf_to_dict(
+    target_gdf: gpd.GeoDataFrame, set_index_column: str = None, orient: str = "dict"
+):
+    """
+    Convert GeoDataFrame to dictionary.
+
+    Parameters:
+    - gdf: GeoDataFrame to convert to dictionary.
+
+    Returns:
+    - Dictionary containing the GeoDataFrame data.
+    """
+    if set_index_column and set_index_column in target_gdf.columns:
+        target_gdf.set_index(set_index_column, inplace=True)
+    return target_gdf.to_dict(orient=orient)
 
 
 def construct_osm_segmented_network_name(osm_source_path: str) -> str:
@@ -172,16 +191,18 @@ def construct_osm_segmented_network_name(osm_source_path: str) -> str:
 
 
 @time_logger
-def save_gdf_to_cache_as_gpkg(gdf_to_save: gpd.GeoDataFrame, cache_file_path: str):
+def save_gdf_to_cache(gdf_to_save: gpd.GeoDataFrame, cache_file_path: str) -> None:
     """
-    Save GeoDataFrame to cache as .gpkg file.
+    Save GeoDataFrame to cache as .gpkg file if is GeoDataFrame (has geometry)
+    or as .csv file if is DataFrame (without geometry).
 
     Parameters:
+    ----------------
     - gdf_to_save: GeoDataFrame to save.
     - cache_path: Path to the cache file.
 
     Raises:
-    - Exception: If saving fails.
+    - DataManagingError: If saving fails.
     """
     LOG.info(f"Saving GeoDataFrame to cache as .gpkg file.")
     try:
@@ -194,7 +215,7 @@ def save_gdf_to_cache_as_gpkg(gdf_to_save: gpd.GeoDataFrame, cache_file_path: st
                 LOG.error("Wasn't able to save gdf to cache.")
         elif isinstance(gdf_to_save, pd.DataFrame) and not gdf_to_save.empty:
             gdf_to_save.to_csv(cache_file_path, index=False)
-    except Exception as e:
+    except DataManagingError as e:
         LOG.error(f"Failed to save GeoDataFrame to cache. Error: {e}")
         raise e
 
@@ -205,38 +226,29 @@ def prepare_gdf_for_saving(
     """
     Prepare GeoDataFrame for saving.
 
+    Parameters:
+    ----------
+    gdf : gpd.GeoDataFrame
+        The GeoDataFrame to prepare for saving.
+
+    Returns:
+    ----------
+    gpd.GeoDataFrame
+        The prepared GeoDataFrame.
+
     """
     LOG.info("Preparing GeoDataFrame for saving.")
-    # convert osm_ids list to string
-
     if routing_computer == RoutingComputers.Detailed.value:
         if "osm_ids" in gdf.columns:
-            gdf[OSM_IDS_DEFAULT_KEY] = gdf[OSM_IDS_DEFAULT_KEY].apply(list_to_string)
+            gdf[OSM_IDS_KEY] = gdf[OSM_IDS_KEY].apply(list_to_string)
         filter_columns = [
-            "from_id",
-            "to_id",
+            FROM_ID_KEY,
+            TO_ID_KEY,
             "distance",
             "geometry",
             "osm_ids",
         ]
         gdf = filter_gdf_by_columns_if_found(gdf, filter_columns)
-
-    # TODO: maybe remove for -> transpor_mode can be fetched form confs
-    # and travel_time is probably wrong because of custom costs...
-
-    # # convert all non-hashable columns to string e.g. Enum and Timedelta
-    # for column in gdf.columns:
-    #     # Check for Enum and convert to its name value
-    #     if isinstance(gdf[column].dtype, pd.CategoricalDtype):
-    #         if issubclass(gdf[column].dtype.categories.dtype.type, Enum):
-    #             gdf[column] = gdf[column].astype(str)
-    #     elif any(isinstance(v, Enum) for v in gdf[column].dropna().unique()):
-    #         gdf[column] = gdf[column].apply(
-    #             lambda x: x.name if isinstance(x, Enum) else x
-    #         )
-    #     # Convert Timedelta to total seconds
-    #     elif pd.api.types.is_timedelta64_dtype(gdf[column].dtype):
-    #         gdf[column] = gdf[column].dt.total_seconds()
     return gdf
 
 

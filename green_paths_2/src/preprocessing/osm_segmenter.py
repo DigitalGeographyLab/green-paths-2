@@ -11,6 +11,7 @@ from green_paths_2.src.config import (
     OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION,
 )
 from green_paths_2.src.data_utilities import construct_osm_segmented_network_name
+from green_paths_2.src.green_paths_exceptions import OsmSegmenterError
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.timer import time_logger
 
@@ -160,7 +161,7 @@ def segment_or_use_cache_osm_network(osm_source_path: str) -> str:
             # write the way to the new OSM PBF file
             writer.add_way(way)
         writer.close()
-    except Exception as e:
+    except OsmSegmenterError as e:
         # if something goes wrong, remove the file
         if os.path.exists(osm_segmented_network_path):
             os.remove(osm_segmented_network_path)
@@ -170,7 +171,7 @@ def segment_or_use_cache_osm_network(osm_source_path: str) -> str:
     # simple check that osm.pbf is valid
     # TODO: commented the validity check out...
     if not osm_pbf_is_valid(osm_segmented_network_path, max_ways=1000):
-        raise ValueError(
+        raise OsmSegmenterError(
             f"Segmented OSM network file {osm_segmented_network_path} is not valid."
         )
     LOG.info(f"Segmenting the OSM network finished.")

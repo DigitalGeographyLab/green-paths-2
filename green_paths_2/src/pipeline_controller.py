@@ -2,6 +2,7 @@
 
 from green_paths_2.src.config import USER_CONFIG_PATH
 from green_paths_2.src.exposure_analysing.main import exposure_analysing_pipeline
+from green_paths_2.src.green_paths_exceptions import PipeLineRuntimeError
 from green_paths_2.src.osm_network_controller import handle_osm_network_process
 from green_paths_2.src.preprocessing.main import preprocessing_pipeline
 from green_paths_2.src.preprocessing.user_config_parser import UserConfig
@@ -12,9 +13,6 @@ from green_paths_2.src.routing.main import routing_pipeline
 from green_paths_2.src.logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
-
-
-# TODO: make better exception?
 
 
 def handle_pipelines(pipeline_name: str, use_exposure_cache: bool = False):
@@ -31,7 +29,7 @@ def handle_pipelines(pipeline_name: str, use_exposure_cache: bool = False):
 
     Raises
     ------
-    Exception
+    PipeLineRuntimeError
         If pipeline fails.
     """
     try:
@@ -54,11 +52,21 @@ def handle_pipelines(pipeline_name: str, use_exposure_cache: bool = False):
                 exposure_analysing_pipeline(user_config)
             else:
                 osm_network_gdf = handle_osm_network_process(user_config)
-                preprocessing_pipeline(osm_network_gdf, data_handler, user_config)
+                exposure_gdf, processed_osm_network_gdf = preprocessing_pipeline(
+                    osm_network_gdf, data_handler, user_config
+                )
                 LOG.info("\n\n\n * * * \n\n\n")
-                routing_pipeline(data_handler, user_config)
+                green_paths_route_results_gdf, actual_travel_times_gdf = (
+                    routing_pipeline(data_handler, user_config, exposure_gdf)
+                )
                 LOG.info("\n\n\n * * * \n\n\n")
-                exposure_analysing_pipeline(user_config)
-    except Exception as e:
-        LOG.error(f"Pipeline failed with error: {e}")
+                exposure_analysing_pipeline(
+                    user_config,
+                    exposure_gdf=exposure_gdf,
+                    processed_osm_network_gdf=processed_osm_network_gdf,
+                    routing_results_gdf=green_paths_route_results_gdf,
+                    actual_travel_times_gdf=actual_travel_times_gdf,
+                )
+    except PipeLineRuntimeError as e:
+        LOG.error(f"Pipeline controller failed with error: {e}")
         raise e

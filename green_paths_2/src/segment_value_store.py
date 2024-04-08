@@ -3,18 +3,19 @@
 import pandas as pd
 import geopandas as gpd
 from green_paths_2.src.config import (
+    GEOMETRY_KEY,
+    LENGTH_KEY,
     NORMALIZED_DATA_SUFFIX,
+    OSM_ID_KEY,
     SEGMENT_VALUES_ROUND_DECIMALS,
 )
 
+from green_paths_2.src.green_paths_exceptions import SegmentValueStoreError
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.preprocessing.data_source import DataSource
 
 
 LOG = setup_logger(__name__, LoggerColors.RED.value)
-
-
-# TODO: get from user_config -> data_keys which are used to calculate normalized value
 
 
 class SegmentValueStore:
@@ -96,22 +97,24 @@ class SegmentValueStore:
         try:
             exposure_dict = self.get_store()
             # set network_gdf index to osm_id
-            osm_network_gdf = osm_network_gdf.set_index("osm_id")
+            osm_network_gdf = osm_network_gdf.set_index(OSM_ID_KEY)
             for osm_id, _ in exposure_dict.items():
                 # set value "osm_id" to the exposure_dict with the key osm_id
-                exposure_dict[osm_id]["osm_id"] = osm_id
+                exposure_dict[osm_id][OSM_ID_KEY] = osm_id
                 # set value "geometry" to the exposure_dict with the key osm_id
-                exposure_dict[osm_id]["geometry"] = osm_network_gdf.loc[
-                    osm_id, "geometry"
+                exposure_dict[osm_id][GEOMETRY_KEY] = osm_network_gdf.loc[
+                    osm_id, GEOMETRY_KEY
                 ]
-                exposure_dict[osm_id]["length"] = osm_network_gdf.loc[osm_id, "length"]
+                exposure_dict[osm_id][LENGTH_KEY] = osm_network_gdf.loc[
+                    osm_id, LENGTH_KEY
+                ]
 
             self.set_store(exposure_dict)
-        except Exception as e:
+        except SegmentValueStoreError as e:
             LOG.error(f"Error combining exposures to geometries: {e}")
             return False
 
-    # TODO: maybe crash -> or put to configurations that will crash?
+    # TODO: Do we want to crash?
     def validate_data_coverage(
         self, data_sources: list[DataSource], osm_network_segment_count: int
     ) -> None:
@@ -203,9 +206,6 @@ class SegmentValueStore:
         Returns:
         - Dictionary with the OSM IDs as keys and the normalised values as values.
         """
-        # TODO: if we want to support scaling with min and max according to the data -> maybe remove?
-        # meta_data = self.get_data_info_from_segment_store(data_key)
-        # min_val, max_val = meta_data["min"], meta_data["max"]
         normalized_values = {}
 
         # Iterate through each segment in the master segment store
@@ -238,30 +238,6 @@ class SegmentValueStore:
 
         return normalized_values
 
-    def get_data_info_from_segment_store(self, data_key: str) -> dict:
-        # get min, max, mean, median, std, etc. for each data source from segment store
-        data_values = []
-        for _, data in self.master_segment_store.items():
-            if data_key in data:
-                data_values.append(data[data_key])
-
-        return {
-            "min": min(data_values),
-            "max": max(data_values),
-            "mean": sum(data_values) / len(data_values),
-            "median": sorted(data_values)[len(data_values) // 2],
-            "std": pd.Series(data_values).std(),
-        }
-
-    # TODO: test e.g. with
-    # from shapely.geometry import Point
-    # # Example nested dict: {123: {'noise_data': 1.5, 'geometry': 'POINT(1 2)'}}
-    # nested_dict = {
-    #     123: {'noise_data': 1.5, 'air_quality': 2.0, 'geometry': Point(1, 2)},
-    #     # Add more entries as needed
-    # }
-
-    # TODO: maybe remove the geometry check -> should always have geometry???
     def convert_segment_store_to_gdf(self) -> None:
         """
         Convert segment store to GeoDataFrame.
@@ -282,7 +258,7 @@ class SegmentValueStore:
             else:
                 gdf = gpd.GeoDataFrame(df)
             self.set_master_segment_gdf(gdf)
-        except Exception as e:
+        except SegmentValueStoreError as e:
             LOG.error(f"Error converting segment store to GeoDataFrame: {e}")
 
     def save_segment_values(self, data_segment_values: dict, data_name: str) -> None:
@@ -303,7 +279,7 @@ class SegmentValueStore:
                     master_store[osm_id] = {}
                 master_store[osm_id][data_name] = value
             self.set_store(master_store)
-        except Exception as e:
+        except SegmentValueStoreError as e:
             # TODO: throw error?
             LOG.error(f"Error saving segment values: {e}")
 

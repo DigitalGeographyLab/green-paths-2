@@ -1,9 +1,9 @@
-""" """
+""" Cache cleaner module. """
 
 import os
 
 from green_paths_2.src.config import DATA_CACHE_DIR_PATH
-
+from green_paths_2.src.green_paths_exceptions import DataManagingError
 from green_paths_2.src.logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.RED.value)
@@ -14,18 +14,31 @@ def empty_folder(folder_path: str) -> None:
     Empty a folder by deleting all files in it.
 
     Parameters:
+    ------------
     - folder_path: Path to the folder to be emptied.
+
+    Raises:
+    -----------
+    - DataManagingError: If the file deletion fails.
     """
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
         try:
             if os.path.isfile(file_path) or os.path.islink(file_path):
                 os.unlink(file_path)
-        except Exception as e:
+        except DataManagingError as e:
             LOG.error(f"Failed to delete {file_path}. Reason: {e}")
 
 
 def clear_cache_dirs(dirs: list[str]) -> None:
+    """
+    Empty cache directories.
+
+    Parameters:
+    ------------
+    - dirs: List of cache directories to empty.
+
+    """
     LOG.info(f"Emptying cache directories: {dirs}")
     cache_root_dir_path = DATA_CACHE_DIR_PATH
     for dir in dirs:

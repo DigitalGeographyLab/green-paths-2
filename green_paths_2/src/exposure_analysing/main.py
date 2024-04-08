@@ -1,76 +1,105 @@
-""" TODO """
+""" Main module for the exposure analysing pipeline."""
 
 import geopandas as gpd
 
-from green_paths_2.src.data_utilities import (
-    save_gdf_to_cache_as_gpkg,
+from green_paths_2.src.config import (
+    NAME_KEY,
 )
-
 from green_paths_2.src.exposure_analysing.exposure_calculator import ExposureCalculator
 from green_paths_2.src.exposure_analysing.exposure_data_handlers import (
-    load_datas_from_cache,
+    get_datas_from_sources,
+    save_final_results_data,
 )
-from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.preprocessing.data_types import RoutingComputers
+from green_paths_2.src.green_paths_exceptions import PipeLineRuntimeError
 from green_paths_2.src.preprocessing.user_config_parser import UserConfig
 from green_paths_2.src.timer import time_logger
+
+from green_paths_2.src.logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 
 
-def exposure_analysing_pipeline(user_config: UserConfig) -> None:
-    """TODO"""
+@time_logger
+def exposure_analysing_pipeline(
+    user_config: UserConfig,
+    exposure_gdf: gpd.GeoDataFrame = None,
+    processed_osm_network_gdf: gpd.GeoDataFrame = None,
+    routing_results_gdf: gpd.GeoDataFrame = None,
+    actual_travel_times_gdf: gpd.GeoDataFrame = None,
+):
+    """
+    Run the exposure analysing pipeline.
+
+    Parameters
+    ----------
+    user_config : UserConfig
+        User configuration object.
+    exposure_gdf : gpd.GeoDataFrame, optional
+        GeoDataFrame containing exposure data. Defaults to None.
+    processed_osm_network_gdf : gpd.GeoDataFrame, optional
+        GeoDataFrame containing processed OSM network data. Defaults to None.
+    routing_results_gdf : gpd.GeoDataFrame, optional
+        GeoDataFrame containing routing results. Defaults to None.
+    actual_travel_times_gdf : gpd.GeoDataFrame, optional
+        GeoDataFrame containing actual travel times. Defaults to None.
+
+    Raises
+    ------
+    PipeLineRuntimeError
+        If the exposure analysing pipeline fails.
+    """
     LOG.info("\n\n\nStarting analysing pipeline\n\n\n")
-    routing_results, segment_exposure_store, osm_network_store = load_datas_from_cache(
-        user_config.routing.computer
-    )
+    try:
+        routing_results, segment_exposure_store, osm_network_store = (
+            get_datas_from_sources(
+                exposure_gdf=exposure_gdf,
+                osm_network_gdf=processed_osm_network_gdf,
+                routing_results_gdf=routing_results_gdf,
+                # actual_travel_times_gdf=actual_travel_times_gdf,
+                routing_computer=user_config.routing.computer,
+            )
+        )
 
-    # TODO -> move this...
-    data_names = [data.get("name") for data in user_config.data_sources]
+        # validate that the data is found
+        if not routing_results or not segment_exposure_store or not osm_network_store:
+            raise ValueError("Data not found for analysing pipeline.")
 
-    exposure_calculator = ExposureCalculator(
-        routing_results=routing_results,
-        segment_exposure_store=segment_exposure_store,
-        osm_network_store=osm_network_store,
-        data_names=data_names,
-    )
+        exposure_calculator = ExposureCalculator(
+            user_config=user_config,
+            routing_results=routing_results,
+            segment_exposure_store=segment_exposure_store,
+            osm_network_store=osm_network_store,
+            data_names=[data.get(NAME_KEY) for data in user_config.data_sources],
+        )
 
-    exposure_calculator.construct_master_statistics_dict()
+        exposure_calculator.construct_master_statistics_dict()
 
-    # TODO: analyze master statistics store?
+        if not exposure_calculator.get_master_statistics_store():
+            raise ValueError("No statistics found for any paths.")
 
-    exposure_calculator.combine_all_path_statistics_to_master_combined_statistics_list()
+        # TODO: analyze master statistics store? -> crash if not enough data found?
 
-    # TODO: ehkä laita noi jonnekki muualle kuin tonne samaan storee
+        exposure_calculator.calculate_and_combine_paths_statistics()
 
-    # TODO: -> nyt tukee vaan 1 -> kato miten järkevä monelle reitille, ehkä se key = from_id + to_id tms?
-    # TODO: -> tee joku saveus esim gdf
+        if not exposure_calculator.get_master_statistics_store():
+            raise ValueError("No statistics found for any paths.")
 
-    print("test combined path statistics")
+        combined_results_per_path = (
+            exposure_calculator.get_master_combined_statistics_store()
+        )
 
-    test_combined = exposure_calculator.get_master_combined_statistics_store()
+        if not combined_results_per_path:
+            raise ValueError("No combined path statistics found for any paths.")
 
-    # print(test_combined)
-    # print("täää oli toi combined list")
-    # return
+        saved_final_result = save_final_results_data(
+            user_config=user_config,
+            combined_master_statistics_store=combined_results_per_path,
+        )
 
-    test_combined_gdf = gpd.GeoDataFrame(test_combined)
+        if not saved_final_result.empty:
+            LOG.info(f"Saved final result df/gdf head {saved_final_result.head()}")
 
-    # set geometry to test_combined_gdf
-    # test_combined_gdf.set_geometry("geometry")
-
-    # check crs and set it if not found or incorrect
-    if not test_combined_gdf.crs or test_combined_gdf.crs != "EPSG:4326":
-        test_combined_gdf.crs = "EPSG:4326"
-
-    print("the crs is...")
-    print(test_combined_gdf.crs)
-
-    save_gdf_to_cache_as_gpkg(
-        test_combined_gdf,
-        "green_paths_2/src/cache/exposure_analysing/test_results.gpkg",
-    )
-
-    print(test_combined_gdf)
-
-    # todo
+        LOG.info("Analysing pipeline finished.")
+    except PipeLineRuntimeError as e:
+        LOG.error(f"Analysing pipeline failed with error: {e}")
+        raise e

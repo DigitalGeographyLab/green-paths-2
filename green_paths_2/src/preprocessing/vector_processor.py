@@ -2,6 +2,7 @@
 
 import geopandas as gpd
 from green_paths_2.src.config import FIX_INVALID_GEOMETRIES
+from green_paths_2.src.green_paths_exceptions import DataManagingError
 from green_paths_2.src.preprocessing.data_source import DataSource
 
 from green_paths_2.src.data_utilities import (
@@ -48,11 +49,11 @@ def load_vector_data(data_path: str, layer_name: str = None):
         if not layer_name:
             available_layers = list_vector_data_layers(data_path)
             if not available_layers:
-                raise Exception(
+                raise DataManagingError(
                     f"No layername provided and no layers found from vector data: {data_path}"
                 )
             if len(available_layers) > 1 and not available_layers:
-                raise Exception(
+                raise DataManagingError(
                     f"Vector data has many layers but no layer name provided to choose from: {data_path}"
                 )
                 # return multiple layers as dict
@@ -63,7 +64,7 @@ def load_vector_data(data_path: str, layer_name: str = None):
             # get the only layer name
             layer_name = available_layers[0]
         return gpd.read_file(data_path, layer=layer_name)
-    except Exception as e:
+    except DataManagingError as e:
         LOG.info(f"failed to read vector point data layer for path: {data_path}")
         LOG.error(e)
 
