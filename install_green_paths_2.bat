@@ -3,6 +3,14 @@
 :: PRE-REQUISITES:
     :: 1. Install Miniconda or Anaconda
 
+:: WINDOWS
+    :: Some of GP2 dependecy packages require Microsoft Visual C++ 14.0 or greater.
+    :: Download and install Microsoft Visual C++ Build Tools from https://visualstudio.microsoft.com/visual-cpp-build-tools/
+    :: From Visual Studio Installer select the tab "Individual components" and from there select at least:
+    ::  - C++ build tools 
+    ::  - Windows 10 SDK
+    :: - C++ CMake tools for Windows
+
 :: STEPS:
 
 :: first remember to deactivate the current conda env if active by runnning the following command:
@@ -33,6 +41,13 @@ where conda >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo Conda is not installed. Please install Miniconda or Anaconda before proceeding.
     echo See: https://conda.io/projects/conda/en/latest/user-guide/install/index.html
+
+    echo ''
+    echo NOTE: after conda install, some of the following can be needed:
+    echo Restaring computer, adding conda to PATH, restarting terminal/cmd/etc., ...
+    echo If these don't work, please use the conda/anaconda prompt installed with conda.
+    echo ''
+
     exit /b 1
 )
 
@@ -62,7 +77,7 @@ call conda create -n dgl_gp2 python=3.11 -y
 call conda activate dgl_gp2
 
 :: Install Java
-call conda install -c conda-forge openjdk -y
+call conda install -c conda-forge openjdk=21 -y
 
 :: Set JAVA_HOME for the Conda environment
 :: Note: Setting JAVA_HOME permanently in Windows requires setting it in the system environment variables

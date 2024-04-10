@@ -36,6 +36,11 @@ echo ''
 if ! conda --version &> /dev/null; then
     echo "Conda is not installed. Please install Miniconda or Anaconda before proceeding."
     echo "See: https://conda.io/projects/conda/en/latest/user-guide/install/index.html"
+    echo ''
+    echo "NOTE: after conda install, some of the following can be needed:"
+    echo "Restaring computer, adding conda to PATH, restarting terminal/cmd/etc., ..."
+    echo "If these don't work, please use the conda/anaconda prompt installed with conda."
+    echo ''
     exit 1
 fi
 
@@ -65,7 +70,7 @@ source $(conda info --base)/etc/profile.d/conda.sh
 conda activate dgl_gp2
 
 # Install Java
-conda install -c conda-forge openjdk -y
+conda install -c conda-forge openjdk=21 -y
 
 # Set JAVA_HOME for the Conda environment
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d

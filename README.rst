@@ -2,6 +2,8 @@
 Green Paths 2
 =============
 
+Multi-objective exposure routing for healthier paths choicess
+
 
 .. image:: https://img.shields.io/pypi/v/green_paths_2.svg
         :target: https://pypi.python.org/pypi/green_paths_2
@@ -16,11 +18,63 @@ Green Paths 2
 
 GREEN PATHS 2 IS UNDER CONSTRUCTION!!!
 
-Test running with e.g. make greenpaths2 preprocessing
+
+Installation:
 
 
 
-TODOS
+        Windows
+
+
+        Mac / Linux
+
+
+
+CLI USER INTERFACE
+
+        Here are some examples of how to use the CLI:
+
+        Windows:
+
+        All commands are run in some cli terminal
+        with prefix: poetry run python green_paths_2_cli.py
+
+
+                general
+
+                --help
+
+                preprocessing
+
+                poetry run python green_paths_2_cli.py preprocessing
+
+
+                routing
+
+                poetry run python green_paths_2_cli.py routing
+
+                analysing
+
+                green-paths-2 analysing --help
+
+
+
+
+        Mac / Linux:
+
+                make green_paths_2_cli.py --help
+
+                make preprocessing --help
+
+                make routing --help
+
+                make analysing --help
+
+
+Green Paths 2 Framework
+
+Green paths 2 consist of 3 main modules:
+
         preprocessing:
 
                 osm_processor
@@ -42,7 +96,7 @@ TODOS
 
 
 
-Bi-objective exposure routing for healthier paths choices
+
 
 
 * Free software: MIT license
@@ -56,6 +110,18 @@ Features
 
 Credits
 -------
+
+- r5
+- r5py
+- GP1
+
+
+- cookiecutter
+- poetry
+- all other dependencies
+
+
+
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
