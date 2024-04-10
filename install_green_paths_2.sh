@@ -32,6 +32,12 @@ echo "Installing GreenPaths 2.0"
 echo ''
 
 
+# Check if Conda is installed by looking for the 'conda' command
+if ! conda --version &> /dev/null; then
+    echo "Conda is not installed. Please install Miniconda or Anaconda before proceeding."
+    exit 1
+fi
+
 # Check if the dgl_gp2 environment is currently active
 # it is is activate, echo instructions to deactivate and exit
 if [[ "$CONDA_DEFAULT_ENV" == "dgl_gp2" ]]; then
