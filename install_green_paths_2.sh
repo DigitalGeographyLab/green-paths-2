@@ -35,6 +35,7 @@ echo ''
 # Check if Conda is installed by looking for the 'conda' command
 if ! conda --version &> /dev/null; then
     echo "Conda is not installed. Please install Miniconda or Anaconda before proceeding."
+    echo "See: https://conda.io/projects/conda/en/latest/user-guide/install/index.html"
     exit 1
 fi
 

@@ -32,6 +32,7 @@ echo:
 where conda >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo Conda is not installed. Please install Miniconda or Anaconda before proceeding.
+    echo See: https://conda.io/projects/conda/en/latest/user-guide/install/index.html
     exit /b 1
 )
 
