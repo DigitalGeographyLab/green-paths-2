@@ -1,7 +1,7 @@
 :: INSTRUCTIONS:
 
 :: PRE-REQUISITES:
-    # 1. Install Miniconda or Anaconda
+    :: 1. Install Miniconda or Anaconda
 
 :: STEPS:
 
