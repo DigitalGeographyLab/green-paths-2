@@ -13,7 +13,6 @@ from green_paths_2.src.green_paths_exceptions import (
 from green_paths_2.src.preprocessing.data_types import (
     DataSourceModel,
     DataTypes,
-    RoutingComputers,
     TravelModes,
 )
 
@@ -140,6 +139,17 @@ class UserConfig:
         if save_to_cache and not isinstance(save_to_cache, bool):
             raise ConfigError(
                 "Invalid save to cache config, should be bool, True or False."
+            )
+
+        datas_coverage_safety_percentage = config.get(
+            DataSourceModel.DatasCoverageSafetyPercentage.value
+        )
+
+        if datas_coverage_safety_percentage and not isinstance(
+            datas_coverage_safety_percentage, (int, float)
+        ):
+            raise ConfigDataError(
+                "Invalid datas coverage safety percentage in analysing parameters. Should be float or integer."
             )
 
     def _validate_osm_pbf_network_file(self, config: dict) -> None:
@@ -348,23 +358,21 @@ class UserConfig:
                 "Invalid or missing routing configuration. See that atleast one data source is provided in user_config.yaml."
             )
 
-        computer: str = routing_config.get(DataSourceModel.Computer.value)
         transport_mode: str = routing_config.get(DataSourceModel.TransportMode.value)
-        od_pairs_path: str = routing_config.get(
-            DataSourceModel.Origins_destinations.value
-        )
+        od_crs: str = routing_config.get(DataSourceModel.ODcrs.value)
+        origins_path: str = routing_config.get(DataSourceModel.Origins.value)
+        destinations_path: str = routing_config.get(DataSourceModel.Destinations.value)
         exposure_parameters: list[dict] = routing_config.get(
             DataSourceModel.ExposureParameters.value
         )
+        origin_lon_name = routing_config.get(DataSourceModel.ODLonName.value)
+        origin_lat_name = routing_config.get(DataSourceModel.ODLatName.value)
 
-        if (
-            not computer
-            or not isinstance(computer, str)
-            or computer not in [rc.value for rc in RoutingComputers]
-        ):
-            raise ConfigDataError(
-                "Invalid or missing computer configuration in routing parameters. Should be matrix or detailed."
-            )
+        origins_file_extension = os.path.splitext(origins_path)[-1].lower()
+        destinations_file_extension = os.path.splitext(destinations_path)[-1].lower()
+
+        origin_is_csv = origins_file_extension == ".csv"
+        destination_is_csv = destinations_file_extension == ".csv"
 
         if (
             not transport_mode
@@ -375,13 +383,49 @@ class UserConfig:
                 "Invalid or missing travel mode configuration in routing parameters. Should be walking or cycling."
             )
 
+        if origin_is_csv or destination_is_csv:
+            # only mandatory for CSV OD files, optional for GPKG or SHP
+            if not od_crs or not isinstance(od_crs, (str, int)):
+                raise ConfigDataError(
+                    "Invalid or missing OD crs configuration in routing parameters. Should be int or str."
+                )
+
+            if (
+                origin_is_csv
+                and not origin_lon_name
+                or not isinstance(origin_lon_name, str)
+            ):
+                raise ConfigDataError(
+                    "Invalid or missing origin longitude name configuration in routing parameters."
+                )
+
+            if (
+                destination_is_csv
+                and not origin_lat_name
+                or not isinstance(origin_lat_name, str)
+            ):
+                raise ConfigDataError(
+                    "Invalid or missing origin latitude name configuration in routing parameters."
+                )
+
         if (
-            not od_pairs_path
-            or not isinstance(od_pairs_path, str)
-            or not os.path.exists(od_pairs_path)
+            not origins_path
+            or not isinstance(origins_path, str)
+            or not os.path.exists(origins_path)
+            or origins_file_extension not in [".csv", ".gpkg", ".shp"]
         ):
             raise ConfigDataError(
-                "Invalid or missing od pairs path configuration in routing parameters."
+                "Invalid or missing ORIGINS path configuration in routing parameters."
+            )
+
+        if (
+            not destinations_path
+            or not isinstance(destinations_path, str)
+            or not os.path.exists(destinations_path)
+            or destinations_file_extension not in [".csv", ".gpkg", ".shp"]
+        ):
+            raise ConfigDataError(
+                "Invalid or missing DESTINATIONS path configuration in routing parameters."
             )
 
         for exposure_param in exposure_parameters:

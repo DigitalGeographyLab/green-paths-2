@@ -5,17 +5,18 @@ import numpy as np
 
 
 # R5PY PATHS
+
 # GREEN PATSH 2 PATCHED R5 JAR FILE PATH
-# R5_JAR_FILE_PATH = "https://github.com/DigitalGeographyLab/r5/releases/download/v7.1-gp2-1/r5-v7.1-gp2-2-gd8134d8-all.jar"
-
-# TODO: roope testaa
-# R5_JAR_FILE_PATH = (
-#     "/Users/hcroope/omat/r5_dgl/r5/build/libs/r5-v7.1-gp2-1.dirty-all.jar"
-# )
-
 R5_JAR_FILE_PATH = "https://github.com/DigitalGeographyLab/r5/releases/download/v7.1-gp2-2/r5-v7.1-gp2-1-1-ga342478-all.jar"
 
-JAVA_PATH = "/Users/hcroope/miniconda3/envs/r5py_Gp2/lib/jvm"
+# TODO: LOCAL FOR TESTING
+# R5_JAR_FILE_PATH = (
+#     "/Users/hcroope/omat/r5_dgl/r5/build/libs/r5-v7.1-gp2-2.dirty-all.jar"
+# )
+
+# TODO: LOCAL FOR TESTING
+# JAVA_PATH = "/Users/hcroope/miniconda3/envs/r5py_Gp2/lib/jvm"
+
 
 # DEFAULT VALUE FOR CUSTOM COST TRANSPORT NETWORK'S ALLOW MISSING DATA (OSMIDS)
 ALLOW_MISSING_DATA_DEFAULT = True
@@ -92,8 +93,6 @@ SEGMENT_STORE_GPKG_FILE_NAME: str = "segment_store.gpkg"
 
 OSM_NETWORK_GPKG_FILE_NAME: str = "osm_network.gpkg"
 
-ROUTING_RESULTS_GPKG_FILE_NAME: str = "routing_results.gpkg"
-
 ROUTING_RESULTS_CSV_FILE_NAME: str = "routing_results.csv"
 
 TRAVEL_TIMES_CSV_FILE_NAME: str = "travel_times.csv"
@@ -141,7 +140,6 @@ CACHE_ROUTING_RESULTS_PATH = os.path.join(DATA_CACHE_DIR_PATH, ROUTING_CACHE_DIR
 
 ROUTING_RESULTS_GDF_CACHE_PATH = os.path.join(
     CACHE_ROUTING_RESULTS_PATH,
-    ROUTING_RESULTS_GPKG_FILE_NAME,
 )
 
 ROUTING_RESULTS_CSV_CACHE_PATH = os.path.join(
@@ -181,6 +179,8 @@ SEGMENT_VALUES_ROUND_DECIMALS = 3
 
 SEGMENT_SAMPLING_POINTS_KEY = "sampling_points"
 
+DATA_COVERAGE_SAFETY_PERCENTAGE = 50
+
 
 # default values for optional user configuration attributes
 # these will be used if the user does not specify them in the configuration file
@@ -188,4 +188,5 @@ DEFAULT_CONFIGURATION_VALUES = {
     "segment_sampling_points_amount": 3,
     "raster_cell_resolution": 10,
     "save_raster_file": False,
+    "datas_coverage_safety_percentage": DATA_COVERAGE_SAFETY_PERCENTAGE,
 }

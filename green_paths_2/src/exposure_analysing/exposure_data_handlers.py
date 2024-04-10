@@ -20,7 +20,6 @@ from green_paths_2.src.green_paths_exceptions import (
     DataManagingError,
     SpatialOperationError,
 )
-from green_paths_2.src.preprocessing.data_types import RoutingComputers
 
 from shapely.geometry import MultiLineString, LineString
 from shapely.ops import linemerge, unary_union
@@ -37,7 +36,6 @@ def get_datas_from_sources(
     osm_network_gdf,
     routing_results_gdf,
     # actual_travel_times_gdf,
-    routing_computer: str,
 ):
     """
     Get data from sources for analysing pipeline.
@@ -52,8 +50,6 @@ def get_datas_from_sources(
         GeoDataFrame containing routing results.
     actual_travel_times_gdf : gpd.GeoDataFrame
         GeoDataFrame containing actual travel times.
-    routing_computer : str
-        The routing computer used for routing.
 
     Returns
     -------
@@ -68,7 +64,7 @@ def get_datas_from_sources(
     ):
         LOG.info("Loading data from cache for analysing pipeline")
         routing_results, segment_exposure_store, osm_network_store = (
-            _load_datas_from_cache(routing_computer=routing_computer)
+            _load_datas_from_cache()
         )
     else:
         LOG.info("Using parameter data for analysing pipeline")
@@ -80,7 +76,7 @@ def get_datas_from_sources(
     return routing_results, segment_exposure_store, osm_network_store
 
 
-def _load_datas_from_cache(routing_computer: str):
+def _load_datas_from_cache():
     """
     Load routing results and exposure store from cache.
 
@@ -101,10 +97,7 @@ def _load_datas_from_cache(routing_computer: str):
     #     TRAVEL_TIMES_CSV_CACHE_PATH, OSM_ID_KEY
     # )
 
-    if routing_computer == RoutingComputers.Matrix.value:
-        routing_results_path = ROUTING_RESULTS_CSV_CACHE_PATH
-    elif routing_computer == RoutingComputers.Detailed.value:
-        routing_results_path = ROUTING_RESULTS_GDF_CACHE_PATH
+    routing_results_path = ROUTING_RESULTS_CSV_CACHE_PATH
 
     routing_results = get_and_convert_gdf_to_dict(
         routing_results_path, OSM_ID_KEY, orient="records"
@@ -139,6 +132,14 @@ def combine_multilinestrings_to_single_linestring(
         # Use unary_union to handle both LineString and MultiLineString objects,
         # and to ensure all geometries are considered for merging.
         combined_line_geometries = unary_union(multilinestrings)
+
+        # check if has only 1 linestring, if so return it
+        if (
+            isinstance(combined_line_geometries, LineString)
+            and len(multilinestrings) == 1
+        ):
+            return combined_line_geometries
+
         # merge multiple LineString objects into a single LineString
         merged_line = linemerge(combined_line_geometries)
 

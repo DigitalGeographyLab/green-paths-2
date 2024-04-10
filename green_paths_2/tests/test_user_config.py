@@ -2,7 +2,7 @@
 
 import pytest
 from green_paths_2.src.preprocessing.user_config_parser import UserConfig
-from green_paths_2.src.preprocessing.preprocessing_exceptions import (
+from green_paths_2.src.green_paths_exceptions import (
     ConfigError,
     ConfigDataError,
 )

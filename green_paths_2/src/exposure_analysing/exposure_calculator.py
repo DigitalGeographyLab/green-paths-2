@@ -246,11 +246,9 @@ class ExposureCalculator:
             raise ValueError("No routing results found.")
 
         for path_data in self.routing_results:
-
             path_exposure_data = self._init_path_exposure_dict(path_data)
             path_data_osm_ids = path_data.get(OSM_IDS_KEY, False)
             valid_osm_ids = self._validate_and_convert_osmids(path_data_osm_ids)
-
             if not valid_osm_ids:
                 # if path has no osm_ids or osms are invalid (e.g., float), skip
                 LOG.warning(

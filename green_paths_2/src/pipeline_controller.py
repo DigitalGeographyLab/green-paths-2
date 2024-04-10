@@ -11,10 +11,12 @@ from green_paths_2.src.preprocessing.user_data_handler import UserDataHandler
 from green_paths_2.src.routing.main import routing_pipeline
 
 from green_paths_2.src.logging import setup_logger, LoggerColors
+from green_paths_2.src.timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 
 
+@time_logger
 def handle_pipelines(pipeline_name: str, use_exposure_cache: bool = False):
     """
     Master function to handle different pipelines.

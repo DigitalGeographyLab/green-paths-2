@@ -3,6 +3,7 @@
 import pandas as pd
 import geopandas as gpd
 from green_paths_2.src.config import (
+    DATA_COVERAGE_SAFETY_PERCENTAGE,
     GEOMETRY_KEY,
     LENGTH_KEY,
     NORMALIZED_DATA_SUFFIX,
@@ -10,7 +11,10 @@ from green_paths_2.src.config import (
     SEGMENT_VALUES_ROUND_DECIMALS,
 )
 
-from green_paths_2.src.green_paths_exceptions import SegmentValueStoreError
+from green_paths_2.src.green_paths_exceptions import (
+    DataManagingError,
+    SegmentValueStoreError,
+)
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.preprocessing.data_source import DataSource
 
@@ -116,7 +120,10 @@ class SegmentValueStore:
 
     # TODO: Do we want to crash?
     def validate_data_coverage(
-        self, data_sources: list[DataSource], osm_network_segment_count: int
+        self,
+        data_sources: list[DataSource],
+        osm_network_segment_count: int,
+        datas_coverage_safety_limit: int | float,
     ) -> None:
         """Validate that the data covers the entire network."""
         for data_name, _ in data_sources.items():
@@ -137,12 +144,22 @@ class SegmentValueStore:
             )
             # TODO -> should we crash of fail here if too low %???
 
-            if data_coverage_percentage < 25:
-                LOG.warning(f"WARNING: Data coverage for {data_name} is less than 25%.")
-            elif data_coverage_percentage < 50:
-                LOG.warning(f"WARNING: Data coverage for {data_name} is less than 50%.")
-            elif data_coverage_percentage < 75:
-                LOG.warning(f"WARNING: Data coverage for {data_name} is less than 75%.")
+            if data_coverage_percentage < datas_coverage_safety_limit:
+                LOG.error(
+                    f"ERROR: Data coverage for {data_name} is less than safety limit: {datas_coverage_safety_limit}%."
+                )
+                LOG.error(
+                    f"Data coverage for {data_name} is: {data_coverage_percentage}%."
+                )
+                LOG.error(
+                    f"Safety limit is needed that we can be sure that the GP2 routes are actually using exposure datas."
+                )
+                LOG.error(
+                    f"Modify the safety limit if needed in the user configurations. The default from GP2 config is {DATA_COVERAGE_SAFETY_PERCENTAGE}"
+                )
+                raise DataManagingError(
+                    f"Data coverage for {data_name} is less than safety limit: {datas_coverage_safety_limit}%."
+                )
 
     def validate_user_min_max_values(self, data_sources: list[DataSource]) -> None:
         """Validate user defined min and max values."""

@@ -3,16 +3,10 @@
 import os
 from green_paths_2.src.config import (
     ALLOW_MISSING_DATA_DEFAULT,
-    JAVA_PATH,
     NORMALIZED_DATA_SUFFIX,
 )
 
 import geopandas as gpd
-
-# Set JAVA_HOME
-# for some reasons this needs to be set here alos
-# os.environ["JAVA_HOME"] = JAVA_PATH
-
 
 from green_paths_2.src.preprocessing.data_types import DataSourceModel, TravelModes
 from green_paths_2.src.preprocessing.user_config_parser import UserConfig
@@ -29,7 +23,6 @@ set_environment_and_import_r5py()
 # import r5py
 from r5py import (
     CustomCostTransportNetwork,
-    DetailedItinerariesComputer,
     TravelTimeMatrixComputer,
 )
 
@@ -68,39 +61,6 @@ def route_travel_time_matrix_computer(
     return travel_time_matrix_computer_results
 
 
-@time_logger
-def init_detailed_itineraries_computer(
-    custom_cost_transport_network, origins, destinations, transport_mode
-):
-    """Initialize DetailedItinerariesComputer."""
-    LOG.info("Initing DetailedItinerariesComputer")
-
-    detailed_computer_custom_cost = DetailedItinerariesComputer(
-        custom_cost_transport_network,
-        origins=origins,
-        destinations=destinations,
-        transport_modes=transport_mode,
-    )
-    LOG.info("Finished initing DetailedItinerariesComputer")
-
-    return detailed_computer_custom_cost
-
-
-@time_logger
-def route_detailed_itineraries_computer(
-    detailed_itineraries_computer,
-):
-    """Route with DetailedItinerariesComputer."""
-    LOG.info("Routing with DetailedItinerariesComputer")
-
-    detailed_itineraries_routing_results = (
-        detailed_itineraries_computer.compute_travel_details()
-    )
-    LOG.info("Finished routing with DetailedItinerariesComputer")
-
-    return detailed_itineraries_routing_results
-
-
 def _build_custom_cost_networks_params(
     exposure_dict: dict, routing_config: dict
 ) -> tuple:
@@ -126,9 +86,6 @@ def _build_custom_cost_networks_params(
         exposure_name = exposure_confs.get(DataSourceModel.Name.value)
         exposure_name_normalized = f"{exposure_name}{NORMALIZED_DATA_SUFFIX}"
         names.append(exposure_name)
-        # sensitivity, allow_missing = _get_data_metadata_with_data_name(
-        #     data_key, routing_config
-        # )
         sensitivities.append(exposure_confs.get(DataSourceModel.Sensitivity.value))
         custom_cost_segment_weight_factors.append(
             exposure_dict.get(exposure_name_normalized)

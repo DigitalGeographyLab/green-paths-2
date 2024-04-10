@@ -35,8 +35,8 @@
 
 # europe e.g. 3035
 project_crs: 3879
-
-# save_to_cache: "True"
+datas_coverage_safety_percentage: 60
+save_to_cache: False
 
 osm_network:
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/london_osm_network.osm.pbf
@@ -92,8 +92,6 @@ data_sources:
     # custom_processing_function: convert_aq_nc_to_tif_and_scale_offset
 
 
-
-
   - name: gvi
     filepath: green_paths_2/src/user/data/greenery_points.gpkg
     # data_type: vector
@@ -139,18 +137,25 @@ data_sources:
 
 
 routing:
-    computer: matrix
-    # computer: detailed
     transport_mode: walking
-    # travel_mode: cycling
-    origins_destinations: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
+    # transport_mode: cycling
+    # origins: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
+    # origins: "green_paths_2/src/cache/data/origin_point.gpkg"
+    origins: green_paths_2/src/cache/data/population_hki_centroids.gpkg
+    # origins: "green_paths_2/src/cache/data/origins.csv"
+    # origins: "green_paths_2/src/cache/data/linnanmaki_origins.csv"
+    od_lon_name: longitude
+    od_lat_name: latitude
+    # destinations: "green_paths_2/src/cache/data/destinations_points.gpkg"
+    # destinations: "green_paths_2/src/cache/data/destinations.csv"
+    destinations: green_paths_2/src/cache/data/destinations_points_shp.shp
+    od_crs: 4326
     exposure_parameters:
       - name: gvi
-        sensitivity: 1.25
-
+        sensitivity: 999
       - name: aqi
-        sensitivity: 1.5
-        # allow_missing_data: True
+        sensitivity: 999
+        allow_missing_data: True
 
 
 analysing:

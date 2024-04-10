@@ -10,13 +10,13 @@ from green_paths_2.src.config import (
     OSM_ID_KEY,
     ROUTING_CACHE_DIR_NAME,
     ROUTING_RESULTS_CSV_CACHE_PATH,
-    ROUTING_RESULTS_GDF_CACHE_PATH,
     SAVE_TO_CACHE_KEY,
     SEGMENT_STORE_GDF_CACHE_PATH,
     TRAVEL_TIMES_CSV_CACHE_PATH,
 )
 
 from green_paths_2.src.routing.routing_utilities import (
+    init_origin_destinations_from_files,
     set_environment_and_import_r5py,
 )
 
@@ -36,13 +36,11 @@ LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 import geopandas as gpd
 from green_paths_2.src.timer import time_logger
 from green_paths_2.src.cache_cleaner import clear_cache_dirs
-from green_paths_2.src.preprocessing.data_types import RoutingComputers
 
 from green_paths_2.src.data_utilities import (
     convert_gdf_to_dict,
     convert_travel_times_dicts_to_gdf,
     get_and_convert_gdf_to_dict,
-    prepare_gdf_for_saving,
     save_gdf_to_cache,
 )
 from green_paths_2.src.preprocessing.user_config_parser import UserConfig
@@ -115,7 +113,9 @@ def routing_pipeline(
             )
 
         # origins, destinations = test_init_ods()
-        origins, destinations = test_2_init_single_hki_od_points()
+        origins, destinations = init_origin_destinations_from_files(
+            user_config.routing, user_config.project_crs
+        )
 
         print("origin is: ")
         print(origins)
@@ -130,31 +130,18 @@ def routing_pipeline(
             user_config.routing,
         )
 
-        # print("sideshoooow")
-        # print(actual_travel_times)
-        # print(type(actual_travel_times))
-
         travel_times_gdf = convert_travel_times_dicts_to_gdf(actual_travel_times)
-
-        saveable_routing_results = prepare_gdf_for_saving(
-            green_paths_route_results, user_config.routing.computer
-        )
-
-        if user_config.routing.computer == RoutingComputers.Matrix.value:
-            cache_file_path = ROUTING_RESULTS_CSV_CACHE_PATH
-        elif user_config.routing.computer == RoutingComputers.Detailed.value:
-            cache_file_path = ROUTING_RESULTS_GDF_CACHE_PATH
 
         # TODO: do we need / are we using travel_times_gdf?
 
         has_save_to_cache = hasattr(user_config, SAVE_TO_CACHE_KEY)
 
         if has_save_to_cache and user_config.save_to_cache:
-            save_gdf_to_cache(saveable_routing_results, cache_file_path)
+            save_gdf_to_cache(green_paths_route_results, ROUTING_RESULTS_CSV_CACHE_PATH)
             save_gdf_to_cache(travel_times_gdf, TRAVEL_TIMES_CSV_CACHE_PATH)
 
         LOG.info("Green Paths 2 routing pipeline completed.")
-        return saveable_routing_results, actual_travel_times
+        return green_paths_route_results, actual_travel_times
     except PipeLineRuntimeError as e:
         LOG.error(f"Routing pipeline failed with error: {e}")
         raise e

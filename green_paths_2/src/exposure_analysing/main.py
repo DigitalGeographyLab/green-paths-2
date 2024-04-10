@@ -56,7 +56,6 @@ def exposure_analysing_pipeline(
                 osm_network_gdf=processed_osm_network_gdf,
                 routing_results_gdf=routing_results_gdf,
                 # actual_travel_times_gdf=actual_travel_times_gdf,
-                routing_computer=user_config.routing.computer,
             )
         )
 
@@ -95,6 +94,10 @@ def exposure_analysing_pipeline(
             user_config=user_config,
             combined_master_statistics_store=combined_results_per_path,
         )
+
+        print("this is all in final results")
+        print(saved_final_result)
+        print(len(saved_final_result))
 
         if not saved_final_result.empty:
             LOG.info(f"Saved final result df/gdf head {saved_final_result.head()}")

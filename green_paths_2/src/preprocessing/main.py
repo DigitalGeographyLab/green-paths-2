@@ -164,7 +164,11 @@ def preprocessing_pipeline(
                 "No data was found from the datasources for any of the segments. Check the data sources (e.g. CRS's) and try again."
             )
 
-        segment_store.validate_data_coverage(all_data_sources, len(osm_network_gdf))
+        segment_store.validate_data_coverage(
+            all_data_sources,
+            len(osm_network_gdf),
+            user_config.datas_coverage_safety_percentage,
+        )
 
         # TODO: ehkä tähän pitäis ottaa joku checki jos on tullu null arvoja teiltä?
 

@@ -24,22 +24,21 @@ class DataSourceModel(Enum):
     MaxDataValue = "max_data_value"
     Columnsofinterest = "columns_of_interest"
     Saverasterfile = "save_raster_file"
-    Computer = "computer"
-    Origins_destinations = "origins_destinations"
+    Origins = "origins"
+    Destinations = "destinations"
+    ODcrs = "od_crs"
+    ODLonName = "od_lon_name"
+    ODLatName = "od_lat_name"
     Sensitivity = "sensitivity"
     AllowMissingData = "allow_missing_data"
     ExposureParameters = "exposure_parameters"
     TransportMode = "transport_mode"
     KeepGeometry = "keep_geometry"
     CumulativeRanges = "cumulative_ranges"
+    DatasCoverageSafetyPercentage = "datas_coverage_safety_percentage"
 
 
 # TODO: maybe rename this file?
-
-
-class RoutingComputers(Enum):
-    Matrix: str = "matrix"
-    Detailed: str = "detailed"
 
 
 # TODO -> should there be CAR here?

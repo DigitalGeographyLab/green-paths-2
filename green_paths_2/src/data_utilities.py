@@ -15,7 +15,6 @@ from green_paths_2.src.config import (
 )
 from green_paths_2.src.green_paths_exceptions import DataManagingError
 from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.preprocessing.data_types import RoutingComputers
 from green_paths_2.src.timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.CYAN.value)
@@ -220,38 +219,6 @@ def save_gdf_to_cache(gdf_to_save: gpd.GeoDataFrame, cache_file_path: str) -> No
         raise e
 
 
-def prepare_gdf_for_saving(
-    gdf: gpd.GeoDataFrame, routing_computer: str
-) -> gpd.GeoDataFrame:
-    """
-    Prepare GeoDataFrame for saving.
-
-    Parameters:
-    ----------
-    gdf : gpd.GeoDataFrame
-        The GeoDataFrame to prepare for saving.
-
-    Returns:
-    ----------
-    gpd.GeoDataFrame
-        The prepared GeoDataFrame.
-
-    """
-    LOG.info("Preparing GeoDataFrame for saving.")
-    if routing_computer == RoutingComputers.Detailed.value:
-        if "osm_ids" in gdf.columns:
-            gdf[OSM_IDS_KEY] = gdf[OSM_IDS_KEY].apply(list_to_string)
-        filter_columns = [
-            FROM_ID_KEY,
-            TO_ID_KEY,
-            "distance",
-            "geometry",
-            "osm_ids",
-        ]
-        gdf = filter_gdf_by_columns_if_found(gdf, filter_columns)
-    return gdf
-
-
 def list_to_string(lst) -> list[str]:
     """
     Convert list to string.
@@ -263,7 +230,7 @@ def list_to_string(lst) -> list[str]:
     - String of the list elements separated by a semicolon.
 
     """
-    return ";".join(map(str, lst)) if lst and isinstance(lst, list) else None
+    return ",".join(map(str, lst)) if lst and isinstance(lst, list) else None
 
 
 def string_to_list(string: str) -> list[str]:
@@ -277,7 +244,7 @@ def string_to_list(string: str) -> list[str]:
     - List of the string elements separated by a semicolon.
     """
     # Strip square brackets and split the string into a list
-    list_from_string = string.strip("[]").split(", ")
+    list_from_string = string.strip("[]").split(",")
     return [elem for elem in list_from_string]
 
 

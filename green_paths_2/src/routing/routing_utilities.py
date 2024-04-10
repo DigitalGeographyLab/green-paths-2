@@ -1,11 +1,18 @@
 """Module for routing utilities."""
 
 import os
-from green_paths_2.src.config import JAVA_PATH, NORMALIZED_DATA_SUFFIX, R5_JAR_FILE_PATH
+
+import pandas as pd
 import geopandas as gpd
+from shapely.geometry import Point
+from green_paths_2.src.config import (
+    NORMALIZED_DATA_SUFFIX,
+    R5_JAR_FILE_PATH,
+)
 from green_paths_2.src.data_utilities import construct_osm_segmented_network_name
 from green_paths_2.src.green_paths_exceptions import R5pyError
-from green_paths_2.src.preprocessing.user_data_handler import UserDataHandler
+from green_paths_2.src.preprocessing.data_types import DataSourceModel
+from green_paths_2.src.preprocessing.user_config_parser import UserConfig
 
 from green_paths_2.src.logging import setup_logger, LoggerColors
 
@@ -34,14 +41,10 @@ def set_environment_and_import_r5py(set_environmental_variables: bool = True) ->
             # Correctly use extend to add R5 classpath argument
             sys.argv.extend(["--r5-classpath", R5_JAR_FILE_PATH])
 
-            # Set environment variables
-            os.environ["JAVA_HOME"] = JAVA_PATH
-
-        # TODO: dynamically import r5py and make it global -> is this working???
-        global r5py, CustomCostTransportNetwork, TravelTimeMatrixComputer, DetailedItinerariesComputer
+        # dynamically import r5py and make it global
+        global r5py, CustomCostTransportNetwork, TravelTimeMatrixComputer
         import r5py
         from r5py import CustomCostTransportNetwork
-        from r5py.r5.detailed_itineraries_computer import DetailedItinerariesComputer
         from r5py.r5.travel_time_matrix_computer import TravelTimeMatrixComputer
 
         return True
@@ -130,6 +133,62 @@ def test_2_init_single_hki_od_points():
     return origin_point, destination_point
 
 
+def init_origin_destinations_from_files(
+    routing_config: UserConfig, project_crs: str | int
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    """
+    Initialize origins and destinations from files.
+
+    Parameters
+    ----------
+    routing_config : UserConfig
+        Routing configuration.
+    project_crs : str | int
+        Project CRS.
+
+    Returns
+    -------
+    tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]
+        Tuple containing the origins and destinations GeoDataFrames.
+    """
+
+    origins_path = routing_config.origins
+    destinations_path = routing_config.destinations
+
+    if hasattr(routing_config, DataSourceModel.ODLonName.value) and hasattr(
+        routing_config, DataSourceModel.ODLatName.value
+    ):
+        lon_name = routing_config.od_lon_name
+        lat_name = routing_config.od_lat_name
+        od_crs = routing_config.od_crs
+
+        if lon_name and lat_name:
+            origins = build_routing_ods_from_file(
+                origins_path,
+                original_crs=od_crs,
+                target_crs=project_crs,
+                lon_col_name=lon_name,
+                lat_col_name=lat_name,
+            )
+            destinations = build_routing_ods_from_file(
+                destinations_path,
+                original_crs=od_crs,
+                target_crs=project_crs,
+                lon_col_name=lon_name,
+                lat_col_name=lat_name,
+            )
+
+            return origins, destinations
+
+    origins = build_routing_ods_from_file(origins_path, target_crs=project_crs)
+    destinations = build_routing_ods_from_file(
+        destinations_path, target_crs=project_crs
+    )
+
+    return origins, destinations
+
+
+# TODO: remove this
 def test_init_ods():
     population_grid = gpd.read_file(
         os.path.join(
@@ -153,43 +212,55 @@ def test_init_ods():
     return origins, destinations
 
 
-import os
-import pandas as pd
-import geopandas as gpd
-from shapely.geometry import Point
+def build_routing_ods_from_file(
+    file_path: str,
+    original_crs: str | int = None,
+    target_crs: str | int = None,
+    lon_col_name: str = None,
+    lat_col_name: str = None,
+):
+    """
+    Build routing origins or destinations from file.
 
+    Parameters
+    ----------
+    file_path : str
+        Path to the file.
+    target_crs : str | int, optional
+        Target CRS, by default None
+    lon_col_name : str, optional
+        Longitude column name, by default None
+    lat_col_name : str, optional
+        Latitude column name, by default None
 
-# TODO TODO: not using anywhere atm...
-# TODO: ROOPE TODO säädä tää kuntoon ku tiietää mitä kaikkia halutaan tukea...
-
-
-def load_spatial_data_autodetect(file_path, target_crs="EPSG:4326"):
+    Returns
+    -------
+    gpd.GeoDataFrame
+        GeoDataFrame containing the routing origins or destinations.
+    """
     # Extract file extension
     file_extension = os.path.splitext(file_path)[-1].lower()
 
     if file_extension == ".csv":
-        # Load CSV
         df = pd.read_csv(file_path)
         # Assuming columns for origin and destination latitudes and longitudes
-        origin_points = [Point(xy) for xy in zip(df.origin_lon, df.origin_lat)]
-        dest_points = [Point(xy) for xy in zip(df.dest_lon, df.dest_lat)]
-        # Combine into a single GeoDataFrame
-        gdf_origins = gpd.GeoDataFrame(df, geometry=origin_points, crs="EPSG:4326")
-        gdf_destinations = gpd.GeoDataFrame(df, geometry=dest_points, crs="EPSG:4326")
+        points_from_csv = [Point(xy) for xy in zip(df[lat_col_name], df[lon_col_name])]
+        gdf_from_file = gpd.GeoDataFrame(df, geometry=points_from_csv, crs=original_crs)
     elif file_extension in [".gpkg", ".shp"]:
-        # Load GeoPackage or Shapefile
-        gdf_origins = gpd.read_file(file_path)
-        gdf_destinations = (
-            gdf_origins.copy()
-        )  # This line is illustrative; adjust based on actual needs
+        gdf_from_file = gpd.read_file(file_path)
     else:
-        raise ValueError(f"Unsupported file extension: {file_extension}")
+        raise ValueError(
+            f"Unsupported file extension for Origins or Destinations: {file_extension}. Please use .csv, .gpkg or .shp."
+        )
 
-    # Transform CRS if necessary for origins
-    if gdf_origins.crs != target_crs:
-        gdf_origins = gdf_origins.to_crs(target_crs)
-    # Transform CRS if necessary for destinations
-    if gdf_destinations.crs != target_crs:
-        gdf_destinations = gdf_destinations.to_crs(target_crs)
+    # all geometries should be of type Point, otherwise raise an error
+    if not gdf_from_file.geometry.geom_type.eq("Point").all():
+        raise ValueError(
+            f"Invalid geometry type in the Origins or Destinations file. Please make sure the file contains only Point geometries."
+        )
 
-    return gdf_origins, gdf_destinations
+    # Check if the crs is correct, if not, convert it
+    if gdf_from_file.crs != target_crs:
+        gdf_from_file = gdf_from_file.to_crs(target_crs)
+
+    return gdf_from_file

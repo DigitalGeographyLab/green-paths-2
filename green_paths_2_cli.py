@@ -4,7 +4,6 @@ import argparse
 
 from green_paths_2.src.pipeline_controller import handle_pipelines
 from green_paths_2.src.cache_cleaner import clear_cache_dirs
-from green_paths_2.src.config import USER_CONFIG_PATH
 from green_paths_2.src.config_validator import validate_user_config
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.data_fetchers.osm_network_loader import (
