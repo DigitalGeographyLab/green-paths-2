@@ -18,11 +18,11 @@ Green Paths 2
 
 
 
-        "In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery
+  "In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery
 
-=============
-Green Paths 2 (GP2) a Multi-objective exposure routing for healthier paths choices
-=============
+
+**Green Paths 2 (GP2) a Multi-objective exposure routing for healthier paths choices**
+
 
 GP2 uses OpenStreetMap (OSM) road network and user defined datas from flexible user_configurations.yml file to calculate the exposure values for the road network.
 The exposure values are then used to route healthier paths with the help of Conveyal's `r5 https://github.com/conveyal/r5` routing engine
