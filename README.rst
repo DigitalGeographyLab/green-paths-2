@@ -18,7 +18,7 @@ Green Paths 2
 
 
 
-"In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery
+        "In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery
 ~~~~~~~~~~~~~~
 
 **Green Paths 2 (GP2) is a Multi-objective exposure routing for healthier paths choices.**
@@ -95,51 +95,51 @@ See more on Green paths 2 framework and modules in the Green Paths 2 Modules and
 Installation:
 --------------
 
-        Windows
-        ~~~~~~~~~~~~~~
+Windows
+~~~~~~~~~~~~~~
 
-        Prerequisites:
-        - Miniconda or Anaconda
-        - Microsoft Visual Build Tools C++ 14.0 or greater
+Prerequisites:
+- Miniconda or Anaconda
+- Microsoft Visual Build Tools C++ 14.0 or greater
 
-        `Install miniconda/anaconda https://docs.conda.io/en/latest/miniconda.html`
-        The installation has python included.
+`Install miniconda/anaconda https://docs.conda.io/en/latest/miniconda.html`
+The installation has python included.
 
-        `Install Microsoft Visual Build Tools C++ 14.0 or greater https://visualstudio.microsoft.com/visual-cpp-build-tools/`
-        From Visual Studio Installer select the tab "Individual components" and from there select at least:
-        - C++ build tools (version 14.0 or greater)
-        - Windows 10 SDK
-        - C++ CMake tools for Windows
+`Install Microsoft Visual Build Tools C++ 14.0 or greater https://visualstudio.microsoft.com/visual-cpp-build-tools/`
+From Visual Studio Installer select the tab "Individual components" and from there select at least:
+- C++ build tools (version 14.0 or greater)
+- Windows 10 SDK
+- C++ CMake tools for Windows
 
-        After installing the prerequisites, install Green Paths 2 to conda environment:
-        - Navigate to the Green Paths 2 root folder
-        - (optional) deactivete the conda environment if active by running:
-                conda deactivate
-        - Run the following command in the terminal:
-                install_green_paths_2.bat
-        - After successfull installation, activate the conda environment by running:
-                conda activate green_paths_2
-        - Now you can start using Green Paths 2 by running the CLI commands in the terminal.
+After installing the prerequisites, install Green Paths 2 to conda environment:
+- Navigate to the Green Paths 2 root folder
+- (optional) deactivete the conda environment if active by running:
+        conda deactivate
+- Run the following command in the terminal:
+        install_green_paths_2.bat
+- After successfull installation, activate the conda environment by running:
+        conda activate green_paths_2
+- Now you can start using Green Paths 2 by running the CLI commands in the terminal.
 
 
-        Mac / Linux
-        ~~~~~~~~~~~~~~
+Mac / Linux
+~~~~~~~~~~~~~~
 
-        Prerequisites:
-        - Miniconda or Anaconda
+Prerequisites:
+- Miniconda or Anaconda
 
-        `Install miniconda/anaconda https://docs.conda.io/en/latest/miniconda.html`
-        The installation has python included.
+`Install miniconda/anaconda https://docs.conda.io/en/latest/miniconda.html`
+The installation has python included.
 
-        After installing the prerequisites, install Green Paths 2 to conda environment:
-        - Navigate to the Green Paths 2 root folder
-        - (optional) deactivete the conda environment if active by running:
-                conda deactivate
-        - Run the following command in the terminal:
-                ./install_green_paths_2.sh
-        - After successfull installation, activate the conda environment by running:
-                conda activate green_paths_2
-        - Now you can start using Green Paths 2 by running the CLI commands in the terminal.
+After installing the prerequisites, install Green Paths 2 to conda environment:
+- Navigate to the Green Paths 2 root folder
+- (optional) deactivete the conda environment if active by running:
+        conda deactivate
+- Run the following command in the terminal:
+        ./install_green_paths_2.sh
+- After successfull installation, activate the conda environment by running:
+        conda activate green_paths_2
+- Now you can start using Green Paths 2 by running the CLI commands in the terminal.
 
 
 .. tip:: Remember to activate the conda environment after installation!
@@ -188,30 +188,30 @@ Green Paths 2 is operated via CLI. The CLI commands are run in the terminal / cm
 Detailed description of the commands:
 --------------
 
-        Preprocessing
-        - Preprocessing pipeline for processing and calculating exposure values for the OSM road network.
+Preprocessing
+- Preprocessing pipeline for processing and calculating exposure values for the OSM road network.
 
-        Routing
-        - Routing pipeline for using the preprocessing reusults for Multi-objective routing.
+Routing
+- Routing pipeline for using the preprocessing reusults for Multi-objective routing.
 
-        Analysing
-        - Analysing pipeline for analysing the results of the routing. The results are saved to the output folder as gpkg of csv files, depending if the results have geometries or not.
+Analysing
+- Analysing pipeline for analysing the results of the routing. The results are saved to the output folder as gpkg of csv files, depending if the results have geometries or not.
 
-        OSM network segmenter
-        - Segmenting the OSM road network into smaller segments to enable accurate exposure calculations. Natively OSM roads (ways) are expanding over multiple nodes (intersections),
-        and this is why they need to be split to smaller segments. Will save the segmented network to the cache folder. The cached file will be used in the preprocessing and all pipelines if found.
-        Will run segmenting for each different osm network file found from the user configurations.
+OSM network segmenter
+- Segmenting the OSM road network into smaller segments to enable accurate exposure calculations. Natively OSM roads (ways) are expanding over multiple nodes (intersections),
+and this is why they need to be split to smaller segments. Will save the segmented network to the cache folder. The cached file will be used in the preprocessing and all pipelines if found.
+Will run segmenting for each different osm network file found from the user configurations.
 
-        Validator 
-        - User configurations validator for validating the user configuration yml file attributes. This should be ran before the pipe to enable successful run.
+Validator 
+- User configurations validator for validating the user configuration yml file attributes. This should be ran before the pipe to enable successful run.
 
-        Descriptor
-        - Descriptor for describint the datas from user configurations. This functionality aims to help in filling the correct parameters to the user configuration yml file.
+Descriptor
+- Descriptor for describint the datas from user configurations. This functionality aims to help in filling the correct parameters to the user configuration yml file.
 
 
-        OSM network downloader
-        - Downloading the OSM road network data from the OSM API. User most likely should download the OSM PBF from other sources for more accurate road networks,
-        but this is a quick way to get the data for testing or general use.
+OSM network downloader
+- Downloading the OSM road network data from the OSM API. User most likely should download the OSM PBF from other sources for more accurate road networks,
+but this is a quick way to get the data for testing or general use.
 
 
 Running the commands
@@ -228,95 +228,95 @@ Base command and info:
 
 **all pipeline**
 
-_commands_
+commands_
         ``inv gp2 --args="all"``
         
         ``inv gp2 --args="all -uc"``
 
         ``inv gp2 --args="all --use-cache"``
 
-_descriptions_
+descriptions_
         - Run all the pipelines in the correct order. The user configurations are validated before the pipeline starts.
         - Run the all pipline with the use of cache. The cache is used in the preprocessing and routing pipelines if found.
 
 **preprocessing pipeline**
 
-_commands_
+commands_
         - inv gp2 --args="preprocessing"
-_descriptions_
+descriptions_
         - Run the preprocessing pipeline. The user configurations are validated before the pipeline starts. Saving the results to cache via user_config parameter.
 
 **routing pipeline**
 
-_commands_
+commands_
         ``inv gp2 --args="routing"``
 
-_descriptions_
+descriptions_
         - Run the routing pipeline. Will use cached files if ran separately, if cached files not found, dont route. Will prioritize parameter exposure values, these are inputted in all pipeline. 
 
 **analysing pipeline**
 
-_commands_
+commands_
         ``inv gp2 --args="analysing"``
 
-_descriptions_
+descriptions_
         - Run the analysing pipeline. Will try to use cached files if ran separately, if cached files not found, dont analyse. Will prioritize parameter exposure values, these are inputted in all pipeline.
 
 **fetch osm network**
 
-_commands_
+commands_
         ``inv gp2 --args="fetch_osm_network"``
 
         ``inv gp2 --args="fetch_osm_network -c"``
 
         ``inv gp2 --args="fetch_osm_network --city"``
 
-_descriptions_
+descriptions_
         - Fetch the OSM network data from the OSM API using pyrosm. The fetched data will be saved to the cache folder.
         - Fetch the OSM network data from the OSM API for the city specified in the user configurations.
 
 **validate user configurations**
 
-_commands_
+commands_
         ``inv gp2 --args="validate"``
 
-_descriptions_
+descriptions_
         - Validate the user configurations. The user configurations are validated before the pipeline starts. It is recommended to run this before running the pipelines!
 
 **describe user configurations**
 
-_commands_
+commands_
         ``inv gp2 --args="describe"``
 
-_descriptions_
+descriptions_
         - Describe the user configurations. The descriptor will help to find the possible values for the user configurations.
 
 **clear cache**
 
-_commands_
+commands_
         ``inv gp2 --args="clear_cache -d"``
 
         ``inv gp2 --args="clear_cache --dirs"``
 
 
-_descriptions_
+descriptions_
         - Clear the cache folder. This will remove all the cached files from the cache folder. Clear the wanted directories under cache. Use with caution!
         - Possible directories to clear: all, preprocessing, routing, analysing, final_exposure_results, osm_network_segmenter, osm_network_downloader
 
 **osm network segmenter**
 
-_commands_
+commands_
         ``inv gp2 --args="osm_network_segmenter"``
 
-_descriptions_
+descriptions_
         - Segment the OSM road network into smaller segments to enable accurate exposure calculations. Will save the segmented network to the cache folder.
 
 **osm network downloader**
 
-_commands_
+commands_
         ``inv gp2 --args="osm_network_downloader"``
 
-_descriptions_
+descriptions_
         - Download the OSM road network data from the OSM API. User most likely should download the OSM PBF from other sources for more accurate road networks,
         but this is a quick way to get the data for testing or general network use.
         - Recommended to use e.g. `bbbike.org https://extract.bbbike.org/` to download the OSM PBF. Try not to download extensive areas, as the processing times will increase as the network does. Use only needed areas.
