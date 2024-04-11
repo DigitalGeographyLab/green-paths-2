@@ -1,5 +1,5 @@
 =============
-Green Paths 2
+Green Paths 2.0
 =============
 
 **GREEN PATHS 2 IS UNDER CONSTRUCTION**
@@ -19,10 +19,10 @@ Green Paths 2
 
 
 
-        "In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery
+"In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2.0: The Return of the Greenery
 
 
-**Green Paths 2 (GP2) a Multi-objective exposure routing for healthier paths choices**
+**Green Paths 2.0 (GP2) a Multi-objective exposure routing for healthier paths choices**
 
 
 GP2 uses OpenStreetMap (OSM) road network and user defined datas from flexible user_configurations.yml file to calculate the exposure values for the road network.
@@ -42,7 +42,7 @@ See also the `Green Paths Web GUI https://green-paths.web.app/?map=streets`
         GP2 is using patched forks from r5 modified fork `R5_GP2 https://github.com/DigitalGeographyLab/r5/tree/gp2` and r5py modified fork `R5_GP2 https://github.com/DigitalGeographyLab/r5py_gp2`.
 
 
-Quickstart for Green Paths 2
+Quickstart for Green Paths 2.0
 ----------
 
 1. Clone the repository from GitHub:
@@ -70,7 +70,7 @@ Quickstart for Green Paths 2
         
         ``conda activate green_paths_2``
 
-5. Run the Green Paths 2 CLI commands:
+5. Run the Green Paths 2.0 CLI commands:
 
         ``inv gp2 --args="all"``
 
