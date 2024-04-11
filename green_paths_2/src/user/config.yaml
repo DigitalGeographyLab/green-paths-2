@@ -109,14 +109,14 @@ data_sources:
   - name: aqi
     filepath: green_paths_2/src/user/data/allPollutants_2023-12-15T04.nc
     data_type: raster
+    original_crs: 4326 # mandatory
     # layer_name: Helsinki_4326
     data_column: AQI  # mandatory
     min_data_value: 0 # mandatory
     max_data_value: 5 # mandatory
     good_exposure: False # mandatory
-    # raster_cell_resolution: 20 # optional for raster
-    # save_raster_file: True # optional
-    original_crs: 4326
+    raster_cell_resolution: 20 # optional
+    save_raster_file: False # optional
     custom_processing_function: convert_aq_nc_to_tif_and_scale_offset
 
 
@@ -137,8 +137,8 @@ data_sources:
 
 
 routing:
-    transport_mode: walking
-    # transport_mode: cycling
+    # transport_mode: walking
+    transport_mode: cycling
     # origins: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
     # origins: "green_paths_2/src/cache/data/origin_point.gpkg"
     origins: green_paths_2/src/cache/data/population_hki_centroids.gpkg

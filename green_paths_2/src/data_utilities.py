@@ -133,27 +133,31 @@ def get_and_convert_gdf_to_dict(
     """
     Convert exposure data to dictionary, drop geometry.
     """
-    LOG.info(f"Getting and converting GeoDataFrame to dictionary from path: {path}")
-    if not os.path.exists(path):
-        LOG.error(f"Cache might be empty, file not found for path: {path}.")
-        raise ValueError("Exposure data GeoDataFrame from cache is empty.")
+    try:
+        LOG.info(f"Getting and converting GeoDataFrame to dictionary from path: {path}")
+        if not os.path.exists(path):
+            LOG.error(f"Cache might be empty, file not found for path: {path}.")
+            raise ValueError("Exposure data GeoDataFrame from cache is empty.")
 
-    if ".gpkg" in path:
-        exposure_data_gdf = get_gpkg_from_cache_as_gdf(path)
-    elif ".csv" in path:
-        exposure_data_gdf = pd.read_csv(path)
+        if ".gpkg" in path:
+            exposure_data_gdf = get_gpkg_from_cache_as_gdf(path)
+        elif ".csv" in path:
+            exposure_data_gdf = pd.read_csv(path)
 
-    if exposure_data_gdf.empty:
-        LOG.error("Exposure data GeoDataFrame is empty.")
-        raise ValueError("Exposure data GeoDataFrame from cache is empty.")
+        if exposure_data_gdf.empty:
+            LOG.error("Exposure data GeoDataFrame is empty.")
+            raise ValueError("Exposure data GeoDataFrame from cache is empty.")
 
-    if data_source_names:
-        # keep only data_source_names columns
-        exposure_data_gdf = filter_gdf_by_columns_if_found(
-            exposure_data_gdf, data_source_names, keep=True
-        )
+        if data_source_names:
+            # keep only data_source_names columns
+            exposure_data_gdf = filter_gdf_by_columns_if_found(
+                exposure_data_gdf, data_source_names, keep=True
+            )
 
-    return convert_gdf_to_dict(exposure_data_gdf, set_index_column, orient)
+        return convert_gdf_to_dict(exposure_data_gdf, set_index_column, orient)
+    except ValueError as e:
+        LOG.error(f"Failed to get and convert GeoDataFrame to dictionary. Error: {e}")
+        return {}
 
 
 def convert_gdf_to_dict(

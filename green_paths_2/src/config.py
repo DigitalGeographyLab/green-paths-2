@@ -74,7 +74,7 @@ PREPROCESSING_CACHE_DIR_NAME: str = "preprocessing"
 
 ROUTING_CACHE_DIR_NAME: str = "routing"
 
-EXPOSURE_ANALYSING_CACHE_DIR_NAME: str = "exposure_analysing"
+EXPOSURE_ANALYSING_CACHE_DIR_NAME: str = "final_exposure_results"
 
 OSM_CACHE_DIR_NAME: str = "osm"
 

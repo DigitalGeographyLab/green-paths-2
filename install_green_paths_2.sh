@@ -26,11 +26,9 @@
 # START OF THE INSTALL SCRIPT
 
 #!/bin/bash
-
 echo ''
 echo "Installing GreenPaths 2.0"
 echo ''
-
 
 # Check if Conda is installed by looking for the 'conda' command
 if ! conda --version &> /dev/null; then
@@ -88,13 +86,15 @@ chmod +x $CONDA_PREFIX/etc/conda/deactivate.d/env_vars.sh
 # Activate environment again to ensure JAVA_HOME is set
 conda activate dgl_gp2
 
-# install poetry for the current conda environment
+# Install Poetry
 pip install poetry
 
-# Use the full path to call Poetry for setup and installation
-poetry --version
-poetry config virtualenvs.create false
-poetry install
+# # Export Poetry dependencies to requirements.txt
+# poetry export -f requirements.txt --output requirements.txt --without-hashes
+
+# # Install dependencies via Conda when possible and fallback to pip for the rest
+# # Note: You might need to manually specify some dependencies here if they need to be installed via Conda for better compatibility
+# pip install -r requirements.txt
 
 echo ''
 echo "Installation and setup are complete."

@@ -112,6 +112,11 @@ def routing_pipeline(
                 normalized_data_source_names,
             )
 
+        if not exposure_dict:
+            raise ValueError(
+                "Exposure data not found for routing pipeline. Not as parameter nor from cache."
+            )
+
         # origins, destinations = test_init_ods()
         origins, destinations = init_origin_destinations_from_files(
             user_config.routing, user_config.project_crs

@@ -53,24 +53,18 @@ def main():
     preprocessing_parser = subparsers.add_parser(
         "preprocessing", help="Run the preprocessing pipeline."
     )
-    preprocessing_parser.add_argument(
-        "-nc",
-        "--use_network_cache",
-        help="If flag is given, use network cache if found from data/cache directory.",
-        action="store_true",
-    )
 
     # Subparser for routing
     routing_parsers = subparsers.add_parser("routing", help="Run the routing pipeline.")
     # Add arguments specific to action2 if needed
 
-    # TODO: add cache to routing?
-    routing_parsers.add_argument(
-        "-rc",
-        "--router_cache",
-        help="Flag for using cached exposure datas for routing",
-        action="store_true",
-    )
+    # TODO: add or remove cache to routing?
+    # routing_parsers.add_argument(
+    #     "-uc",
+    #     "--use_cache",
+    #     help="Flag for using cached exposure datas for routing",
+    #     action="store_true",
+    # )
 
     # Subparser for exposure analysing
     analysing_parsers = subparsers.add_parser(
@@ -83,8 +77,8 @@ def main():
     )
 
     fetchers_parser.add_argument(
-        "-a",
-        "--area",
+        "-c",
+        "--city",
         type=str,
         help="Name of city.",
         required=False,

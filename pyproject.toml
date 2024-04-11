@@ -6,7 +6,8 @@ authors = ["roope heinonen <roope.heinonen@helsinki.fi>"]
 readme = "README.rst"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.13"
+invoke = "^1.6.0"  # Replace with the latest version number as necessary
 black = "^24.2.0"
 isort = "^5.13.2"
 xarray = "^2024.2.0"

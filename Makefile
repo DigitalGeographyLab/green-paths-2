@@ -86,7 +86,7 @@ dist: clean ## builds source and wheel package
 install: clean ## install the package to the active Python's site-packages
 	poetry install
 
-greenpaths2:
+gp2:
 	poetry run python green_paths_2_cli.py $(ARGS)
 
 %:
