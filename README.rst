@@ -18,7 +18,7 @@ Green Paths 2
 
 
 
-_"In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery!_
+"In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery
 
 
 **Green Paths 2 (GP2) is a Multi-objective exposure routing for healthier paths choices.**
