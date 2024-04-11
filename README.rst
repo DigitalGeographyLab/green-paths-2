@@ -2,7 +2,9 @@
 Green Paths 2
 =============
 
-GREEN PATHS 2 IS UNDER CONSTRUCTION
+.. warning:: GREEN PATHS 2 IS UNDER CONSTRUCTION
+
+
 
 .. image:: https://img.shields.io/pypi/v/green_paths_2.svg
         :target: https://pypi.python.org/pypi/green_paths_2
@@ -15,20 +17,23 @@ GREEN PATHS 2 IS UNDER CONSTRUCTION
         :alt: Documentation Status
 
 
+.. tip:: "In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery!
+
+
 **Green Paths 2 (GP2) is a Multi-objective exposure routing for healthier paths choices.**
 
 GP2 uses OpenStreetMap (OSM) road network and user defined datas from flexible user_configurations.yml file to calculate the exposure values for the road network.
-The exposure values are then used to route healthier paths with the help of Conveyal's `r5 <https://github.com/conveyal/r5>` routing engine
-and python wrapper `r5py <https://github.com/r5py/r5py>`. It then calculates exposure results for the taken paths and returns the results in the final_exposure_results folder.
+The exposure values are then used to route healthier paths with the help of Conveyal's `r5 https://github.com/conveyal/r5` routing engine
+and python wrapper `r5py https://github.com/r5py/r5py`. It then calculates exposure results for the taken paths and returns the results in the final_exposure_results folder.
 
-Green Paths 2 is the next iteration, and heavily depending on the current version: `Green Paths <https://www.helsinki.fi/en/researchgroups/digital-geography-lab/green-paths>` and `Github <https://github.com/DigitalGeographyLab/green-path-server>`,
-developed by Joose Helle for his Geography masters thesis and for `Digital Geography Lab, University of Helsinki <https://www.helsinki.fi/en/researchgroups/digital-geography-lab>`.
+Green Paths 2 is the next iteration, and heavily depending on the current version: `Green Paths https://www.helsinki.fi/en/researchgroups/digital-geography-lab/green-paths` and `Github https://github.com/DigitalGeographyLab/green-path-server`,
+developed by Joose Helle for his Geography masters thesis and for `Digital Geography Lab, University of Helsinki https://www.helsinki.fi/en/researchgroups/digital-geography-lab`.
 
 Green Paths is a proof-of-concept bi-objective routing tool for Helsinki Metropolitan area, supporting: Greenery, hourly air quality and noise exposures.
 
 The Green Paths 2 aims to enable more powerful masscalculations to use for flexible cities and datas. GP2 can thus be ran any where where there is OSM road network and exposure data available. The source has been written from scratch, excluding some functionalities from the original Green Paths.
 
-See also the `Green Paths Web GUI < https://green-paths.web.app/?map=streets>`
+See also the `Green Paths Web GUI https://green-paths.web.app/?map=streets`
 
 .. note:: GP2 is using patched forks from r5 modified fork `R5_GP2 https://github.com/DigitalGeographyLab/r5/tree/gp2` and r5py modified fork `R5_GP2 https://github.com/DigitalGeographyLab/r5py_gp2`.
 
@@ -99,10 +104,10 @@ Installation:
         - Miniconda or Anaconda
         - Microsoft Visual Build Tools C++ 14.0 or greater
 
-        `Install miniconda/anaconda <https://docs.conda.io/en/latest/miniconda.html>`
+        `Install miniconda/anaconda https://docs.conda.io/en/latest/miniconda.html`
         The installation has python included.
 
-        `Install Microsoft Visual Build Tools C++ 14.0 or greater <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`
+        `Install Microsoft Visual Build Tools C++ 14.0 or greater https://visualstudio.microsoft.com/visual-cpp-build-tools/`
         From Visual Studio Installer select the tab "Individual components" and from there select at least:
         - C++ build tools (version 14.0 or greater)
         - Windows 10 SDK
@@ -127,7 +132,7 @@ Installation:
         Prerequisites:
         - Miniconda or Anaconda
 
-        `Install miniconda/anaconda <https://docs.conda.io/en/latest/miniconda.html>`
+        `Install miniconda/anaconda https://docs.conda.io/en/latest/miniconda.html`
         The installation has python included.
 
         After installing the prerequisites, install Green Paths 2 to conda environment:
@@ -318,7 +323,7 @@ _commands_
 _descriptions_
         - Download the OSM road network data from the OSM API. User most likely should download the OSM PBF from other sources for more accurate road networks,
         but this is a quick way to get the data for testing or general network use.
-        - Recommended to use e.g. `bbbike.org <https://extract.bbbike.org/>` to download the OSM PBF. Try not to download extensive areas, as the processing times will increase as the network does. Use only needed areas.
+        - Recommended to use e.g. `bbbike.org https://extract.bbbike.org/` to download the OSM PBF. Try not to download extensive areas, as the processing times will increase as the network does. Use only needed areas.
 
 
 ~~~~~~~~~~~~~~
@@ -417,9 +422,9 @@ References
 ----------
 
 For details on the core methods implemented in Conveyal Analysis and R5, see:
-- `Conway, Byrd, and van der Linden (2017) <https://keep.lib.asu.edu/items/127809>`.
-- `Conway, Byrd, and van Eggermond (2018) <https://www.jtlu.org/index.php/jtlu/article/view/1074>`.
-- `Conway and Stewart (2019) <https://files.indicatrix.org/Conway-Stewart-2019-Charlie-Fare-Constraints.pdf>`.
+- `Conway, Byrd, and van der Linden (2017) https://keep.lib.asu.edu/items/127809`.
+- `Conway, Byrd, and van Eggermond (2018) https://www.jtlu.org/index.php/jtlu/article/view/1074`.
+- `Conway and Stewart (2019) https://files.indicatrix.org/Conway-Stewart-2019-Charlie-Fare-Constraints.pdf`.
 
 
 
