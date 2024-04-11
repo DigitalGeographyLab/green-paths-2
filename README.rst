@@ -18,7 +18,8 @@ Green Paths 2
 
 
 
-"In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery
+
+        "In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery
 
 
 **Green Paths 2 (GP2) a Multi-objective exposure routing for healthier paths choices**
@@ -42,7 +43,7 @@ See also the `Green Paths Web GUI https://green-paths.web.app/?map=streets`
 
 
 Quickstart for Green Paths 2
---------------
+----------
 
 1. Clone the repository from GitHub:
 
@@ -82,7 +83,7 @@ Quickstart for Green Paths 2
 
 
 Green Paths 2 Framework
---------------
+----------
 
 Green Paths 2 consist of 3 different modules which can be run separately or together as pipeline. For general use, the whole (all) pipeline should be used. If running modules separately,
 user should have run the required previoud modules using cache.
@@ -95,10 +96,10 @@ See more on Green paths 2 framework and modules in the Green Paths 2 Modules and
 
 
 Installation:
---------------
+----------
 
 Windows
-~~~~~~~~~~~~~~
+----------
 
 Prerequisites:
 - Miniconda or Anaconda
@@ -125,7 +126,7 @@ After installing the prerequisites, install Green Paths 2 to conda environment:
 
 
 Mac / Linux
-~~~~~~~~~~~~~~
+----------
 
 Prerequisites:
 - Miniconda or Anaconda
@@ -148,7 +149,7 @@ After installing the prerequisites, install Green Paths 2 to conda environment:
 
 
 Quickstart for Green Paths 2
---------------
+----------
 
 1. After successful installation, and conda environment activate, fill in the user configurations in the **user/config.yml** file.
 
@@ -172,8 +173,9 @@ Quickstart for Green Paths 2
 
 
 
+
 CLI USER INTERFACE
---------------
+----------
 
 Green Paths 2 is operated via CLI. The CLI commands are run in the terminal / cmd. Here are all the supported commands:
 
@@ -188,7 +190,7 @@ Green Paths 2 is operated via CLI. The CLI commands are run in the terminal / cm
 
 
 Detailed description of the commands:
---------------
+----------
 
 Preprocessing
 - Preprocessing pipeline for processing and calculating exposure values for the OSM road network.
@@ -217,7 +219,7 @@ but this is a quick way to get the data for testing or general use.
 
 
 Running the commands
---------------
+----------
 
 For unified approach on running task no matter the OS, we are using invoke.
 
@@ -326,7 +328,7 @@ descriptions_
 
 
 Running the commands fallback for Windows
---------------
+----------
 
 If the inv command is not working, you can run the commands with poetry:
 
@@ -343,7 +345,7 @@ See all possibilities from Running the commands section.
 
 
 Running the commands fallback for Mac / Linux
---------------
+----------
 
 If the inv command is not working, you can run the commands with poetry or make:
 
@@ -354,7 +356,7 @@ In addition to poetry, cli can be used with make in unix based systems:
 
 
 Description of Green Paths 2 Modules and components
---------------
+----------
 
 
 TODO: detailed descriptions go here...
