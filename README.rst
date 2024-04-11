@@ -1,4 +1,3 @@
-=============
 Green Paths 2
 =============
 
@@ -17,9 +16,9 @@ Green Paths 2
         :alt: Documentation Status
 
 
-
+~~~~~~~~~~~~~~
 "In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery
-
+~~~~~~~~~~~~~~
 
 **Green Paths 2 (GP2) is a Multi-objective exposure routing for healthier paths choices.**
 
@@ -92,11 +91,9 @@ See more on Green paths 2 framework and modules in the Green Paths 2 Modules and
 
 
 
---------------
 Installation:
 --------------
 
-        ~~~~~~~~~~~~~~
         Windows
         ~~~~~~~~~~~~~~
 
@@ -124,8 +121,6 @@ Installation:
         - Now you can start using Green Paths 2 by running the CLI commands in the terminal.
 
 
-
-        ~~~~~~~~~~~~~~
         Mac / Linux
         ~~~~~~~~~~~~~~
 
