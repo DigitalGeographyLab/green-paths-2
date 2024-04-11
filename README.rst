@@ -1,3 +1,4 @@
+=============
 Green Paths 2
 =============
 
@@ -16,7 +17,7 @@ Green Paths 2
         :alt: Documentation Status
 
 
-~~~~~~~~~~~~~~
+
 "In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery
 ~~~~~~~~~~~~~~
 
@@ -37,7 +38,7 @@ See also the `Green Paths Web GUI https://green-paths.web.app/?map=streets`
 
 .. note:: GP2 is using patched forks from r5 modified fork `R5_GP2 https://github.com/DigitalGeographyLab/r5/tree/gp2` and r5py modified fork `R5_GP2 https://github.com/DigitalGeographyLab/r5py_gp2`.
 
-=============
+
 Quickstart for Green Paths 2
 =============
 
@@ -143,9 +144,9 @@ Installation:
 
 .. tip:: Remember to activate the conda environment after installation!
 
-=============
+
 Quickstart for Green Paths 2
-=============
+--------------
 
 1. After successful installation, and conda environment activate, fill in the user configurations in the **user/config.yml** file.
 
@@ -168,7 +169,7 @@ Quickstart for Green Paths 2
 6. Enjoy!
 
 
---------------
+
 CLI USER INTERFACE
 --------------
 
@@ -183,7 +184,7 @@ Green Paths 2 is operated via CLI. The CLI commands are run in the terminal / cm
 - analysing
 - all
 
---------------
+
 Detailed description of the commands:
 --------------
 
@@ -212,7 +213,7 @@ Detailed description of the commands:
         - Downloading the OSM road network data from the OSM API. User most likely should download the OSM PBF from other sources for more accurate road networks,
         but this is a quick way to get the data for testing or general use.
 
---------------
+
 Running the commands
 --------------
 
@@ -321,7 +322,7 @@ _descriptions_
         - Recommended to use e.g. `bbbike.org https://extract.bbbike.org/` to download the OSM PBF. Try not to download extensive areas, as the processing times will increase as the network does. Use only needed areas.
 
 
-~~~~~~~~~~~~~~
+
 Running the commands fallback for Windows
 ~~~~~~~~~~~~~~
 
@@ -338,7 +339,7 @@ e.g. ``poetry run python green_paths_2_cli.py --args="routing -uc"``
 See all possibilities from Running the commands section.
 
 
-~~~~~~~~~~~~~~
+
 Running the commands fallback for Mac / Linux
 ~~~~~~~~~~~~~~
 
@@ -350,9 +351,9 @@ In addition to poetry, cli can be used with make in unix based systems:
 
 
 
-=============
+~~~~~~~~~~~~~~
 Description of Green Paths 2 Modules and components
-=============
+~~~~~~~~~~~~~~
 
 
 TODO: detailed descriptions go here...
