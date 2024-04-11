@@ -19,9 +19,10 @@ Green Paths 2
 
 
         "In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery
-~~~~~~~~~~~~~~
 
-**Green Paths 2 (GP2) is a Multi-objective exposure routing for healthier paths choices.**
+=============
+Green Paths 2 (GP2) a Multi-objective exposure routing for healthier paths choices
+=============
 
 GP2 uses OpenStreetMap (OSM) road network and user defined datas from flexible user_configurations.yml file to calculate the exposure values for the road network.
 The exposure values are then used to route healthier paths with the help of Conveyal's `r5 https://github.com/conveyal/r5` routing engine
@@ -36,7 +37,8 @@ The Green Paths 2 aims to enable more powerful masscalculations to use for flexi
 
 See also the `Green Paths Web GUI https://green-paths.web.app/?map=streets`
 
-.. note:: GP2 is using patched forks from r5 modified fork `R5_GP2 https://github.com/DigitalGeographyLab/r5/tree/gp2` and r5py modified fork `R5_GP2 https://github.com/DigitalGeographyLab/r5py_gp2`.
+
+        GP2 is using patched forks from r5 modified fork `R5_GP2 https://github.com/DigitalGeographyLab/r5/tree/gp2` and r5py modified fork `R5_GP2 https://github.com/DigitalGeographyLab/r5py_gp2`.
 
 
 Quickstart for Green Paths 2
@@ -58,9 +60,9 @@ Quickstart for Green Paths 2
         Mac / Linux:
         ``./install_green_paths_2.sh``
 
-.. tip:: Remember to deactivate the conda environment before installing and re-activate it after installation!
+        Remember to deactivate the conda environment before installing and re-activate it after installation!
 
-.. warning:: and check the prerequisites for the installation from the installation section!
+                and check the prerequisites for the installation from the installation section!
 
 
 4. Activate the conda environment:
@@ -78,7 +80,7 @@ Quickstart for Green Paths 2
 7. Travel safe and healthy!
 
 
-
+=============
 Green Paths 2 Framework
 =============
 
@@ -228,7 +230,7 @@ Base command and info:
 
 **all pipeline**
 
-commands_
+*commands*
         ``inv gp2 --args="all"``
         
         ``inv gp2 --args="all -uc"``
@@ -351,7 +353,6 @@ In addition to poetry, cli can be used with make in unix based systems:
 
 
 
-~~~~~~~~~~~~~~
 Description of Green Paths 2 Modules and components
 ~~~~~~~~~~~~~~
 
@@ -368,24 +369,24 @@ Data requirements
 
 Green paths 2 consist of 3 main modules:
 
-        preprocessing:
+preprocessing:
 
-                osm_processor
-                - [ ] convert osm_processor to cli
-                - [ ] put paths to confs
-                - [ ] add tests for osm_processor
+        osm_processor
+        - [ ] convert osm_processor to cli
+        - [ ] put paths to confs
+        - [ ] add tests for osm_processor
 
-                etc...
+        etc...
 
-        routing:
+routing:
 
-                - [ ] todo todo
-                etc...
+        - [ ] todo todo
+        etc...
 
-        analysing:
+analysing:
 
-                - [ ] todo todo
-                etc...
+        - [ ] todo todo
+        etc...
 
 
 
