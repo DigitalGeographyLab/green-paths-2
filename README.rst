@@ -2,7 +2,7 @@
 Green Paths 2
 =============
 
-GREEN PATHS 2 IS UNDER CONSTRUCTION
+**GREEN PATHS 2 IS UNDER CONSTRUCTION**
 
 
 
@@ -17,8 +17,8 @@ GREEN PATHS 2 IS UNDER CONSTRUCTION
         :alt: Documentation Status
 
 
-.. tip:: 
-        "In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery!
+
+_"In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2: The Return of the Greenery!_
 
 
 **Green Paths 2 (GP2) is a Multi-objective exposure routing for healthier paths choices.**
