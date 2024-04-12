@@ -179,12 +179,16 @@ def convert_gdf_to_dict(
 
 def construct_osm_segmented_network_name(osm_source_path: str) -> str:
     """Constructs the name for the segmented OSM network file."""
+    # Normalize input path to avoid mix of path separators
+    osm_source_path = osm_source_path.replace("\\", os.sep).replace("/", os.sep)
+
     network_name_no_extension = os.path.basename(osm_source_path).rsplit(".osm.pbf", 1)[
         0
     ]
     osm_file_name = (
         network_name_no_extension + OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION
     )
+
     return os.path.join(
         DATA_CACHE_DIR_PATH,
         OSM_CACHE_DIR_NAME,
