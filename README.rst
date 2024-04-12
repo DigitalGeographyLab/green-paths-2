@@ -107,6 +107,7 @@ Prerequisites:
 
 `Install miniconda/anaconda https://docs.conda.io/en/latest/miniconda.html`
 The installation has python included.
+Conda should manually be added to the PATH or the conda prompt should be used, if problems with conda not found occur.
 
 `Install Microsoft Visual Build Tools C++ 14.0 or greater https://visualstudio.microsoft.com/visual-cpp-build-tools/`
 From Visual Studio Installer select the tab "Individual components" and from there select at least:
