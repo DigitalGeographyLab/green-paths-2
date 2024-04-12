@@ -2,15 +2,14 @@
 
 import os
 import yaml
-from green_paths_2.src.config import DEFAULT_CONFIGURATION_VALUES
-from green_paths_2.src.data_utilities import determine_file_type
-from green_paths_2.src.preprocessing.spatial_operations import crs_uses_meters
-from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.green_paths_exceptions import (
-    ConfigDataError,
+from ..config import DEFAULT_CONFIGURATION_VALUES
+from ..data_utilities import determine_file_type
+from .spatial_operations import crs_uses_meters
+from ..logging import setup_logger, LoggerColors
+from ..green_paths_exceptions import (
     ConfigError,
 )
-from green_paths_2.src.preprocessing.data_types import (
+from .data_types import (
     DataSourceModel,
     DataTypes,
     TravelModes,
@@ -37,6 +36,7 @@ class UserConfig:
         self.config_path = config_path
         self.skip_validation = skip_validation
         self.data_source_names = []
+        self.errors = []
 
     def parse_config(self):
         """
@@ -93,12 +93,17 @@ class UserConfig:
             A dictionary containing the user configuration.
         """
         LOG.info("Validating user config")
+        self.errors = []
         self._validate_crs(config)
         self._validate_project_configs(config)
         self._validate_osm_pbf_network_file(config)
         self._validate_data_sources(config)
         self._validate_routing_config(config)
         self._validate_analysing_config(config)
+        if self.errors:
+            error_message = "\n\n".join(self.errors)
+            LOG.error(f"Errors in user configuration: \n{error_message}")
+            raise ConfigError(f"ERRORS IN USER CONFIGURATION: \n{error_message}")
 
     def set_attributes(self, config: dict) -> None:
         """
@@ -137,7 +142,7 @@ class UserConfig:
         """Validate project configurations."""
         save_to_cache = config.get("save_to_cache")
         if save_to_cache and not isinstance(save_to_cache, bool):
-            raise ConfigError(
+            self.errors.append(
                 "Invalid save to cache config, should be bool, True or False."
             )
 
@@ -148,7 +153,7 @@ class UserConfig:
         if datas_coverage_safety_percentage and not isinstance(
             datas_coverage_safety_percentage, (int, float)
         ):
-            raise ConfigDataError(
+            self.errors.append(
                 "Invalid datas coverage safety percentage in analysing parameters. Should be float or integer."
             )
 
@@ -161,13 +166,13 @@ class UserConfig:
         osm_pbf_path = config.get("osm_network").get("osm_pbf_file_path")
 
         if not osm_pbf_path or not os.path.exists(osm_pbf_path):
-            raise ConfigError(
+            self.errors.append(
                 f"Didn't find osm network pbf file with provided user confs. Path was {osm_pbf_path}"
             )
         # TODO: lisää tähän joku checki mikä lataa ja kattoo onhan siel kamaa jne... et on osmid't ja kaikkee
         _, file_extension = os.path.splitext(osm_pbf_path)
         if file_extension.lower() != ".pbf":
-            raise ConfigError(
+            self.errors.append(
                 f"Invalid osm_pdb_path in data config file. Should be X.osm.pbf Path was {osm_pbf_path}"
             )
         LOG.info("OSM PBF configurations validated.")
@@ -179,12 +184,12 @@ class UserConfig:
         :param config: A dictionary containing configuration data.
         """
         if not config.get("project_crs"):
-            raise ConfigError("Invalid or missing project crs configuration.")
+            self.errors.append("Invalid or missing project crs configuration.")
 
         # TODO: validate that the crs is valid crs
 
         if not crs_uses_meters(config.get("project_crs")):
-            raise ConfigError(
+            self.errors.append(
                 "Invalid project crs. Project crs should use meters as units. Most of projected CRS's use meters as units, opposed to geographic CRS's which use degrees."
             )
 
@@ -199,7 +204,7 @@ class UserConfig:
         """
         data_sources_config = config.get("data_sources", [])
         if not data_sources_config:
-            raise ConfigError(
+            self.errors.append(
                 "Invalid or missing data sources configuration. See that atleast one data source is provided in user_config.yaml."
             )
 
@@ -231,6 +236,9 @@ class UserConfig:
                 LOG.warning(
                     "Data type in config file does not match determined file extension."
                 )
+                self.errors.append(
+                    "Data type in config file does not match determined file extension."
+                )
                 LOG.warning("IF THE DATATYPE IS WRONG, IT WILL CAUSE ERRORS LATER ON.")
                 LOG.warning("! ! !")
                 LOG.warning("\n")
@@ -241,21 +249,19 @@ class UserConfig:
 
             # data name
             if not name or not isinstance(name, str):
-                raise ConfigDataError("Invalid or missing data name configuration.")
+                self.errors.append("Invalid or missing data name configuration.")
 
             # filepath
             if not filepath or not os.path.exists(filepath):
-                raise ConfigDataError(f"Invalid or missing filepath configuration.")
+                self.errors.append(f"Invalid or missing filepath configuration.")
 
             #  data type, mandatory (but if missing, try to determine from file extension)
             if data_type not in [dt.value for dt in DataTypes]:
-                raise ConfigDataError(
-                    f"Invalid or not supported datatype configuration."
-                )
+                self.errors.append(f"Invalid or not supported datatype configuration.")
 
             # data column for vector data, mandatory
             if data_type == DataTypes.Vector.value and not data_column:
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid or missing data column configuration for vector data."
                 )
 
@@ -263,19 +269,19 @@ class UserConfig:
             if data_column == DataTypes.Raster.value and (
                 data_column and not isinstance(data_column, str)
             ):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid data column configuration. Should be string. This optional attribute can be left empty. If provided, it should be string."
                 )
 
             # data buffer, optional
             if data_buffer and not isinstance(data_buffer, int):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid data buffer configuration. Should be integer. This optional attribute can be left empty, if provided, it should be integer."
                 )
 
             # min normalized, mandatory
             if min_data_value is None or (not isinstance(min_data_value, (int, float))):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid min normalized configuration. Should be float or integer."
                 )
 
@@ -283,18 +289,18 @@ class UserConfig:
             if not max_data_value or not (
                 isinstance(max_data_value, int) or isinstance(max_data_value, float)
             ):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid max normalized configuration. Should be float or integer."
                 )
 
             if min_data_value >= max_data_value:
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid min normalized and max normalized configuration. Max normalized should be greater than min normalized."
                 )
 
             # good exposure, mandatory
             if not good_exposure and not isinstance(good_exposure, bool):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid or missing good exposure configuration. Should be boolean."
                 )
 
@@ -305,7 +311,7 @@ class UserConfig:
                 not raster_cell_resolution
                 or not isinstance(raster_cell_resolution, int)
             ):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid or missing raster cell resolution configuration for vector data. Should be integer. Mandatory for vector data. if provided, it should be integer."
                 )
 
@@ -315,7 +321,7 @@ class UserConfig:
                 and raster_cell_resolution
                 and not isinstance(raster_cell_resolution, int)
             ):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid raster cell resolution configuration. Should be integer. Optional for raster data."
                 )
 
@@ -323,7 +329,7 @@ class UserConfig:
             if original_crs and not (
                 isinstance(original_crs, int) or isinstance(original_crs, str)
             ):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid original crs configuration. Should be integer or string. This optional attribute can be left empty. If provided, it should be integer or string."
                 )
 
@@ -334,13 +340,13 @@ class UserConfig:
                 columns_of_interest
                 and not all(isinstance(column, str) for column in columns_of_interest)
             ):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid columns of interest configuration. Should be list of strings. This optional attribute can be left empty. If provided, it should be list of strings."
                 )
 
             # save raster file, optional
             if save_raster_file and not isinstance(save_raster_file, bool):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid save raster file configuration. Should be boolean. This optional attribute can be left empty. If provided, it should be boolean."
                 )
 
@@ -354,8 +360,8 @@ class UserConfig:
         """
         routing_config = config.get("routing", {})
         if not routing_config:
-            raise ConfigError(
-                "Invalid or missing routing configuration. See that atleast one data source is provided in user_config.yaml."
+            self.errors.append(
+                "Invalid or missing routing configuration section. See that atleast one data source is provided in user_config.yaml."
             )
 
         transport_mode: str = routing_config.get(DataSourceModel.TransportMode.value)
@@ -379,14 +385,14 @@ class UserConfig:
             or not isinstance(transport_mode, str)
             or transport_mode not in [tm.value for tm in TravelModes]
         ):
-            raise ConfigDataError(
+            self.errors.append(
                 "Invalid or missing travel mode configuration in routing parameters. Should be walking or cycling."
             )
 
         if origin_is_csv or destination_is_csv:
             # only mandatory for CSV OD files, optional for GPKG or SHP
             if not od_crs or not isinstance(od_crs, (str, int)):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid or missing OD crs configuration in routing parameters. Should be int or str."
                 )
 
@@ -395,7 +401,7 @@ class UserConfig:
                 and not origin_lon_name
                 or not isinstance(origin_lon_name, str)
             ):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid or missing origin longitude name configuration in routing parameters."
                 )
 
@@ -404,7 +410,7 @@ class UserConfig:
                 and not origin_lat_name
                 or not isinstance(origin_lat_name, str)
             ):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid or missing origin latitude name configuration in routing parameters."
                 )
 
@@ -414,7 +420,7 @@ class UserConfig:
             or not os.path.exists(origins_path)
             or origins_file_extension not in [".csv", ".gpkg", ".shp"]
         ):
-            raise ConfigDataError(
+            self.errors.append(
                 "Invalid or missing ORIGINS path configuration in routing parameters."
             )
 
@@ -424,7 +430,7 @@ class UserConfig:
             or not os.path.exists(destinations_path)
             or destinations_file_extension not in [".csv", ".gpkg", ".shp"]
         ):
-            raise ConfigDataError(
+            self.errors.append(
                 "Invalid or missing DESTINATIONS path configuration in routing parameters."
             )
 
@@ -435,7 +441,7 @@ class UserConfig:
                 DataSourceModel.AllowMissingData.value
             )
             if not name or not isinstance(name, str):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid or missing exposure parameter name configuration."
                 )
 
@@ -445,15 +451,15 @@ class UserConfig:
             ]
 
             if name not in preprocessing_data_sources_names:
-                raise ConfigDataError(
+                self.errors.append(
                     "Routing Exposure parameter name not found in Preprocessing data sources. Check that the name matches with the data source name."
                 )
             if not sensitivity or not isinstance(sensitivity, (int, float)):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid sensitivity configuration in routing parameters. Should be float or integer."
                 )
             if allow_missing_data and not isinstance(allow_missing_data, bool):
-                raise ConfigDataError(
+                self.errors.append(
                     "Invalid allow missing data configuration in routing parameters. Should be boolean if set."
                 )
             LOG.info("Routing configuration validated.")
@@ -479,7 +485,7 @@ class UserConfig:
         ]
 
         if not cumulative_keys_valid:
-            raise ConfigDataError(
+            self.errors.append(
                 "Invalid cumulative ranges in analysing parameters. No valid data source names found, cumulative values might have keys that aren't datasources."
             )
 
@@ -492,18 +498,18 @@ class UserConfig:
             if cumulative_ranges_data:
 
                 if not isinstance(cumulative_ranges_data, list):
-                    raise ConfigDataError(
+                    self.errors.append(
                         "Invalid cumulative ranges in analysing parameters. Should be list of float or integers."
                     )
 
                 for range_value_pair in cumulative_ranges_data:
                     if not isinstance(range_value_pair, list):
-                        raise ConfigDataError(
+                        self.errors.append(
                             "Invalid cumulative ranges in analysing parameters. Should be list of float or integers."
                         )
                     for single_range_value in range_value_pair:
                         if not isinstance(single_range_value, (int, float)):
-                            raise ConfigDataError(
+                            self.errors.append(
                                 "Invalid cumulative ranges in analysing parameters. Should be list of float or integers."
                             )
 
@@ -512,6 +518,6 @@ class UserConfig:
         keep_geometry: bool = analysing_config.get(DataSourceModel.KeepGeometry.value)
 
         if keep_geometry and not isinstance(keep_geometry, bool):
-            raise ConfigDataError(
+            self.errors.append(
                 "Invalid keep_geometry in analysing parameters. Should be boolean True or False."
             )

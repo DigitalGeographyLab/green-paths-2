@@ -3,16 +3,13 @@
 import geopandas as gpd
 import rasterio
 import shapely
-from green_paths_2.src.preprocessing.data_source import DataSource
-from green_paths_2.src.data_utilities import rename_gdf_column
-from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.timer import time_logger
+from ..logging import setup_logger, LoggerColors
+from ..timer import time_logger
 from shapely import wkt
 from pyproj import CRS
 
 import geopandas as gpd
-from shapely.geometry import LineString, box
-from shapely.ops import split
+from shapely.geometry import box
 
 
 LOG = setup_logger(__name__, LoggerColors.ORANGE.value)

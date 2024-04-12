@@ -2,7 +2,7 @@
 
 import pandas as pd
 import geopandas as gpd
-from green_paths_2.src.config import (
+from .config import (
     DATA_COVERAGE_SAFETY_PERCENTAGE,
     GEOMETRY_KEY,
     LENGTH_KEY,
@@ -11,12 +11,12 @@ from green_paths_2.src.config import (
     SEGMENT_VALUES_ROUND_DECIMALS,
 )
 
-from green_paths_2.src.green_paths_exceptions import (
+from .green_paths_exceptions import (
     DataManagingError,
     SegmentValueStoreError,
 )
-from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.preprocessing.data_source import DataSource
+from .logging import setup_logger, LoggerColors
+from .preprocessing.data_source import DataSource
 
 
 LOG = setup_logger(__name__, LoggerColors.RED.value)

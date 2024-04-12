@@ -5,16 +5,16 @@ import os
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Point
-from green_paths_2.src.config import (
+from ..config import (
     NORMALIZED_DATA_SUFFIX,
     R5_JAR_FILE_PATH,
 )
-from green_paths_2.src.data_utilities import construct_osm_segmented_network_name
-from green_paths_2.src.green_paths_exceptions import R5pyError
-from green_paths_2.src.preprocessing.data_types import DataSourceModel
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
+from ..data_utilities import construct_osm_segmented_network_name
+from ..green_paths_exceptions import R5pyError
+from ..preprocessing.data_types import DataSourceModel
+from ..preprocessing.user_config_parser import UserConfig
 
-from green_paths_2.src.logging import setup_logger, LoggerColors
+from ..logging import setup_logger, LoggerColors
 
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)

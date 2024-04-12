@@ -2,9 +2,9 @@
 
 import os
 
-from green_paths_2.src.config import DATA_CACHE_DIR_PATH
-from green_paths_2.src.green_paths_exceptions import DataManagingError
-from green_paths_2.src.logging import setup_logger, LoggerColors
+from .config import DATA_CACHE_DIR_PATH
+from .green_paths_exceptions import DataManagingError
+from .logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.RED.value)
 

@@ -136,26 +136,26 @@ data_sources:
 
 
 
-routing:
-    # transport_mode: walking
-    transport_mode: cycling
-    # origins: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
-    # origins: "green_paths_2/src/cache/data/origin_point.gpkg"
-    origins: green_paths_2/src/cache/data/population_hki_centroids.gpkg
-    # origins: "green_paths_2/src/cache/data/origins.csv"
-    # origins: "green_paths_2/src/cache/data/linnanmaki_origins.csv"
-    od_lon_name: longitude
-    od_lat_name: latitude
-    # destinations: "green_paths_2/src/cache/data/destinations_points.gpkg"
-    # destinations: "green_paths_2/src/cache/data/destinations.csv"
-    destinations: green_paths_2/src/cache/data/destinations_points_shp.shp
-    od_crs: 4326
-    exposure_parameters:
-      - name: gvi
-        sensitivity: 999
-      - name: aqi
-        sensitivity: 999
-        allow_missing_data: True
+# routing:
+#     # transport_mode: walking
+#     transport_mode: cycling
+#     # origins: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
+#     # origins: "green_paths_2/src/cache/data/origin_point.gpkg"
+#     origins: green_paths_2/src/cache/data/population_hki_centroids.gpkg
+#     # origins: "green_paths_2/src/cache/data/origins.csv"
+#     # origins: "green_paths_2/src/cache/data/linnanmaki_origins.csv"
+#     od_lon_name: longitude
+#     od_lat_name: latitude
+#     # destinations: "green_paths_2/src/cache/data/destinations_points.gpkg"
+#     # destinations: "green_paths_2/src/cache/data/destinations.csv"
+#     destinations: green_paths_2/src/cache/data/destinations_points_shp.shp
+#     od_crs: 4326
+#     exposure_parameters:
+#       - name: gvi
+#         sensitivity: 999
+#       - name: aqi
+#         sensitivity: 999
+#         allow_missing_data: True
 
 
 analysing:

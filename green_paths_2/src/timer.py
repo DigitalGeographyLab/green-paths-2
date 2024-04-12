@@ -1,7 +1,7 @@
 """ Decorator to log the time taken by a function to execute """
 
 import time
-from green_paths_2.src.logging import setup_logger, LoggerColors
+from .logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.CYAN.value)
 

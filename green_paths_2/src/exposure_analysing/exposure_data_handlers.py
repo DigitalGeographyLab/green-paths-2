@@ -2,21 +2,20 @@
 
 import geopandas as gpd
 import pandas as pd
-from green_paths_2.src.config import (
+from ..config import (
     FINAL_EXPOSURE_ANALYSING_RESULTS_CSV_PATH,
     FINAL_EXPOSURE_ANALYSING_RESULTS_GPKG_PATH,
     OSM_ID_KEY,
     OSM_NETWORK_GDF_CACHE_PATH,
     ROUTING_RESULTS_CSV_CACHE_PATH,
-    ROUTING_RESULTS_GDF_CACHE_PATH,
     SEGMENT_STORE_GDF_CACHE_PATH,
 )
-from green_paths_2.src.data_utilities import (
+from ..data_utilities import (
     convert_gdf_to_dict,
     get_and_convert_gdf_to_dict,
     save_gdf_to_cache,
 )
-from green_paths_2.src.green_paths_exceptions import (
+from ..green_paths_exceptions import (
     DataManagingError,
     SpatialOperationError,
 )
@@ -25,8 +24,8 @@ from shapely.geometry import MultiLineString, LineString
 from shapely.ops import linemerge, unary_union
 from typing import List
 
-from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
+from ..logging import setup_logger, LoggerColors
+from ..preprocessing.user_config_parser import UserConfig
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 

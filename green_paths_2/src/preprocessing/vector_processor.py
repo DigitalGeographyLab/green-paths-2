@@ -1,22 +1,21 @@
 """ This module contains functions for loading and processing vector data. """
 
 import geopandas as gpd
-from green_paths_2.src.config import FIX_INVALID_GEOMETRIES
-from green_paths_2.src.green_paths_exceptions import DataManagingError
-from green_paths_2.src.preprocessing.data_source import DataSource
+from ..config import FIX_INVALID_GEOMETRIES
+from ..green_paths_exceptions import DataManagingError
+from ..preprocessing.data_source import DataSource
 
-from green_paths_2.src.data_utilities import (
+from ..data_utilities import (
     filter_gdf_by_columns_if_found,
 )
 
-# from green_paths_2.src.preprocessing.data_types import DataSourceModel
-from green_paths_2.src.preprocessing.spatial_operations import (
+# from ..preprocessing.data_types import DataSourceModel
+from ..preprocessing.spatial_operations import (
     fix_invalid_geometries,
     handle_gdf_crs,
     has_invalid_geometries,
 )
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
-from green_paths_2.src.logging import setup_logger, LoggerColors
+from ..logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 

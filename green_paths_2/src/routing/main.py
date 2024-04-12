@@ -6,7 +6,7 @@
 # LIKE THIS BEFORE OTHER IMPORTS DUE TO NEED FOR --r5-classpath ARGUMENT BEFORE R5PY IMPORTS
 # IT IS DIRTY, AND THERE MIGHT BE A BETTER WAY TO DO THIS
 
-from green_paths_2.src.config import (
+from ..config import (
     OSM_ID_KEY,
     ROUTING_CACHE_DIR_NAME,
     ROUTING_RESULTS_CSV_CACHE_PATH,
@@ -15,7 +15,7 @@ from green_paths_2.src.config import (
     TRAVEL_TIMES_CSV_CACHE_PATH,
 )
 
-from green_paths_2.src.routing.routing_utilities import (
+from ..routing.routing_utilities import (
     init_origin_destinations_from_files,
     set_environment_and_import_r5py,
 )
@@ -27,26 +27,26 @@ if not set_environment_and_import_r5py():
     )
 
 
-from green_paths_2.src.green_paths_exceptions import PipeLineRuntimeError, R5pyError
-from green_paths_2.src.logging import setup_logger, LoggerColors
+from ..green_paths_exceptions import PipeLineRuntimeError, R5pyError
+from ..logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 
 
 import geopandas as gpd
-from green_paths_2.src.timer import time_logger
-from green_paths_2.src.cache_cleaner import clear_cache_dirs
+from ..timer import time_logger
+from ..cache_cleaner import clear_cache_dirs
 
-from green_paths_2.src.data_utilities import (
+from ..data_utilities import (
     convert_gdf_to_dict,
     convert_travel_times_dicts_to_gdf,
     get_and_convert_gdf_to_dict,
     save_gdf_to_cache,
 )
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
-from green_paths_2.src.preprocessing.user_data_handler import UserDataHandler
-from green_paths_2.src.routing.router_controller import route_green_paths_2_paths
-from green_paths_2.src.routing.routing_utilities import (
+from ..preprocessing.user_config_parser import UserConfig
+from ..preprocessing.user_data_handler import UserDataHandler
+from ..routing.router_controller import route_green_paths_2_paths
+from ..routing.routing_utilities import (
     get_normalized_data_source_names,
     test_2_init_single_hki_od_points,
     test_init_ods,

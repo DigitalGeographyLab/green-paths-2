@@ -3,30 +3,30 @@
 import os
 import gc
 import geopandas as gpd
-from green_paths_2.src.data_utilities import (
+from ..data_utilities import (
     determine_file_type,
     filter_gdf_by_columns_if_found,
     save_gdf_to_cache,
 )
-from green_paths_2.src.preprocessing.custom_functions import (
+from ..preprocessing.custom_functions import (
     apply_custom_processing_function,
 )
-from green_paths_2.src.preprocessing.spatial_operations import (
+from ..preprocessing.spatial_operations import (
     create_buffer_for_geometries,
 )
 
-from green_paths_2.src.preprocessing.vector_processor import (
+from ..preprocessing.vector_processor import (
     load_and_process_vector_data,
 )
-from green_paths_2.src.preprocessing.user_data_handler import UserDataHandler
-from green_paths_2.src.preprocessing.raster_operations import (
+from ..preprocessing.user_data_handler import UserDataHandler
+from ..preprocessing.raster_operations import (
     calculate_segment_raster_values_from_raster_file,
     check_raster_file_crs,
     rasterize_and_calculate_segment_values,
     reproject_raster_to_crs,
 )
-from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.config import (
+from ..logging import setup_logger, LoggerColors
+from ..config import (
     GEOMETRY_KEY,
     LENGTH_KEY,
     OSM_ID_KEY,
@@ -36,15 +36,15 @@ from green_paths_2.src.config import (
     SAVE_TO_CACHE_KEY,
     SEGMENT_STORE_GDF_CACHE_PATH,
 )
-from green_paths_2.src.preprocessing.data_types import DataTypes
-from green_paths_2.src.green_paths_exceptions import (
+from ..preprocessing.data_types import DataTypes
+from ..green_paths_exceptions import (
     ConfigDataError,
     PipeLineRuntimeError,
 )
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
-from green_paths_2.src.routing.main import routing_pipeline
-from green_paths_2.src.segment_value_store import SegmentValueStore
-from green_paths_2.src.timer import time_logger
+from ..preprocessing.user_config_parser import UserConfig
+from ..routing.main import routing_pipeline
+from ..segment_value_store import SegmentValueStore
+from ..timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 

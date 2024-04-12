@@ -2,20 +2,19 @@
 
 from r5py import TransportMode
 import geopandas as gpd
-from green_paths_2.src.green_paths_exceptions import R5pyError
-from green_paths_2.src.preprocessing.data_types import (
-    DataSourceModel,
+from ..green_paths_exceptions import R5pyError
+from ..preprocessing.data_types import (
     TravelModes,
 )
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
-from green_paths_2.src.routing.r5py_router import (
+from ..preprocessing.user_config_parser import UserConfig
+from ..routing.r5py_router import (
     build_custom_cost_network,
     init_travel_time_matrix_computer,
     route_travel_time_matrix_computer,
 )
 
 
-from green_paths_2.src.logging import setup_logger, LoggerColors
+from ..logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 

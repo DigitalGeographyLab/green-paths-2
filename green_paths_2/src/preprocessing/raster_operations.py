@@ -13,7 +13,7 @@ import rasterio
 from rasterio.enums import Resampling
 from rasterio.warp import calculate_default_transform, reproject
 
-from green_paths_2.src.config import (
+from ..config import (
     OSM_ID_KEY,
     OUTPUT_RASTER_DIR_PATH,
     RASTER_NO_DATA_VALUE,
@@ -23,8 +23,8 @@ from green_paths_2.src.config import (
 )
 
 
-from green_paths_2.src.green_paths_exceptions import SpatialOperationError
-from green_paths_2.src.logging import setup_logger, LoggerColors
+from ..green_paths_exceptions import SpatialOperationError
+from ..logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.PURPLE.value)
 

@@ -2,37 +2,37 @@
 
 import os
 import geopandas as gpd
-from green_paths_2.src.config import (
+from ..config import (
     DATA_CACHE_DIR_PATH,
     DESCRIPTOR_FILE_NAME,
     LOGS_CACHE_DIR_NAME,
     USER_CONFIG_PATH,
 )
-from green_paths_2.src.config_validator import validate_user_config
-from green_paths_2.src.data_utilities import determine_file_type
-from green_paths_2.src.green_paths_exceptions import PipeLineRuntimeError
-from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.preprocessing.custom_functions import (
+from ..config_validator import validate_user_config
+from ..data_utilities import determine_file_type
+from ..green_paths_exceptions import PipeLineRuntimeError
+from ..logging import setup_logger, LoggerColors
+from ..preprocessing.custom_functions import (
     apply_custom_processing_function,
 )
-from green_paths_2.src.preprocessing.data_source import DataSource
-from green_paths_2.src.preprocessing.data_types import DataTypes
-from green_paths_2.src.preprocessing.osm_network_handler import OsmNetworkHandler
-from green_paths_2.src.preprocessing.raster_operations import (
+from ..preprocessing.data_source import DataSource
+from ..preprocessing.data_types import DataTypes
+from ..preprocessing.osm_network_handler import OsmNetworkHandler
+from ..preprocessing.raster_operations import (
     check_raster_file_crs,
     describe_raster_data,
     reproject_raster_to_crs,
 )
-from green_paths_2.src.preprocessing.spatial_operations import (
+from ..preprocessing.spatial_operations import (
     check_if_raster_and_network_extends_overlap,
     check_if_vector_data_and_network_extends_overlap,
     create_buffer_for_geometries,
     handle_gdf_crs,
     has_invalid_geometries,
 )
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
-from green_paths_2.src.preprocessing.user_data_handler import UserDataHandler
-from green_paths_2.src.preprocessing.vector_processor import (
+from ..preprocessing.user_config_parser import UserConfig
+from ..preprocessing.user_data_handler import UserDataHandler
+from ..preprocessing.vector_processor import (
     list_vector_data_layers,
     load_vector_data,
 )

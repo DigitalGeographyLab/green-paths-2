@@ -1,7 +1,7 @@
 """ Data Source Class / Model """
 
 from typing import Any, Optional
-from green_paths_2.src.logging import setup_logger, LoggerColors
+from ..logging import setup_logger, LoggerColors
 
 
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)

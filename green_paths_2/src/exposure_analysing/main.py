@@ -2,19 +2,19 @@
 
 import geopandas as gpd
 
-from green_paths_2.src.config import (
+from ..config import (
     NAME_KEY,
 )
-from green_paths_2.src.exposure_analysing.exposure_calculator import ExposureCalculator
-from green_paths_2.src.exposure_analysing.exposure_data_handlers import (
+from ..exposure_analysing.exposure_calculator import ExposureCalculator
+from ..exposure_analysing.exposure_data_handlers import (
     get_datas_from_sources,
     save_final_results_data,
 )
-from green_paths_2.src.green_paths_exceptions import PipeLineRuntimeError
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
-from green_paths_2.src.timer import time_logger
+from ..green_paths_exceptions import PipeLineRuntimeError
+from ..preprocessing.user_config_parser import UserConfig
+from ..timer import time_logger
 
-from green_paths_2.src.logging import setup_logger, LoggerColors
+from ..logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 

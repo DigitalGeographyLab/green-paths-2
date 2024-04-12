@@ -4,10 +4,10 @@ import os
 import shutil
 import pyrosm
 
-from green_paths_2.src.logging import setup_logger, LoggerColors
+from ..logging import setup_logger, LoggerColors
 
-from green_paths_2.src.config import DATA_CACHE_DIR_PATH, OSM_CACHE_DIR_NAME
-from green_paths_2.src.timer import time_logger
+from ..config import DATA_CACHE_DIR_PATH, OSM_CACHE_DIR_NAME
+from ..timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.RED.value)
 

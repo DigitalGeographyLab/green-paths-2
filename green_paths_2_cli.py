@@ -1,5 +1,11 @@
 """Cli user interface for Green paths 2."""
 
+import sys
+import os
+
+# Ensuring the root of the project is in the PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
 import argparse
 
 from green_paths_2.src.pipeline_controller import handle_pipelines

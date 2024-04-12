@@ -1,10 +1,11 @@
 """ conftest.py is a file that is used to configure the pytest test runner. """
 
 import pytest
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
-from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.preprocessing.osm_network_handler import OsmNetworkHandler
-from green_paths_2.src.green_paths_exceptions import ConfigDataError
+
+from ..src.preprocessing.user_config_parser import UserConfig
+from ..src.logging import setup_logger, LoggerColors
+from ..src.preprocessing.osm_network_handler import OsmNetworkHandler
+from ..src.green_paths_exceptions import ConfigDataError
 
 LOG = setup_logger(__name__, LoggerColors.YELLOW.value)
 
@@ -13,9 +14,9 @@ TEST_CONFIG_PATH = "tests/data/test_valid_user_config.yaml"
 TEST_INVALID_CONFIG_PATH = "tests/data/test_invalid_user_config.yaml"
 
 
-# @pytest.fixture
-# def user_config_path():
-#     yield UserConfig()._load_config(TEST_CONFIG_PATH)
+@pytest.fixture
+def user_config_path():
+    yield UserConfig()._load_config(TEST_CONFIG_PATH)
 
 
 # @pytest.fixture

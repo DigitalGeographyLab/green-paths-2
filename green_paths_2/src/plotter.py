@@ -61,8 +61,8 @@ def simple_plot_gdfs(
 
 # e.g. use example
 
-# from green_paths_2.src..plotter import simple_plot_gdf
-#
+# from .plotter import simple_plot_gdf
+
 # simple_plot_gdf(
 #     spatially_joined_edges_with_polygons,
 #     "network_data",

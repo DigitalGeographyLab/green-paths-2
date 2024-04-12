@@ -4,16 +4,10 @@ import datetime
 import os
 import osmium
 
-from green_paths_2.src.config import (
-    DATA_CACHE_DIR_PATH,
-    OSM_CACHE_DIR_NAME,
-    OSM_CACHE_SEGMENTED_DIR_NAME,
-    OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION,
-)
-from green_paths_2.src.data_utilities import construct_osm_segmented_network_name
-from green_paths_2.src.green_paths_exceptions import OsmSegmenterError
-from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.timer import time_logger
+from ..data_utilities import construct_osm_segmented_network_name
+from ..green_paths_exceptions import OsmSegmenterError
+from ..logging import setup_logger, LoggerColors
+from ..timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.RED.value)
 

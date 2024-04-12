@@ -4,18 +4,15 @@ import os
 import geopandas as gpd
 import pandas as pd
 
-from green_paths_2.src.config import (
+from .config import (
     DATA_CACHE_DIR_PATH,
-    FROM_ID_KEY,
     OSM_CACHE_DIR_NAME,
     OSM_CACHE_SEGMENTED_DIR_NAME,
-    OSM_IDS_KEY,
     OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION,
-    TO_ID_KEY,
 )
-from green_paths_2.src.green_paths_exceptions import DataManagingError
-from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.timer import time_logger
+from .green_paths_exceptions import DataManagingError
+from .logging import setup_logger, LoggerColors
+from .timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.CYAN.value)
 

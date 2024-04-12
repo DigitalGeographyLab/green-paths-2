@@ -1,17 +1,17 @@
 """ TODO """
 
-from green_paths_2.src.config import USER_CONFIG_PATH
-from green_paths_2.src.exposure_analysing.main import exposure_analysing_pipeline
-from green_paths_2.src.green_paths_exceptions import PipeLineRuntimeError
-from green_paths_2.src.osm_network_controller import handle_osm_network_process
-from green_paths_2.src.preprocessing.main import preprocessing_pipeline
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
+from .config import USER_CONFIG_PATH
+from .exposure_analysing.main import exposure_analysing_pipeline
+from .green_paths_exceptions import PipeLineRuntimeError
+from .osm_network_controller import handle_osm_network_process
+from .preprocessing.main import preprocessing_pipeline
+from .preprocessing.user_config_parser import UserConfig
 
-from green_paths_2.src.preprocessing.user_data_handler import UserDataHandler
-from green_paths_2.src.routing.main import routing_pipeline
+from .preprocessing.user_data_handler import UserDataHandler
+from .routing.main import routing_pipeline
 
-from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.timer import time_logger
+from .logging import setup_logger, LoggerColors
+from .timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 

@@ -1,7 +1,7 @@
 """ Data Source Handler Class """
 
-from green_paths_2.src.preprocessing.data_source import DataSource
-from green_paths_2.src.logging import setup_logger, LoggerColors
+from ..preprocessing.data_source import DataSource
+from ..logging import setup_logger, LoggerColors
 
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)

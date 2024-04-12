@@ -6,12 +6,12 @@ import xarray
 import rasterio
 import numpy as np
 
-from green_paths_2.src.config import (
+from ..config import (
     AQI_DATA_CACHE_DIR_PATH,
     RASTER_NO_DATA_VALUE,
     TIF_FILE_EXTENSION,
 )
-from green_paths_2.src.green_paths_exceptions import SpatialOperationError
+from ..green_paths_exceptions import SpatialOperationError
 
 
 def validate_function_in_globals(custom_function_name: str) -> bool:

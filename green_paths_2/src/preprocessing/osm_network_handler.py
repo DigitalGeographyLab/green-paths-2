@@ -1,31 +1,25 @@
 """ For dealing with OSM network related operations. """
 
-import os
 import geopandas as gpd
 from pyrosm import OSM
-import osmium
 
-from green_paths_2.src.config import (
+from ..config import (
     ID_KEY,
     OSM_ID_KEY,
     NETWORK_COLUMNS_TO_KEEP,
     OSM_ID_KEY,
     SEGMENT_SAMPLING_POINTS_KEY,
 )
-from green_paths_2.src.data_utilities import (
+from ..data_utilities import (
     filter_gdf_by_columns_if_found,
     rename_gdf_column,
 )
-from green_paths_2.src.logging import setup_logger
-from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.preprocessing.osm_segmenter import (
-    segment_or_use_cache_osm_network,
-)
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
-from green_paths_2.src.timer import time_logger
+from ..logging import setup_logger
+from ..logging import setup_logger, LoggerColors
+from ..timer import time_logger
 
 
-from green_paths_2.src.preprocessing.spatial_operations import (
+from ..preprocessing.spatial_operations import (
     has_invalid_geometries,
     fix_invalid_geometries,
     handle_gdf_crs,

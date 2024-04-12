@@ -1,7 +1,7 @@
 """ Class to handle exposure calculations. """
 
 import numpy as np
-from green_paths_2.src.config import (
+from ..config import (
     CUMULATIVE_EXPOSURE_LENGTH_METERS_SUFFIX,
     FROM_ID_KEY,
     GEOMETRY_KEY,
@@ -14,14 +14,14 @@ from green_paths_2.src.config import (
     SUM_EXPOSURE_SUFFIX,
     TO_ID_KEY,
 )
-from green_paths_2.src.data_utilities import string_to_list
+from ..data_utilities import string_to_list
 
-from green_paths_2.src.exposure_analysing.exposure_data_handlers import (
+from ..exposure_analysing.exposure_data_handlers import (
     combine_multilinestrings_to_single_linestring,
 )
-from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
-from green_paths_2.src.timer import time_logger
+from ..logging import setup_logger, LoggerColors
+from ..preprocessing.user_config_parser import UserConfig
+from ..timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 

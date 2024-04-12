@@ -392,6 +392,21 @@ analysing:
         etc...
 
 
+Future developments and ideas
+----------
+
+- Currently the GP2 supports only cloning the repo and setting up conda environment. Should gp2 be pip installable or dockerized in the future?
+
+
+For Developers
+----------
+
+After the first "prototype" version of GP2 is ready, the development will most likely not continue actively.
+Developers can still contribute to the project by forking the repository and optionally creating a pull request.
+
+Issues and bugs are also very welcome, and I will try to fix them as soon as possible, but no guarantees on the time frame.
+
+
 
 
 
@@ -400,18 +415,12 @@ analysing:
 * Documentation: https://green-paths-2.readthedocs.io.
 
 
-Features
---------
-
-* TODO
-
 Credits
 -------
 
 - r5
 - r5py
 - GP1
-
 
 - cookiecutter
 - poetry

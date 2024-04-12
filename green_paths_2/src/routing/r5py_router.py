@@ -1,19 +1,18 @@
 """ Module for routing with R5py. """
 
-import os
-from green_paths_2.src.config import (
+from ..config import (
     ALLOW_MISSING_DATA_DEFAULT,
     NORMALIZED_DATA_SUFFIX,
 )
 
 import geopandas as gpd
 
-from green_paths_2.src.preprocessing.data_types import DataSourceModel, TravelModes
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
-from green_paths_2.src.routing.routing_utilities import set_environment_and_import_r5py
-from green_paths_2.src.timer import time_logger
+from ..preprocessing.data_types import DataSourceModel, TravelModes
+from ..preprocessing.user_config_parser import UserConfig
+from ..routing.routing_utilities import set_environment_and_import_r5py
+from ..timer import time_logger
 
-from green_paths_2.src.logging import setup_logger, LoggerColors
+from ..logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 

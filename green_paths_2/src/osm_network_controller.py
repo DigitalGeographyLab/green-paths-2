@@ -1,11 +1,11 @@
 """ This module contains the OSM network controller. """
 
 import geopandas as gpd
-from green_paths_2.src.preprocessing.osm_network_handler import OsmNetworkHandler
-from green_paths_2.src.preprocessing.osm_segmenter import (
+from .preprocessing.osm_network_handler import OsmNetworkHandler
+from .preprocessing.osm_segmenter import (
     segment_or_use_cache_osm_network,
 )
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
+from .preprocessing.user_config_parser import UserConfig
 
 
 def handle_osm_network_process(user_config: UserConfig) -> gpd.GeoDataFrame:

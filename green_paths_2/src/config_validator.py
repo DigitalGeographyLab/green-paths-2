@@ -1,9 +1,9 @@
 """ Validation module for user configuration. """
 
-from green_paths_2.src.config import USER_CONFIG_PATH
-from green_paths_2.src.green_paths_exceptions import ConfigError
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
-from green_paths_2.src.logging import setup_logger, LoggerColors
+from .config import USER_CONFIG_PATH
+from .green_paths_exceptions import ConfigError
+from .preprocessing.user_config_parser import UserConfig
+from .logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.YELLOW.value)
 LOG_SUCCESS = setup_logger(f"{__name__}_success", LoggerColors.GREEN.value)
