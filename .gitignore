@@ -107,7 +107,13 @@ ENV/
 
 # Customs
 .DS_Store
-green_paths_2/src/cache/*
+
+
+# Ignore all files in the cache directory
+green_paths_2/src/cache/**/*
+
+# Do not ignore directories (re-include them)
+!green_paths_2/src/cache/**/
 green_paths_2/src/visualizations
 green_paths_2/data/*
 green_paths_2/src/user/data/*
