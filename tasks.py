@@ -7,6 +7,7 @@
 
 import inspect
 import os
+import sys
 
 if not hasattr(inspect, "getargspec"):
     inspect.getargspec = inspect.getfullargspec
@@ -19,9 +20,13 @@ def gp2(c, args=""):
     """
     Runs the GreenPaths 2 CLI with optional arguments.
     """
-    command = f"poetry run python green_paths_2_cli.py {args}"
+    command = f"poetry run python -u green_paths_2_cli.py {args}"
     # Check if the operating system is Windows
     if os.name == "nt":  # 'nt' means Windows
-        c.run(command, pty=False)
+        c.run(
+            command, echo=True, out_stream=sys.stdout, err_stream=sys.stderr, pty=False
+        )
     else:
-        c.run(command, pty=True)
+        c.run(
+            command, echo=True, out_stream=sys.stdout, err_stream=sys.stderr, pty=True
+        )
