@@ -189,8 +189,10 @@ def construct_osm_segmented_network_name(osm_source_path: str) -> str:
         network_name_no_extension + OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION
     )
 
+    data_cache_dir_path = DATA_CACHE_DIR_PATH.replace("\\", os.sep).replace("/", os.sep)
+
     return os.path.join(
-        DATA_CACHE_DIR_PATH,
+        data_cache_dir_path,
         OSM_CACHE_DIR_NAME,
         OSM_CACHE_SEGMENTED_DIR_NAME,
         osm_file_name,
