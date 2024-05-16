@@ -61,7 +61,7 @@ osm_network:
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/helsinki_history_pbf_osm_network.osm.pbf
   original_crs: 4326
   filter_columns: ["id"]
-  segment_sampling_points_amount: 5
+  # segment_sampling_points_amount: 5
 
 data_sources:
 
@@ -103,8 +103,8 @@ data_sources:
     max_data_value: 86.28875 # mandatory
     good_exposure: True # mandatory
     # data_buffer: 10 # optional, only for vector datas, in meters
-    raster_cell_resolution: 20 # mandatory
-    # save_raster_file: True # optional
+    raster_cell_resolution: 100 # mandatory
+    save_raster_file: True # optional
     original_crs: 3879
 
   # TODO: test with vector data type -> should crash!?
@@ -117,8 +117,8 @@ data_sources:
     min_data_value: 0 # mandatory
     max_data_value: 5 # mandatory
     good_exposure: False # mandatory
-    raster_cell_resolution: 20 # optional
-    save_raster_file: False # optional
+    # raster_cell_resolution: 20 # optional
+    save_raster_file: True # optional
     custom_processing_function: convert_aq_nc_to_tif_and_scale_offset
 
 

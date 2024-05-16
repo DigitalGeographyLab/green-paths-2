@@ -42,6 +42,8 @@ OSM_IDS_KEY = "osm_ids"
 
 SAVE_TO_CACHE_KEY = "save_to_cache"
 
+RASTER_CELL_RESOLUTION_KEY = "raster_cell_resolution"
+
 MIN_EXPOSURE_SUFFIX = "_min_exposure"
 
 MAX_EXPOSURE_SUFFIX = "_max_exposure"
@@ -186,7 +188,7 @@ DATA_COVERAGE_SAFETY_PERCENTAGE = 50
 # these will be used if the user does not specify them in the configuration file
 DEFAULT_CONFIGURATION_VALUES = {
     "segment_sampling_points_amount": 3,
-    "raster_cell_resolution": 10,
+    RASTER_CELL_RESOLUTION_KEY: 10,
     "save_raster_file": False,
     "datas_coverage_safety_percentage": DATA_COVERAGE_SAFETY_PERCENTAGE,
 }

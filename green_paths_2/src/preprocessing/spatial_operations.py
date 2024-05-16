@@ -3,6 +3,9 @@
 import geopandas as gpd
 import rasterio
 import shapely
+
+from green_paths_2.src.config import RASTER_CELL_RESOLUTION_KEY
+
 from ..logging import setup_logger, LoggerColors
 from ..timer import time_logger
 from shapely import wkt
@@ -110,12 +113,6 @@ def create_buffer_for_geometries(
     return buffered_gdf
 
 
-def convert_wkt_to_geometries(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    """convert geometry column from wkt to shapely geometry"""
-    gdf["geometry"] = gdf["geometry_wkt"].apply(wkt.loads)
-    return gdf
-
-
 def has_invalid_geometries(gdf: gpd.GeoDataFrame, name: str = "") -> bool:
     """Check for invalid geometries in GeoDataFrame"""
     LOG.info(f"Checking for invalid geometries for {name}")
@@ -136,7 +133,6 @@ def has_invalid_geometries(gdf: gpd.GeoDataFrame, name: str = "") -> bool:
     return True
 
 
-# TODO: flagi poistamiseen confeista?
 def fix_invalid_geometries(gdf: gpd.GeoDataFrame, remove_invalid: bool = False):
     """
     Fix invalid geometries, try to fix with buffer 0
@@ -206,65 +202,28 @@ def check_if_raster_and_network_extends_overlap(
     return raster_extent.intersects(network_gdf.unary_union).any()
 
 
-# TODO: old, what is this???
+def get_most_accurate_data_source_resolution(data_sources) -> list:
+    """
+    Get the resolutions from data sources.
 
-# TODO: is this needed if we are just using the raster pipeline?
-# def spatial_join_gdfs(
-#     network_gdf: gpd.GeoDataFrame, data_gdf: gpd.GeoDataFrame
-# ) -> gpd.GeoDataFrame:
-#     """spatially join vector datas: network and polygons geometries"""
-#     LOG.info("Spatial join data with network")
-#     joined_gdf = gpd.sjoin(network_gdf, data_gdf, how="inner", op="intersects")
-#     joined_gdf.rename_geometry("geometry_network", inplace=True)
-#     joined_gdf.drop(columns=["index_right"], inplace=True)
-#     return joined_gdf
+    Parameters:
+    - data_sources: The data sources.
 
-
-# def cut_line_by_polygon(line, polygon):
-#     return [seg for seg in split(line, polygon) if seg.within(polygon)]
-
-
-# def process_segment(row, data_source):
-#     """
-#     TODO maybe remove secondary_data_source and multiple_data_strategy?
-#     """
-#     osm_id = row[OSM_ID_KEY]
-#     edge_geom = row["geometry_network"]
-#     data_geom = row["geometry_data"]
-#     data_column = data_source.data_column
-
-#     # TODO: remove?
-#     # multiple_data_strategy = hasattr(data_source, "multiple_data_strategy")
-#     # if secondary_data_source and multiple_data_strategy:
-#     #     LOG.info(
-#     #         "Has also secondary_data_source: {secondary_data_source}, using with strategy: {multiple_data_strategy}."
-#     #     )
-
-#     # TODO: add point sampling!
-
-#     if edge_geom.intersects(data_geom):
-#         LOG.info(osm_id)
-#         segments = cut_line_by_polygon(edge_geom, data_geom)
-#         LOG.info(segments)
-#         return
-
-#         # TODO: logic for each segment...
-#         # remember to handle multiprocessing / parallel processing
-
-#         # for segment in segments:
-#         #     segment_length = segment.length
-#         #     if "aasd" in my_dict:
-#         #         my_dict[key] += value
-#         #     else:
-#         #         my_dict[key] = value
-#         #     # Calculate weighted value based on db_lo, db_hi, and segment length
-#         #     # Handle NaN values as per your chosen strategy
-#         #     # weighted_value = calculate_weighted_value(
-#         #     #     segment_length, db_lo, db_hi
-#         #     # )  # Implement this function
-#         #     results.append((row["osm_id"], segment_length, weighted_value))
-
-#     # # Convert results to a DataFrame
-#     # segments_df = pd.DataFrame(
-#     #     results, columns=["osm_id", "segment_length", "weighted_value"]
-#     # )
+    Returns:
+    - The most accurate resolution from the data sources.
+    """
+    resolutions = []
+    for data_source in data_sources:
+        if "raster_cell_resolution" in data_source:
+            # prioritize resolution from user configurations
+            conf_resolution = data_source.get(RASTER_CELL_RESOLUTION_KEY)
+            resolutions.append(conf_resolution)
+        elif data_source.get("data_type") == "raster":
+            # process raster resolution from file
+            # if it did not have resolution in confs
+            raster_path = data_source.get("filepath")
+            with rasterio.open(raster_path) as dataset:
+                raster_resolution = dataset.res
+            # take the min from tuple of dimensions
+            resolutions.append(min(raster_resolution))
+    return min(resolutions)

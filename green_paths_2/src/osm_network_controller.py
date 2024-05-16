@@ -28,10 +28,18 @@ def handle_osm_network_process(user_config: UserConfig) -> gpd.GeoDataFrame:
 
     network = OsmNetworkHandler(osm_pbf_file=osm_network_pbf_file_path)
 
+    if hasattr(user_config.osm_network, "segment_sampling_points_amount"):
+        force_sampling_points_amount = (
+            user_config.osm_network.segment_sampling_points_amount
+        )
+    else:
+        force_sampling_points_amount = None
+
     network.process_osm_network(
         project_crs=user_config.project_crs,
         original_crs=user_config.osm_network.original_crs,
-        segment_sampling_points_amount=user_config.osm_network.segment_sampling_points_amount,
+        data_sources=user_config.data_sources,
+        force_sampling_points_amount=force_sampling_points_amount,
     )
     osm_network_gdf: gpd.GeoDataFrame = network.get_network_gdf()
     return osm_network_gdf

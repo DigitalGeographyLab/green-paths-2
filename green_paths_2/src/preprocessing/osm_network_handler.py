@@ -1,7 +1,10 @@
 """ For dealing with OSM network related operations. """
 
+import math
 import geopandas as gpd
 from pyrosm import OSM
+
+from shapely.geometry import MultiLineString, LineString, Point
 
 from ..config import (
     ID_KEY,
@@ -20,6 +23,7 @@ from ..timer import time_logger
 
 
 from ..preprocessing.spatial_operations import (
+    get_most_accurate_data_source_resolution,
     has_invalid_geometries,
     fix_invalid_geometries,
     handle_gdf_crs,
@@ -110,13 +114,38 @@ class OsmNetworkHandler:
         ].apply(lambda x: x.wkt)
         return target_column_name
 
-    def sample_points(self, geometry, num_points):
-        from shapely.geometry import MultiLineString, LineString, Point
-
+    def calculate_sampling_points(
+        self, road_segment_length: float, raster_resolution: int
+    ):
         """
-        Generate evenly spaced sample points along the geometry.
+        Calculate the number of sampling points based on the road segment length and raster resolution.
+
+        Parameters:
+        - road_segment_length: The length of the road segment.
+        - raster_resolution: The raster resolution of the data source.
+
+        Returns:
+        - The number of sampling points to generate.
+        """
+        return math.ceil(road_segment_length / raster_resolution) + 1
+
+    def sample_points(
+        self,
+        geometry,
+        segment_length: float,
+        raster_resolution: int,
+        force_sampling_points_amount: int = None,
+    ):
+        """
+        Generate evenly spaced sample points along the geometry based on segment length and raster resolution.
         Handles both LineString and MultiLineString geometries.
         """
+        if force_sampling_points_amount:
+            num_points = force_sampling_points_amount
+        else:
+            num_points = self.calculate_sampling_points(
+                segment_length, raster_resolution
+            )
         points = []
 
         if isinstance(geometry, LineString):
@@ -125,7 +154,6 @@ class OsmNetworkHandler:
                 for i in range(num_points)
             ]
         elif isinstance(geometry, MultiLineString):
-            # Use .geoms to iterate over each LineString in a MultiLineString
             for line in geometry.geoms:
                 points += [
                     line.interpolate(float(i) / (num_points - 1), normalized=True)
@@ -135,20 +163,31 @@ class OsmNetworkHandler:
         return points
 
     def generate_sampling_points(
-        self, segment_sampling_points_amount: int
+        self,
+        most_accurate_raster_resolution: int,
+        force_sampling_points_amount: int = None,
     ) -> gpd.GeoDataFrame:
         """
         Generate sampling points for each road segment.
+        The sampling points will be generated based on the most accurate raster resolution from the data sources.
+        If force_sampling_points_amount is given, the number of sampling points will be forced to that amount.
 
         Parameters:
-        - segment_sampling_points_amount: The number of sampling points to generate for each road segment.
+        - most_accurate_raster_resolution: The most accurate raster resolution from the data sources.
+        - force_sampling_points_amount: The number of sampling points to generate for each road segment.
 
         Returns:
         - GeoDataFrame with sampling points added as a new column.
         """
 
-        self.network_gdf[SEGMENT_SAMPLING_POINTS_KEY] = self.network_gdf.geometry.apply(
-            lambda x: self.sample_points(x, segment_sampling_points_amount)
+        self.network_gdf[SEGMENT_SAMPLING_POINTS_KEY] = self.network_gdf.apply(
+            lambda row: self.sample_points(
+                row.geometry,
+                row.length,
+                most_accurate_raster_resolution,
+                force_sampling_points_amount,
+            ),
+            axis=1,
         )
 
     def calculate_lengts_of_segments(self) -> gpd.GeoDataFrame:
@@ -161,7 +200,11 @@ class OsmNetworkHandler:
         self.network_gdf["length"] = self.network_gdf.geometry.apply(lambda x: x.length)
 
     def process_osm_network(
-        self, project_crs: int, original_crs: int, segment_sampling_points_amount: int
+        self,
+        project_crs: int,
+        original_crs: int,
+        data_sources: list,
+        force_sampling_points_amount: int = None,
     ) -> gpd.GeoDataFrame:
         """
         Process OSM network.
@@ -175,6 +218,13 @@ class OsmNetworkHandler:
         self.handle_crs(project_crs, original_crs)
         self.network_filter_by_columns(NETWORK_COLUMNS_TO_KEEP)
         self.handle_invalid_geometries()
-        self.generate_sampling_points(segment_sampling_points_amount)
+        most_accurate_raster_resolution = get_most_accurate_data_source_resolution(
+            data_sources
+        )
         self.calculate_lengts_of_segments()
+        self.generate_sampling_points(
+            most_accurate_raster_resolution,
+            force_sampling_points_amount=force_sampling_points_amount,
+        )
+
         return self.get_network_gdf()
