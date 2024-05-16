@@ -140,6 +140,7 @@ data_sources:
 
 routing:
     transport_mode: walking
+    travel_speed: 6.5
     # transport_mode: cycling
     # origins: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
     # origins: "green_paths_2/src/cache/data/origin_point.gpkg"

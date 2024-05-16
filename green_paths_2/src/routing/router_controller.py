@@ -2,6 +2,11 @@
 
 from r5py import TransportMode
 import geopandas as gpd
+
+from green_paths_2.src.config import (
+    DEFAULT_R5_TRAVEL_SPEED_CYCLING,
+    DEFAULT_R5_TRAVEL_SPEED_WALKING,
+)
 from ..green_paths_exceptions import R5pyError
 from ..preprocessing.data_types import (
     TravelModes,
@@ -56,15 +61,34 @@ def route_green_paths_2_paths(
 
         transport_config_mode = routing_config.transport_mode
 
+        travel_speed = getattr(routing_config, "travel_speed", None)
+
+        # set travel mode and travel speed configurations
         if transport_config_mode == TravelModes.Walking.value:
             transport_mode = [TransportMode.WALK]
+            if travel_speed is None:
+                travel_speed = DEFAULT_R5_TRAVEL_SPEED_WALKING
+
         elif transport_config_mode == TravelModes.Cycling.value:
             transport_mode = [TransportMode.BICYCLE]
+            if travel_speed is None:
+                travel_speed = DEFAULT_R5_TRAVEL_SPEED_CYCLING
 
+        # init TravelTimeMatrixComputer
+        # currently using just a single transport mode
+        # so the travel_speed can be set to both modes
+        # this should be refactored, if supporting multiple transport modes
         matrix_computer = init_travel_time_matrix_computer(
-            custom_cost_transport_network, origins, destinations, transport_mode
+            custom_cost_transport_network,
+            origins,
+            destinations,
+            transport_mode,
+            speed_walking=travel_speed,
+            speed_cycling=travel_speed,
         )
+
         routing_results = route_travel_time_matrix_computer(matrix_computer)
+
     except R5pyError as e:
         LOG.error(f"Failed to route Green Paths 2 paths. Error: {e}")
         return None

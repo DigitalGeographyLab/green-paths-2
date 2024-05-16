@@ -183,6 +183,10 @@ SEGMENT_SAMPLING_POINTS_KEY = "sampling_points"
 
 DATA_COVERAGE_SAFETY_PERCENTAGE = 50
 
+DEFAULT_R5_TRAVEL_SPEED_WALKING = 3.6
+
+DEFAULT_R5_TRAVEL_SPEED_CYCLING = 12.0
+
 
 # default values for optional user configuration attributes
 # these will be used if the user does not specify them in the configuration file

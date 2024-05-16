@@ -32,6 +32,8 @@ def init_travel_time_matrix_computer(
     origins: gpd.GeoDataFrame,
     destinations: gpd.GeoDataFrame,
     transport_mode: list[TravelModes],
+    speed_walking: float,
+    speed_cycling: float,
 ):
     """Route with TravelTimeMatrixComputer."""
     LOG.info("Initing TravelTimeMatrixComputer")
@@ -41,6 +43,8 @@ def init_travel_time_matrix_computer(
         origins=origins,
         destinations=destinations,
         transport_modes=transport_mode,
+        speed_walking=speed_walking,
+        speed_cycling=speed_cycling,
     )
 
     LOG.info("Finished initing TravelTimeMatrixComputer")
