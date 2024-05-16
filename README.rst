@@ -188,7 +188,6 @@ CLI USER INTERFACE
 
 Green Paths 2 is operated via CLI. The CLI commands are run in the terminal / cmd. Here are all the supported commands:
 
-- fetch_osm_network
 - validate
 - describe
 - clear_cache
@@ -275,18 +274,6 @@ commands_
 descriptions_
         - Run the analysing pipeline. Will try to use cached files if ran separately, if cached files not found, dont analyse. Will prioritize parameter exposure values, these are inputted in all pipeline.
 
-**fetch osm network**
-
-commands_
-        ``inv gp2 --args="fetch_osm_network"``
-
-        ``inv gp2 --args="fetch_osm_network -c"``
-
-        ``inv gp2 --args="fetch_osm_network --city"``
-
-descriptions_
-        - Fetch the OSM network data from the OSM API using pyrosm. The fetched data will be saved to the cache folder.
-        - Fetch the OSM network data from the OSM API for the city specified in the user configurations.
 
 **validate user configurations**
 

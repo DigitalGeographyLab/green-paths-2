@@ -12,10 +12,6 @@ from green_paths_2.src.pipeline_controller import handle_pipelines
 from green_paths_2.src.cache_cleaner import clear_cache_dirs
 from green_paths_2.src.config_validator import validate_user_config
 from green_paths_2.src.logging import setup_logger, LoggerColors
-from green_paths_2.src.data_fetchers.osm_network_loader import (
-    download_and_move_osm_pbf,
-    get_available_pyrosm_data_sources,
-)
 from green_paths_2.src.preprocessing.data_descriptor import (
     DataDescriptor,
 )
@@ -75,27 +71,6 @@ def main():
     # Subparser for exposure analysing
     analysing_parsers = subparsers.add_parser(
         "analysing", help="Run the analysing pipeline."
-    )
-
-    # DATA LOADERS
-    fetchers_parser = subparsers.add_parser(
-        "fetch_osm_network", help="Fetch OSM network pbf from different cities."
-    )
-
-    fetchers_parser.add_argument(
-        "-c",
-        "--city",
-        type=str,
-        help="Name of city.",
-        required=False,
-    )
-
-    fetchers_parser.add_argument(
-        "-l",
-        "--list_available_cities",
-        help="Prints all available cities (pyrosm)",
-        action="store_true",
-        required=False,
     )
 
     # OSM PARSER
@@ -169,18 +144,6 @@ def main():
     elif args.action == "all":
         LOG.info("Running the all pipeline.")
         handle_pipelines("all", args.use_exposure_cache)
-    elif args.action == "fetch_osm_network":
-        if args.list_available_cities:
-            LOG.info(f"Available cities (pyrosm): \n\n")
-            get_available_pyrosm_data_sources()
-            return
-        elif not args.area:
-            LOG.error(
-                f"Please provide an area name or bounding box coordinates (tuple, minx, miny, maxx, maxy)."
-            )
-        else:
-            LOG.info(f"Fetching OSM network. Using area: {args.area}")
-            download_and_move_osm_pbf(args.area)
     elif args.action == "segment_osm_network":
         segment_or_use_cache_osm_network(args.filepath)
     else:
