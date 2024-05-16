@@ -429,9 +429,8 @@ class ExposureCalculator:
             if not length_for_osmid:
                 continue
 
-            if (
-                self.user_config.analysing
-                and self.user_config.analysing.cumulative_ranges
+            if self.user_config.analysing and hasattr(
+                self.user_config.analysing, "cumulative_ranges"
             ):
                 # if cumulative ranges are set for the data source
                 # use ranges as keys for cumulative exposure lengths

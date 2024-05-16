@@ -1,9 +1,11 @@
-project_crs: 3879 # mandatory
+# HAS ERRORS:
+
+#  missing: project_csr, osm_pbf_file_path
+
 datas_coverage_safety_percentage: 80 # optional, recommended
 save_to_cache: False # optional
 
 osm_network:
-  osm_pbf_file_path: path/to/user_network.osm.pbf # mandatory
   original_crs: 4326 # mandatory
   filter_columns: ["id"] # optional
   segment_sampling_points_amount: 5 # optional, recommended

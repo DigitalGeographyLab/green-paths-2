@@ -45,6 +45,13 @@ See also the `Green Paths Web GUI https://green-paths.web.app/?map=streets`
 Quickstart for Green Paths 2.0
 ----------
 
+Remember to check the prerequisites:
+- All OS: Miniconda or Anaconda
+- Windows: Microsoft Visual Build Tools C++ 14.0 or greater
+See instructions from the installation section.
+
+See also the data requirements and instructions on how to fill the user configurations!
+
 1. Clone the repository from GitHub:
 
         ``git clone https://github.com/DigitalGeographyLab/green-paths-2``
@@ -53,13 +60,15 @@ Quickstart for Green Paths 2.0
 
         ``cd green-paths-2``
 
-3. Install the package to conda environment:
+3. Install Green Paths 2. Remember to run the CLI as administrator. Run the installation script from the root folder:
         
         Windows:
         ``install_green_paths_2.bat``
 
         Mac / Linux:
         ``./install_green_paths_2.sh``
+
+        NOTE: If the installation script has errors, please check the prerequisites!
 
         Remember to deactivate the conda environment before installing and re-activate it after installation!
 
@@ -70,16 +79,38 @@ Quickstart for Green Paths 2.0
         
         ``conda activate green_paths_2``
 
-5. Run the Green Paths 2.0 CLI commands:
+5. Fill in the user configurations in the **user/config.yml** file.
+
+        For help use the **Descriptor**, which will help to find the possible values for the user configurations.
+
+        ``inv gp2 --args="describe"``
+
+6. Validate the user configurations before running the pipeline.
+
+        ``inv gp2 --args="validate"``
+
+7. Run the Green Paths 2.0 CLI commands:
 
         ``inv gp2 --args="all"``
 
-6. See the results in the output folder.
+8. See the results in the output folder.
 
         green_paths_2/src/cache/final_exposure_results
 
-7. Travel safe and healthy!
+9. Travel safe and healthy!
 
+
+Data requirements
+----------
+
+Green Paths 2.0 supports most of the data formats of:
+- raster
+- vector
+
+The data should have numerical values for the exposure calculations.
+
+Data sources are filled in the user configurations file, and the datas need to be on the users local machine.
+See the instructions on how to fill the user configurations in the user configurations section.
 
 
 Green Paths 2 Framework
@@ -97,6 +128,8 @@ See more on Green paths 2 framework and modules in the Green Paths 2 Modules and
 
 Installation:
 ----------
+
+See the OS specific instructions for the installation.
 
 Windows
 ----------
@@ -147,31 +180,6 @@ After installing the prerequisites, install Green Paths 2 to conda environment:
 
 
 **Remember to activate the conda environment after installation!**
-
-
-Quickstart for Green Paths 2
-----------
-
-1. After successful installation, and conda environment activate, fill in the user configurations in the **user/config.yml** file.
-
-2. For help use the **Descriptor**, which will help to find the possible values for the user configurations.
-
-        ``inv gp2 --args="describe"``
-
-3. Validate the user configurations before running the pipeline.
-
-        ``inv gp2 --args="validate"``
-
-4. Start using the Green Paths 2 by running the some pipeline, e.g. the whole pipeline.
-
-        ``inv gp2 --args="all"``
-
-5. Optionally run the OSM segmenter before the pipeline to segment the OSM road network. But don't worry, this is part of the preprocessing pipeline.
-
-        ``inv gp2 --args="osm_network_segmenter"``
-
-6. Enjoy!
-
 
 
 
@@ -390,6 +398,18 @@ analysing:
 
         - [ ] todo todo
         etc...
+
+
+Saving the results
+----------
+
+The final exposure results are saved to the output folder as gpkg or csv files, depending if the results have geometries or not.
+
+User can also choose to save:
+- The raster from preprocessing by defining the save_raster parameter in the user configurations.
+- The geometries from the routing by defining the save_geometries parameter in the user configurations.
+- The 
+
 
 
 Future developments and ideas

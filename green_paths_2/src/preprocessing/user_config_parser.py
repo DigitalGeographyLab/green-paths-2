@@ -253,7 +253,9 @@ class UserConfig:
 
             # filepath
             if not filepath or not os.path.exists(filepath):
-                self.errors.append(f"Invalid or missing filepath configuration.")
+                self.errors.append(
+                    f"Invalid or missing filepath configuration. Path {filepath} not found."
+                )
 
             #  data type, mandatory (but if missing, try to determine from file extension)
             if data_type not in [dt.value for dt in DataTypes]:

@@ -35,8 +35,9 @@
 
 # europe e.g. 3035
 project_crs: 3879
-datas_coverage_safety_percentage: 60
-save_to_cache: False
+# project_crs: 3006
+datas_coverage_safety_percentage: 10
+save_to_cache: True
 
 osm_network:
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/london_osm_network.osm.pbf
@@ -50,7 +51,7 @@ osm_network:
 
   # osm_pbf_file_path: green_paths_2/src/cache/osm/hki_medium.osm.pbf
 
-  # osm_pbf_file_path: /Users/hcroope/omat/GP2/data/joteborgi.oms.pbf
+  # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/green_paths_2/src/cache/osm/joteborg_smaller.osm.pbf
 
   # osm_pbf_file_path: /Users/hcroope/Downloads/planet_-22.003,64.009_-21.652,64.193.osm.pbf
 
@@ -65,12 +66,13 @@ osm_network:
 data_sources:
 
   # - name: shade
-  #   filepath: /Users/hcroope/omat/GP2/data/robertin_shadow.tif
+  #   filepath: /Users/hcroope/omat/GP2/data/robertin_shadow_reprojected.tif
   #   data_type: raster
   #   min_data_value: 0 # mandatory 
   #   max_data_value: 0.3333333432674408 # mandatory
   #   good_exposure: True # mandatory
-  #   original_crs: 3007
+  #   # original_crs: 3007
+  #   # original_crs: 3879
 
 
   # - name: aqi_iceland
@@ -93,7 +95,7 @@ data_sources:
 
 
   - name: gvi
-    filepath: green_paths_2/src/user/data/greenery_points.gpkg
+    filepath: green_paths_2/src/user/data/greenery/greenery_points.gpkg
     # data_type: vector
     layer_name: Helsinki_4326
     data_column: Gvi_Mean # mandatory
@@ -107,7 +109,7 @@ data_sources:
 
   # TODO: test with vector data type -> should crash!?
   - name: aqi
-    filepath: green_paths_2/src/user/data/allPollutants_2023-12-15T04.nc
+    filepath: green_paths_2/src/user/data/air_quality/allPollutants_2023-12-15T04.nc
     data_type: raster
     original_crs: 4326 # mandatory
     # layer_name: Helsinki_4326
@@ -136,34 +138,40 @@ data_sources:
 
 
 
-# routing:
-#     # transport_mode: walking
-#     transport_mode: cycling
-#     # origins: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
-#     # origins: "green_paths_2/src/cache/data/origin_point.gpkg"
-#     origins: green_paths_2/src/cache/data/population_hki_centroids.gpkg
-#     # origins: "green_paths_2/src/cache/data/origins.csv"
-#     # origins: "green_paths_2/src/cache/data/linnanmaki_origins.csv"
-#     od_lon_name: longitude
-#     od_lat_name: latitude
-#     # destinations: "green_paths_2/src/cache/data/destinations_points.gpkg"
-#     # destinations: "green_paths_2/src/cache/data/destinations.csv"
-#     destinations: green_paths_2/src/cache/data/destinations_points_shp.shp
-#     od_crs: 4326
-#     exposure_parameters:
-#       - name: gvi
-#         sensitivity: 999
-#       - name: aqi
-#         sensitivity: 999
-#         allow_missing_data: True
+routing:
+    transport_mode: walking
+    # transport_mode: cycling
+    # origins: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
+    # origins: "green_paths_2/src/cache/data/origin_point.gpkg"
+    origins: green_paths_2/src/cache/data/population_hki_centroids.gpkg
+    # origins: green_paths_2/src/cache/data/gothenburg_points.csv
+    # origins: "green_paths_2/src/cache/data/origins.csv"
+    # origins: "green_paths_2/src/cache/data/linnanmaki_origins.csv"
+    od_lon_name: longitude
+    od_lat_name: latitude
+    # destinations: "green_paths_2/src/cache/data/destinations_points.gpkg"
+    # destinations: "green_paths_2/src/cache/data/destinations.csv"
+    destinations: green_paths_2/src/cache/data/destinations_points_shp.shp
+    # destinations: green_paths_2/src/cache/data/population_hki_centroids.gpkg
+    # destinations: green_paths_2/src/cache/data/gothenburg_points.csv
+    od_crs: 4326
+    exposure_parameters:
+      - name: gvi
+        sensitivity: 1.5
+      - name: aqi
+        sensitivity: 2.0
+        allow_missing_data: True
+      # - name: shade
+      #   sensitivity: 2.5
+      #   allow_missing_data: True
 
 
 analysing:
   keep_geometry: True
-  cumulative_ranges:
-    gvi:
-      # - [0, 0.99]
-      # - [1, 1.99]
-      # - [2, 2.99]
-      # - [3, 3.99]
-      - [4, 5]
+  # cumulative_ranges:
+  #   gvi:
+  #     # - [0, 0.99]
+  #     # - [1, 1.99]
+  #     # - [2, 2.99]
+  #     # - [3, 3.99]
+  #     - [4, 5]

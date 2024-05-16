@@ -135,13 +135,12 @@ def routing_pipeline(
             user_config.routing,
         )
 
-        travel_times_gdf = convert_travel_times_dicts_to_gdf(actual_travel_times)
-
         # TODO: do we need / are we using travel_times_gdf?
 
         has_save_to_cache = hasattr(user_config, SAVE_TO_CACHE_KEY)
 
         if has_save_to_cache and user_config.save_to_cache:
+            travel_times_gdf = convert_travel_times_dicts_to_gdf(actual_travel_times)
             save_gdf_to_cache(green_paths_route_results, ROUTING_RESULTS_CSV_CACHE_PATH)
             save_gdf_to_cache(travel_times_gdf, TRAVEL_TIMES_CSV_CACHE_PATH)
 

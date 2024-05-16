@@ -41,6 +41,30 @@ from ..preprocessing.vector_processor import (
 LOG = setup_logger(__name__, LoggerColors.RED.value)
 
 
+# TODO: ROOPE -> lisää tää testeihin conf parseemiseen!!!
+# from pyproj import CRS, Transformer
+
+# def can_transform(source_crs_code, target_crs_code):
+#     try:
+#         source_crs = CRS.from_user_input(source_crs_code)
+#         target_crs = CRS.from_user_input(target_crs_code)
+#         transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
+#         test_point = (0, 0)  # Using a dummy point to test transformation
+#         transformer.transform(*test_point)
+#         return True
+#     except Exception as e:
+#         print(f"Error in transforming CRS: {e}")
+#         return False
+
+# # Example usage
+# source_crs_code = "EPSG:4326"  # Replace with your raster_crs
+# target_crs_code = "EPSG:3006"  # Replace with your target_crs
+# if can_transform(source_crs_code, target_crs_code):
+#     print("Transformation is possible.")
+# else:
+#     print("Cannot transform between the specified CRSs.")
+
+
 class DataDescriptor:
     """
     This class is used to describe the data sources and the OSM network.
@@ -225,27 +249,23 @@ class DataDescriptor:
                         f"Has invalid geometries: {data_has_invalid_geometries}",
                     )
 
-                    vector_data_in_project_crs = handle_gdf_crs(
-                        name=data_name,
-                        gdf=vector_data,
-                        target_crs=project_crs,
-                        original_crs=data_source.get_original_crs(),
-                    )
+                    # TODO: roope poista?
+                    # vector_data_in_project_crs = handle_gdf_crs(
+                    #     name=data_name,
+                    #     gdf=vector_data,
+                    #     target_crs=project_crs,
+                    #     original_crs=data_source.get_original_crs(),
+                    # )
 
-                    # create buffer for geometries
-                    vector_data_in_project_crs = create_buffer_for_geometries(
-                        "data_name", vector_data_in_project_crs, 5
-                    )
+                    # data_and_network_overlap = (
+                    #     check_if_vector_data_and_network_extends_overlap(
+                    #         vector_data_in_project_crs, network_in_project_crs_gdf
+                    #     )
+                    # )
 
-                    data_and_network_overlap = (
-                        check_if_vector_data_and_network_extends_overlap(
-                            vector_data_in_project_crs, network_in_project_crs_gdf
-                        )
-                    )
-
-                    self._write_new_line_to_data_description_text(
-                        f"Vector data and network extends overlap: {data_and_network_overlap}",
-                    )
+                    # self._write_new_line_to_data_description_text(
+                    #     f"Vector data and network extends overlap: {data_and_network_overlap}",
+                    # )
 
                 elif (
                     data_source.get_data_type() == DataTypes.Raster.value
