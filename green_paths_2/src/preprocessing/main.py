@@ -90,6 +90,8 @@ def preprocessing_pipeline(
                 data_conf_filepath
             )
 
+            no_data_value = data_source.get_no_data_value()
+
             LOG.info(f"Processing datasource: {data_name} ({data_type})")
 
             if data_type == DataTypes.Vector.value:
@@ -112,6 +114,7 @@ def preprocessing_pipeline(
                     data_column=data_source.get_data_column(),
                     raster_cell_resolution=data_source.get_raster_cell_resolution(),
                     save_raster_file=data_source.get_save_raster_file(),
+                    default_raster_null_value=no_data_value,
                 )
 
                 segment_store.save_segment_values(segment_values, data_name)
@@ -150,6 +153,7 @@ def preprocessing_pipeline(
                 segment_values = calculate_segment_raster_values_from_raster_file(
                     network_gdf=osm_network_gdf,
                     raster_file_path=raster_path,
+                    default_raster_null_value=no_data_value,
                 )
 
                 segment_store.save_segment_values(segment_values, data_name)

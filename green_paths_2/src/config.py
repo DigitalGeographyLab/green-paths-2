@@ -34,6 +34,8 @@ LENGTH_KEY = "length"
 
 GEOMETRY_KEY = "geometry"
 
+TRAVEL_TIME_KEY = "travel_time"
+
 ID_KEY = "id"
 
 OSM_ID_KEY = "osm_id"
@@ -50,9 +52,10 @@ MAX_EXPOSURE_SUFFIX = "_max_exposure"
 
 SUM_EXPOSURE_SUFFIX = "_sum_exposure"
 
-LENGHT_WEIGHTED_TOTAL_EXPOSURE_SUFFIX = "_length_weighted_total_exposure"
+TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUFFIX = "_traversal_time_weighted_path_exposure"
 
-CUMULATIVE_EXPOSURE_LENGTH_METERS_SUFFIX = "_cumulative_exposure_length_meters"
+# seconds
+CUMULATIVE_EXPOSURE_TIME_METERS_SUFFIX = "_cumulative_exposure_time_meters"
 
 # KEY LISTS
 

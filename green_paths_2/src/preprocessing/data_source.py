@@ -16,6 +16,7 @@ class DataSource:
         min_data_value: float,
         max_data_value: float,
         data_column: Optional[str] = None,
+        no_data_value: Optional[float] = None,
         data_buffer: Optional[int] = None,
         raster_cell_resolution: Optional[int] = None,
         data_type: Optional[str] = None,
@@ -32,6 +33,7 @@ class DataSource:
         self.max_data_value = max_data_value
         self.data_type = data_type
         self.data_column = data_column
+        self.no_data_value = no_data_value
         self.data_buffer = data_buffer
         self.raster_cell_resolution = raster_cell_resolution
         self.original_crs = original_crs
@@ -87,6 +89,12 @@ class DataSource:
 
     def set_data_column(self, data_column: str):
         self.data_column = data_column
+
+    def get_no_data_value(self):
+        return self.no_data_value
+
+    def set_no_data_value(self, no_data_value: float):
+        self.no_data_value = no_data_value
 
     def get_data_buffer(self):
         return self.data_buffer

@@ -60,7 +60,7 @@ def rasterize_vector_data(
     height: int,
     transform,
     data_column: str,
-    nodata_value: int,  # TODO: ?
+    nodata_value: float | int,  # TODO: ?
 ) -> rasterio.io.DatasetWriter:
     """Rasterize vector data by using the maximum value for each pixel."""
     vector_data_gdf = vector_data_gdf.sort_values(by=data_column, ascending=True)
@@ -122,6 +122,7 @@ def rasterize_and_calculate_segment_values(
     data_column: str,
     raster_cell_resolution: int,
     save_raster_file: bool = False,
+    default_raster_null_value: float = None,
 ) -> dict[int, float]:
     """
     Rasterize vector data and save it to a raster file.
@@ -148,13 +149,13 @@ def rasterize_and_calculate_segment_values(
         height=height,
         transform=transform,
         data_column=data_column,
-        nodata_value=RASTER_NO_DATA_VALUE,
+        nodata_value=default_raster_null_value,
     )
 
     output_raster_path = os.path.join(OUTPUT_RASTER_DIR_PATH, data_name + "-raster.tif")
 
     raster_segment_values = calculate_segment_raster_values(
-        network_gdf, raster, transform
+        network_gdf, raster, transform, default_raster_null_value
     )
 
     # Save the raster to a new file if so configured
@@ -167,7 +168,7 @@ def rasterize_and_calculate_segment_values(
             width,
             height,
             vector_data_gdf.crs,
-            nodata=RASTER_NO_DATA_VALUE,
+            nodata=default_raster_null_value,
         )
 
     return raster_segment_values
@@ -203,7 +204,7 @@ def aggregate_values(values: list[float | None], method="mean") -> float:
     """
     values = np.array(values, dtype=float)
     if len(values) == 0 or np.all(np.isnan(values)) or all(v is None for v in values):
-        return np.nan
+        return None
     if method == "mean":
         return np.nanmean(values)
     elif method == "max":
@@ -213,7 +214,10 @@ def aggregate_values(values: list[float | None], method="mean") -> float:
 
 
 def calculate_segment_raster_values(
-    network_gdf: gpd.GeoDataFrame, raster_data, transform
+    network_gdf: gpd.GeoDataFrame,
+    raster_data,
+    transform,
+    default_raster_null_value: float = None,
 ) -> dict:
     """
     Calculate raster values for each road segment.
@@ -332,7 +336,9 @@ def reproject_raster_to_crs(
 
 # TODO: test -> gpt4 created
 def calculate_segment_raster_values_from_raster_file(
-    network_gdf: gpd.GeoDataFrame, raster_file_path: str
+    network_gdf: gpd.GeoDataFrame,
+    raster_file_path: str,
+    default_raster_null_value: float = None,
 ) -> dict:
     """
     Calculate raster values for each road segment from a raster file.
@@ -346,7 +352,10 @@ def calculate_segment_raster_values_from_raster_file(
     """
     with rasterio.open(raster_file_path) as raster_src:
         return calculate_segment_raster_values(
-            network_gdf, raster_src.read(1), raster_src.transform
+            network_gdf,
+            raster_src.read(1),
+            raster_src.transform,
+            default_raster_null_value,
         )
 
 

@@ -16,6 +16,7 @@ class DataSourceModel(Enum):
     Filepath = "filepath"
     Datatype = "data_type"
     Datacolumn = "data_column"
+    NoDataValue = "no_data_value"
     DataBuffer = "data_buffer"
     GoodExposure = "good_exposure"
     Rastercellresolution = "raster_cell_resolution"
@@ -41,7 +42,6 @@ class DataSourceModel(Enum):
 # TODO: maybe rename this file?
 
 
-# TODO -> should there be CAR here?
 class TravelModes(Enum):
     Walking: str = "walking"
     Cycling: str = "cycling"

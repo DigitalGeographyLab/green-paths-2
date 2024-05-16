@@ -99,6 +99,7 @@ data_sources:
     # data_type: vector
     layer_name: Helsinki_4326
     data_column: Gvi_Mean # mandatory
+    no_data_value: -123
     min_data_value: 0.0096875 # mandatory
     max_data_value: 86.28875 # mandatory
     good_exposure: True # mandatory
@@ -114,6 +115,7 @@ data_sources:
     original_crs: 4326 # mandatory
     # layer_name: Helsinki_4326
     data_column: AQI  # mandatory
+    no_data_value: -123
     min_data_value: 0 # mandatory
     max_data_value: 5 # mandatory
     good_exposure: False # mandatory
@@ -140,7 +142,7 @@ data_sources:
 
 routing:
     transport_mode: walking
-    travel_speed: 6.5
+    travel_speed: 20
     # transport_mode: cycling
     # origins: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
     # origins: "green_paths_2/src/cache/data/origin_point.gpkg"

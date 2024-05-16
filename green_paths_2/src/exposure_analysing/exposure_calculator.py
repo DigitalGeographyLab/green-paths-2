@@ -2,10 +2,10 @@
 
 import numpy as np
 from ..config import (
-    CUMULATIVE_EXPOSURE_LENGTH_METERS_SUFFIX,
+    CUMULATIVE_EXPOSURE_TIME_METERS_SUFFIX,
     FROM_ID_KEY,
     GEOMETRY_KEY,
-    LENGHT_WEIGHTED_TOTAL_EXPOSURE_SUFFIX,
+    TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUFFIX,
     LENGTH_KEY,
     MAX_EXPOSURE_SUFFIX,
     MIN_EXPOSURE_SUFFIX,
@@ -13,6 +13,7 @@ from ..config import (
     OSM_IDS_KEY,
     SUM_EXPOSURE_SUFFIX,
     TO_ID_KEY,
+    TRAVEL_TIME_KEY,
 )
 from ..data_utilities import string_to_list
 
@@ -35,13 +36,16 @@ class ExposureCalculator:
         routing_results: list[dict],
         segment_exposure_store: dict,
         osm_network_store: dict,
+        actual_travel_times_store: dict,
         data_names: list,
     ) -> None:
         self.user_config = user_config
         self.routing_results = routing_results
         self.segment_exposure_store = segment_exposure_store
         self.osm_network_store = osm_network_store
+        self.actual_travel_times_store = actual_travel_times_store
         self.data_names = data_names
+
         self.master_statistics_store = []
         self.master_combined_statistics_store = []
 
@@ -91,13 +95,14 @@ class ExposureCalculator:
                 TO_ID_KEY: path_data.get(TO_ID_KEY),
                 LENGTH_KEY: {},
                 GEOMETRY_KEY: {},
+                TRAVEL_TIME_KEY: {},
             }
         else:
             path_exposure_data: dict = {
                 FROM_ID_KEY: path_data.get(FROM_ID_KEY),
                 TO_ID_KEY: path_data.get(TO_ID_KEY),
                 LENGTH_KEY: {},
-                # "travel_times": {},
+                TRAVEL_TIME_KEY: {},
             }
 
         # init all datas to empty dict
@@ -125,11 +130,10 @@ class ExposureCalculator:
             path_exposure_update_data = {
                 LENGTH_KEY: {},
                 GEOMETRY_KEY: {},
+                TRAVEL_TIME_KEY: {},
             }
         else:
-            path_exposure_update_data = {
-                LENGTH_KEY: {},
-            }
+            path_exposure_update_data = {LENGTH_KEY: {}, TRAVEL_TIME_KEY: {}}
 
         # handle each data source
         for data_name in self.data_names:
@@ -147,6 +151,22 @@ class ExposureCalculator:
                     exposure_data_osm_id_dict.get(osm_id)
                 )
 
+        # get actual travel time seconds
+        time_of_segment = self.actual_travel_times_store.get(TRAVEL_TIME_KEY).get(
+            str(osm_id)
+        )
+
+        # not the cleanest solution, but was fast to implement
+        # this is happening because we are reading from csv so the types might change
+        if not time_of_segment:
+            # try casting the osm_id to int
+            time_of_segment = self.actual_travel_times_store.get(TRAVEL_TIME_KEY).get(
+                int(osm_id)
+            )
+
+        if time_of_segment:
+            path_exposure_update_data[TRAVEL_TIME_KEY][osm_id] = time_of_segment
+
         # get length for osmid from exposure store
         length_of_segment = self.osm_network_store.get(LENGTH_KEY).get(osm_id)
         if length_of_segment:
@@ -159,10 +179,6 @@ class ExposureCalculator:
                 path_exposure_update_data[GEOMETRY_KEY][osm_id] = osm_id_geometry
 
         return path_exposure_update_data
-
-        # TODO: get travel time... -> do we need?
-        # travel_time = travel_times_store.get(osm_id)
-        # path_exposure_data["travel_times"][osm_id] = travel_time
 
     def _validate_and_convert_osmids(self, path_data_osm_ids: list | str) -> list[int]:
         """
@@ -245,15 +261,15 @@ class ExposureCalculator:
         if not self.routing_results:
             raise ValueError("No routing results found.")
 
+        # construct a master exposure dict for all paths
         for path_data in self.routing_results:
+            invalid_osm_ids = 0
             path_exposure_data = self._init_path_exposure_dict(path_data)
             path_data_osm_ids = path_data.get(OSM_IDS_KEY, False)
             valid_osm_ids = self._validate_and_convert_osmids(path_data_osm_ids)
             if not valid_osm_ids:
                 # if path has no osm_ids or osms are invalid (e.g., float), skip
-                LOG.warning(
-                    f"No OSM ids in path or osms are not valid after conversions, skipping."
-                )
+                invalid_osm_ids += 1
                 continue
 
             path_statistics = self._process_path_statistics(
@@ -262,6 +278,8 @@ class ExposureCalculator:
 
             # after each path is processed, update master exposure list
             self.update_master_statistics_store(path_statistics)
+
+        LOG.warning(f"Found total of {invalid_osm_ids} paths with invalid osm_ids.")
 
         LOG.info("Finished constructing master exposure dict.")
 
@@ -299,23 +317,23 @@ class ExposureCalculator:
                 None
             )
             statistics_dict_per_path[
-                f"{path_attribute_key}{LENGHT_WEIGHTED_TOTAL_EXPOSURE_SUFFIX}"
+                f"{path_attribute_key}{TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUFFIX}"
             ] = None
             statistics_dict_per_path[
-                f"{path_attribute_key}{CUMULATIVE_EXPOSURE_LENGTH_METERS_SUFFIX}"
+                f"{path_attribute_key}{CUMULATIVE_EXPOSURE_TIME_METERS_SUFFIX}"
             ] = None
         else:
             # init empty dict for other path data
             statistics_dict_per_path[path_attribute_key] = {}
         return statistics_dict_per_path, False
 
-    def _calculate_length_for_path(
+    def _calculate_sum_for_path(
         self,
         path_attribute_key: str,
         path_attribute_values: dict,
     ) -> dict:
         """
-        Calculate combined length for path. Return tuple with key and value.
+        Calculate combined length or times for path. Return tuple with key and value.
 
         Parameters
         ----------
@@ -358,36 +376,39 @@ class ExposureCalculator:
         )
         return [(path_attribute_key, combined_geom_linestring)]
 
-    def _calculate_length_weighted_total_exposure(
-        self, exposure_values: dict, path_lengths: dict
+    def _calculate_time_weighted_total_exposure(
+        self, exposure_values: dict, path_times: dict
     ) -> float:
         """
-        Calculate length weighted total exposure.
-        Sum of all exposures multiplied by length of each segment
+        Calculate time weighted total exposure.
+        Sum of all exposures multiplied by traversal time of each segment
         divided by total length of path.
 
         Parameters
         ----------
         exposure_values : list
             Exposure values.
-        path_lengths : dict
-            Path lengths.
+        path_times : dict
+            Path times.
 
         Returns
         -------
         float
-            Length weighted total exposure.
+            Traversal time weighted total exposure.
         """
         total_weighted_exposure = 0.0
         for osm_id, exposure_value in exposure_values.items():
-            length_for_osmid = path_lengths.get(osm_id)
-            if not length_for_osmid:
+            time_for_osmid = path_times.get(osm_id)
+            if not time_for_osmid or time_for_osmid < 1:
                 continue
-            weighted_exposure = exposure_value * length_for_osmid
+            weighted_exposure = exposure_value * time_for_osmid
             total_weighted_exposure += weighted_exposure
 
-        total_lenght = sum(path_lengths.values())
-        total_weighted_exposure = total_weighted_exposure / total_lenght
+        path_total_traversal_time = sum(path_times.values())
+        if path_total_traversal_time < 1 or total_weighted_exposure == 0:
+            return 0.0
+
+        total_weighted_exposure = total_weighted_exposure / path_total_traversal_time
         return total_weighted_exposure
 
     def find_range(self, value: float, ranges: list[int, float]) -> str:
@@ -398,21 +419,21 @@ class ExposureCalculator:
                 return f"{start}-{end}"
         return None
 
-    def _calculate_cumulative_exposure_lengths(
-        self, attribute_key: str, exposure_values: dict, path_lengths: dict
+    def _calculate_cumulative_exposure_times(
+        self, attribute_key: str, exposure_values: dict, path_travel_times: dict
     ) -> dict:
         """
-        Calculate cumulative exposure lengths.
-        If ranges are set for the data source, use ranges as keys for cumulative exposure lengths.
+        Calculate cumulative exposure times.
+        If ranges are set for the data source, use ranges as keys for cumulative exposure times.
         If no ranges are set or the exposure values isn't between any range,
-        use exposure values as keys for cumulative exposure lengths.
+        use exposure values as keys for cumulative exposure times.
 
         Parameters
         ----------
         exposure_values : dict
             Exposure values.
 
-        path_lengths : dict
+        path_travel_times : dict
             Path lengths.
 
         Returns
@@ -425,8 +446,13 @@ class ExposureCalculator:
         for osm_id, exposure_value in exposure_values.items():
             # use single decimal for exposure values
             rounded_exposure_value = round(exposure_value, 1)
-            length_for_osmid = path_lengths.get(osm_id)
-            if not length_for_osmid:
+
+            # not good approach to cast osm_id to str, but it fast
+            time_for_osmid = path_travel_times.get(str(osm_id))
+            if not time_for_osmid:
+                time_for_osmid = path_travel_times.get(int(osm_id))
+
+            if not time_for_osmid:
                 continue
 
             if self.user_config.analysing and hasattr(
@@ -447,10 +473,10 @@ class ExposureCalculator:
                         if target_range_for_exposure in cumulative_exposure_lengths:
                             cumulative_exposure_lengths[
                                 target_range_for_exposure
-                            ] += length_for_osmid
+                            ] += time_for_osmid
                         else:
                             cumulative_exposure_lengths[target_range_for_exposure] = (
-                                length_for_osmid
+                                time_for_osmid
                             )
                         # next exposure value
                         continue
@@ -459,9 +485,9 @@ class ExposureCalculator:
             # no ranges for cumulative values set or value not between ranges,
             # use exposure values as keys
             if rounded_exposure_value in cumulative_exposure_lengths:
-                cumulative_exposure_lengths[rounded_exposure_value] += length_for_osmid
+                cumulative_exposure_lengths[rounded_exposure_value] += time_for_osmid
             else:
-                cumulative_exposure_lengths[rounded_exposure_value] = length_for_osmid
+                cumulative_exposure_lengths[rounded_exposure_value] = time_for_osmid
 
         # round all values to 1 decimals
         cumulative_exposure_lengths = {
@@ -475,6 +501,7 @@ class ExposureCalculator:
         path_attribute_key: str,
         path_attribute_values: dict,
         path_lengths: dict,
+        path_travel_times: dict,
     ) -> list:
         """
         Calculate exposure values for path. Return list of tuples with key and value.
@@ -487,6 +514,10 @@ class ExposureCalculator:
             Path attribute values.
         statistics_dict_per_path : dict
             Statistics dict per path.
+        path_lengths : dict
+            Path lengths.
+        path_travel_times : dict
+            Path travel times.
 
         Returns
         -------
@@ -518,28 +549,28 @@ class ExposureCalculator:
                 )
             )
 
-            weighted_exposure_total = self._calculate_length_weighted_total_exposure(
+            weighted_exposure_total = self._calculate_time_weighted_total_exposure(
                 path_attribute_values,
-                path_lengths,
+                path_travel_times,
             )
 
             attribute_key_values.append(
                 (
-                    f"{path_attribute_key}{LENGHT_WEIGHTED_TOTAL_EXPOSURE_SUFFIX}",
+                    f"{path_attribute_key}{TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUFFIX}",
                     round(weighted_exposure_total, 2),
                 )
             )
 
             # calculate cumulative sum of exposure values by using exposure values as keys and distances as values
 
-            cumulative_exposure_lengths = self._calculate_cumulative_exposure_lengths(
+            cumulative_exposure_lengths = self._calculate_cumulative_exposure_times(
                 path_attribute_key,
                 path_attribute_values,
-                path_lengths,
+                path_travel_times,
             )
             attribute_key_values.append(
                 (
-                    f"{path_attribute_key}{CUMULATIVE_EXPOSURE_LENGTH_METERS_SUFFIX}",
+                    f"{path_attribute_key}{CUMULATIVE_EXPOSURE_TIME_METERS_SUFFIX}",
                     cumulative_exposure_lengths,
                 )
             )
@@ -555,6 +586,7 @@ class ExposureCalculator:
     ) -> dict:
         """
         Process path attribute. Get key value pairs for statistics dict per path.
+        One iteration is done for each path attribute key.
 
         Parameters
         ----------
@@ -575,8 +607,8 @@ class ExposureCalculator:
 
         attribute_key_values = []
 
-        if path_attribute_key == LENGTH_KEY:
-            attribute_key_values = self._calculate_length_for_path(
+        if path_attribute_key == LENGTH_KEY or path_attribute_key == TRAVEL_TIME_KEY:
+            attribute_key_values = self._calculate_sum_for_path(
                 path_attribute_key,
                 path_attribute_values,
             )
@@ -596,11 +628,14 @@ class ExposureCalculator:
             }
 
             path_lengths = path_exposure_data.get(LENGTH_KEY)
-            # print(statistics_dict_per_path)
+
+            path_travel_times = path_exposure_data.get(TRAVEL_TIME_KEY)
+
             attribute_key_values = self._calculate_exposure_values_for_path(
                 path_attribute_key,
                 path_attribute_values,
                 path_lengths,
+                path_travel_times,
             )
 
         # add key value pairs to statistics dict
@@ -633,6 +668,7 @@ class ExposureCalculator:
             path_statistics = {}
 
             # loop through all the path attributes keys and values
+            # each attribute is one row from the gdf so to speak
             for (
                 path_attribute_key,
                 path_attribute_values,

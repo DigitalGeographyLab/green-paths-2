@@ -9,6 +9,7 @@ from ..config import (
     OSM_NETWORK_GDF_CACHE_PATH,
     ROUTING_RESULTS_CSV_CACHE_PATH,
     SEGMENT_STORE_GDF_CACHE_PATH,
+    TRAVEL_TIMES_CSV_CACHE_PATH,
 )
 from ..data_utilities import (
     convert_gdf_to_dict,
@@ -34,10 +35,11 @@ def get_datas_from_sources(
     exposure_gdf,
     osm_network_gdf,
     routing_results_gdf,
-    # actual_travel_times_gdf,
+    actual_travel_times_gdf,
 ):
     """
-    Get data from sources for analysing pipeline.
+    Get data from different sources for analysing pipeline.
+    These sources can be parameters or cache.
 
     Parameters
     ----------
@@ -59,20 +61,30 @@ def get_datas_from_sources(
         exposure_gdf is None
         or osm_network_gdf is None
         or routing_results_gdf is None
-        # or actual_travel_times_gdf is None
+        or actual_travel_times_gdf is None
     ):
         LOG.info("Loading data from cache for analysing pipeline")
-        routing_results, segment_exposure_store, osm_network_store = (
-            _load_datas_from_cache()
-        )
+        (
+            routing_results,
+            segment_exposure_store,
+            osm_network_store,
+            actual_travel_times_store,
+        ) = _load_datas_from_cache()
     else:
         LOG.info("Using parameter data for analysing pipeline")
         segment_exposure_store = convert_gdf_to_dict(exposure_gdf, OSM_ID_KEY)
         routing_results = convert_gdf_to_dict(routing_results_gdf, orient="records")
         osm_network_store = convert_gdf_to_dict(osm_network_gdf, OSM_ID_KEY)
-        # actual_travel_times_store = convert_gdf_to_dict(actual_travel_times_gdf)
+        actual_travel_times_store = convert_gdf_to_dict(
+            actual_travel_times_gdf, OSM_ID_KEY
+        )
 
-    return routing_results, segment_exposure_store, osm_network_store
+    return (
+        routing_results,
+        segment_exposure_store,
+        osm_network_store,
+        actual_travel_times_store,
+    )
 
 
 def _load_datas_from_cache():
@@ -90,12 +102,6 @@ def _load_datas_from_cache():
         Tuple containing routing results and exposure store.
     """
 
-    # TODO: säädä traveltimes...
-
-    # travel_times_store = get_and_convert_gdf_to_dict(
-    #     TRAVEL_TIMES_CSV_CACHE_PATH, OSM_ID_KEY
-    # )
-
     routing_results_path = ROUTING_RESULTS_CSV_CACHE_PATH
 
     routing_results = get_and_convert_gdf_to_dict(
@@ -109,7 +115,16 @@ def _load_datas_from_cache():
         OSM_NETWORK_GDF_CACHE_PATH, OSM_ID_KEY
     )
 
-    return routing_results, segment_exposure_store, osm_network_store
+    travel_times_store = get_and_convert_gdf_to_dict(
+        TRAVEL_TIMES_CSV_CACHE_PATH, OSM_ID_KEY
+    )
+
+    return (
+        routing_results,
+        segment_exposure_store,
+        osm_network_store,
+        travel_times_store,
+    )
 
 
 def combine_multilinestrings_to_single_linestring(

@@ -137,28 +137,31 @@ def get_and_convert_gdf_to_dict(
             raise ValueError("Exposure data GeoDataFrame from cache is empty.")
 
         if ".gpkg" in path:
-            exposure_data_gdf = get_gpkg_from_cache_as_gdf(path)
+            data_gdf = get_gpkg_from_cache_as_gdf(path)
         elif ".csv" in path:
-            exposure_data_gdf = pd.read_csv(path)
+            data_gdf = pd.read_csv(path)
+            AAA
 
-        if exposure_data_gdf.empty:
+        if data_gdf.empty:
             LOG.error("Exposure data GeoDataFrame is empty.")
             raise ValueError("Exposure data GeoDataFrame from cache is empty.")
 
         if data_source_names:
             # keep only data_source_names columns
-            exposure_data_gdf = filter_gdf_by_columns_if_found(
-                exposure_data_gdf, data_source_names, keep=True
+            data_gdf = filter_gdf_by_columns_if_found(
+                data_gdf, data_source_names, keep=True
             )
 
-        return convert_gdf_to_dict(exposure_data_gdf, set_index_column, orient)
+        return convert_gdf_to_dict(data_gdf, set_index_column, orient)
     except ValueError as e:
         LOG.error(f"Failed to get and convert GeoDataFrame to dictionary. Error: {e}")
         return {}
 
 
 def convert_gdf_to_dict(
-    target_gdf: gpd.GeoDataFrame, set_index_column: str = None, orient: str = "dict"
+    target_gdf: gpd.GeoDataFrame | pd.DataFrame,
+    set_index_column: str = None,
+    orient: str = "dict",
 ):
     """
     Convert GeoDataFrame to dictionary.
@@ -255,7 +258,7 @@ def string_to_list(string: str) -> list[str]:
     return [elem for elem in list_from_string]
 
 
-def convert_travel_times_dicts_to_gdf(actual_travel_times: list[dict]):
+def convert_travel_times_dicts_to_df(actual_travel_times: list[dict]):
     """
     Convert travel times to GeoDataFrame.
 

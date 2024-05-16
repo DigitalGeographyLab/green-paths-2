@@ -25,7 +25,7 @@ def exposure_analysing_pipeline(
     exposure_gdf: gpd.GeoDataFrame = None,
     processed_osm_network_gdf: gpd.GeoDataFrame = None,
     routing_results_gdf: gpd.GeoDataFrame = None,
-    actual_travel_times_gdf: gpd.GeoDataFrame = None,
+    actual_travel_times_gdf: gpd.GeoDataFrame | list = None,
 ):
     """
     Run the exposure analysing pipeline.
@@ -49,18 +49,35 @@ def exposure_analysing_pipeline(
         If the exposure analysing pipeline fails.
     """
     LOG.info("\n\n\nStarting analysing pipeline\n\n\n")
+
+    # the preprocessing code and locis is messy
+    # the code is not well structured
+    # these are mainly affected by time constraints
+    # all this probably should be refactored
+
+    # also the logic of turning everything to df or gdf is not ideal
+    # should support the original types like dicts etc.
+    # although If the support for df/gdf support is wanted, double logic is needed
     try:
-        routing_results, segment_exposure_store, osm_network_store = (
-            get_datas_from_sources(
-                exposure_gdf=exposure_gdf,
-                osm_network_gdf=processed_osm_network_gdf,
-                routing_results_gdf=routing_results_gdf,
-                # actual_travel_times_gdf=actual_travel_times_gdf,
-            )
+        (
+            routing_results,
+            segment_exposure_store,
+            osm_network_store,
+            actual_travel_times_store,
+        ) = get_datas_from_sources(
+            exposure_gdf=exposure_gdf,
+            osm_network_gdf=processed_osm_network_gdf,
+            routing_results_gdf=routing_results_gdf,
+            actual_travel_times_gdf=actual_travel_times_gdf,
         )
 
         # validate that the data is found
-        if not routing_results or not segment_exposure_store or not osm_network_store:
+        if (
+            not routing_results
+            or not segment_exposure_store
+            or not osm_network_store
+            or not actual_travel_times_store
+        ):
             raise ValueError("Data not found for analysing pipeline.")
 
         exposure_calculator = ExposureCalculator(
@@ -68,6 +85,7 @@ def exposure_analysing_pipeline(
             routing_results=routing_results,
             segment_exposure_store=segment_exposure_store,
             osm_network_store=osm_network_store,
+            actual_travel_times_store=actual_travel_times_store,
             data_names=[data.get(NAME_KEY) for data in user_config.data_sources],
         )
 
@@ -98,6 +116,7 @@ def exposure_analysing_pipeline(
         print("this is all in final results")
         print(saved_final_result)
         print(len(saved_final_result))
+        print(saved_final_result.columns)
 
         if not saved_final_result.empty:
             LOG.info(f"Saved final result df/gdf head {saved_final_result.head()}")

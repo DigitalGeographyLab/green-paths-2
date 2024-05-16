@@ -39,7 +39,7 @@ from ..cache_cleaner import clear_cache_dirs
 
 from ..data_utilities import (
     convert_gdf_to_dict,
-    convert_travel_times_dicts_to_gdf,
+    convert_travel_times_dicts_to_df,
     get_and_convert_gdf_to_dict,
     save_gdf_to_cache,
 )
@@ -139,13 +139,14 @@ def routing_pipeline(
 
         has_save_to_cache = hasattr(user_config, SAVE_TO_CACHE_KEY)
 
+        travel_times_gdf = convert_travel_times_dicts_to_df(actual_travel_times)
+
         if has_save_to_cache and user_config.save_to_cache:
-            travel_times_gdf = convert_travel_times_dicts_to_gdf(actual_travel_times)
             save_gdf_to_cache(green_paths_route_results, ROUTING_RESULTS_CSV_CACHE_PATH)
             save_gdf_to_cache(travel_times_gdf, TRAVEL_TIMES_CSV_CACHE_PATH)
 
         LOG.info("Green Paths 2 routing pipeline completed.")
-        return green_paths_route_results, actual_travel_times
+        return green_paths_route_results, travel_times_gdf
     except PipeLineRuntimeError as e:
         LOG.error(f"Routing pipeline failed with error: {e}")
         raise e
