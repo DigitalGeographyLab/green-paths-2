@@ -189,7 +189,9 @@ def get_raster_value_at_point(point, raster_data, transform):
         return None  # or np.nan, or another value indicating no data
 
 
-def aggregate_values(values: list[float | None], method="mean") -> float:
+def aggregate_values(
+    values: list[float | None], method="mean", default_raster_null_value: float = None
+) -> float:
     """
     Aggregate values based on the given method.
     If all values are np.nan, the function returns np.nan.
@@ -198,12 +200,18 @@ def aggregate_values(values: list[float | None], method="mean") -> float:
     Parameters:
     - values: A list of values to aggregate.
     - method: The aggregation method to use. Options are 'mean', 'max', and 'min'.
+    - default_raster_null_value: The default raster null value.
 
     Returns:
-    - The aggregated value | np.nan.
+    - The aggregated value.
     """
     values = np.array(values, dtype=float)
-    if len(values) == 0 or np.all(np.isnan(values)) or all(v is None for v in values):
+    if (
+        len(values) == 0
+        or np.all(np.isnan(values))
+        or all(v is None for v in values)
+        or all(v == default_raster_null_value for v in values)
+    ):
         return None
     if method == "mean":
         return np.nanmean(values)
@@ -243,7 +251,9 @@ def calculate_segment_raster_values(
         # Aggregate the values for the segment
         # round to 2 decimals
         value_for_segment = aggregate_values(
-            values, method=SEGMENT_POINTS_DEFAULT_SAMPLING_STRATEGY
+            values,
+            method=SEGMENT_POINTS_DEFAULT_SAMPLING_STRATEGY,
+            default_raster_null_value=default_raster_null_value,
         )
 
         # do not store nan values
