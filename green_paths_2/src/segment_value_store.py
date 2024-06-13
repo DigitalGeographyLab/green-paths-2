@@ -164,6 +164,7 @@ class SegmentValueStore:
     def validate_user_min_max_values(self, data_sources: list[DataSource]) -> None:
         """Validate user defined min and max values."""
         values_not_in_range = []
+        data_values_not_in_range = []
         for data_key, data_source in data_sources.items():
             for osm_id, data in self.master_segment_store.items():
                 if data_key in data:
@@ -172,9 +173,10 @@ class SegmentValueStore:
                         or data[data_key] > data_source.max_data_value
                     ):
                         values_not_in_range.append(f"{osm_id}: {data[data_key]}")
+                        data_values_not_in_range.append(data[data_key])
         if values_not_in_range:
             LOG.warning(
-                f"WARNING: {len(values_not_in_range)} values are not within the user defined min and max values. Values: {values_not_in_range}. They will be fitted to the user defined min and max values."
+                f"WARNING: {len(values_not_in_range)} values are not within the user defined min and max values, for data {data_key}. Values not in range max: {max(data_values_not_in_range)}, min : {min(data_values_not_in_range)}. They will be fitted to the user defined min and max values."
             )
 
     def save_normalized_values_to_store(self, data_sources) -> list[str]:

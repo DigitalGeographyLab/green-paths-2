@@ -6,6 +6,7 @@ from ..config import (
     FINAL_EXPOSURE_ANALYSING_RESULTS_CSV_PATH,
     FINAL_EXPOSURE_ANALYSING_RESULTS_GPKG_PATH,
     OSM_ID_KEY,
+    OSM_NETWORK_CSV_CACHE_PATH,
     OSM_NETWORK_GDF_CACHE_PATH,
     ROUTING_RESULTS_CSV_CACHE_PATH,
     SEGMENT_STORE_GDF_CACHE_PATH,
@@ -32,6 +33,7 @@ LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 
 
 def get_datas_from_sources(
+    user_config: UserConfig,
     exposure_gdf,
     osm_network_gdf,
     routing_results_gdf,
@@ -69,7 +71,7 @@ def get_datas_from_sources(
             segment_exposure_store,
             osm_network_store,
             actual_travel_times_store,
-        ) = _load_datas_from_cache()
+        ) = _load_datas_from_cache(user_config)
     else:
         LOG.info("Using parameter data for analysing pipeline")
         segment_exposure_store = convert_gdf_to_dict(exposure_gdf, OSM_ID_KEY)
@@ -87,7 +89,7 @@ def get_datas_from_sources(
     )
 
 
-def _load_datas_from_cache():
+def _load_datas_from_cache(user_config: UserConfig):
     """
     Load routing results and exposure store from cache.
 
@@ -102,18 +104,21 @@ def _load_datas_from_cache():
         Tuple containing routing results and exposure store.
     """
 
-    routing_results_path = ROUTING_RESULTS_CSV_CACHE_PATH
-
     routing_results = get_and_convert_gdf_to_dict(
-        routing_results_path, OSM_ID_KEY, orient="records"
+        ROUTING_RESULTS_CSV_CACHE_PATH, OSM_ID_KEY, orient="records"
     )
     segment_exposure_store = get_and_convert_gdf_to_dict(
         SEGMENT_STORE_GDF_CACHE_PATH, OSM_ID_KEY
     )
 
-    osm_network_store = get_and_convert_gdf_to_dict(
-        OSM_NETWORK_GDF_CACHE_PATH, OSM_ID_KEY
-    )
+    # check user configurations for keep geometry
+    if user_config.analysing and user_config.analysing.keep_geometry:
+        osm_cache_path = OSM_NETWORK_GDF_CACHE_PATH
+    else:
+        # use the csv path
+        osm_cache_path = OSM_NETWORK_CSV_CACHE_PATH
+
+    osm_network_store = get_and_convert_gdf_to_dict(osm_cache_path, OSM_ID_KEY)
 
     travel_times_store = get_and_convert_gdf_to_dict(
         TRAVEL_TIMES_CSV_CACHE_PATH, OSM_ID_KEY
@@ -163,6 +168,7 @@ def combine_multilinestrings_to_single_linestring(
             print(
                 "Warning: The geometries could not be merged into a single LineString."
             )
+            print(type(merged_line))
             return None
     except SpatialOperationError as e:
         LOG.info(f"Error occured when combining a single linestring: {e}")

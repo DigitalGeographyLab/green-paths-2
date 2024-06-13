@@ -110,6 +110,7 @@ def routing_pipeline(
                 SEGMENT_STORE_GDF_CACHE_PATH,
                 OSM_ID_KEY,
                 normalized_data_source_names,
+                orient="dict",
             )
 
         if not exposure_dict:

@@ -131,7 +131,9 @@ def get_and_convert_gdf_to_dict(
     Convert exposure data to dictionary, drop geometry.
     """
     try:
-        LOG.info(f"Getting and converting GeoDataFrame to dictionary from path: {path}")
+        LOG.info(
+            f"Getting and converting GeoDataFrame or CSV to dict from path: {path}"
+        )
         if not os.path.exists(path):
             LOG.error(f"Cache might be empty, file not found for path: {path}.")
             raise ValueError("Exposure data GeoDataFrame from cache is empty.")
@@ -140,13 +142,13 @@ def get_and_convert_gdf_to_dict(
             data_gdf = get_gpkg_from_cache_as_gdf(path)
         elif ".csv" in path:
             data_gdf = pd.read_csv(path)
-            AAA
 
         if data_gdf.empty:
             LOG.error("Exposure data GeoDataFrame is empty.")
             raise ValueError("Exposure data GeoDataFrame from cache is empty.")
 
         if data_source_names:
+            data_source_names.append(set_index_column)
             # keep only data_source_names columns
             data_gdf = filter_gdf_by_columns_if_found(
                 data_gdf, data_source_names, keep=True
@@ -213,7 +215,7 @@ def save_gdf_to_cache(gdf_to_save: gpd.GeoDataFrame, cache_file_path: str) -> No
     Raises:
     - DataManagingError: If saving fails.
     """
-    LOG.info(f"Saving GeoDataFrame to cache as .gpkg file.")
+    LOG.info(f"Saving GeoDataFrame to cache as .gpkg or .csv file: {cache_file_path}")
     try:
         if isinstance(gdf_to_save, gpd.GeoDataFrame) and not gdf_to_save.empty:
             gdf_to_save.to_file(

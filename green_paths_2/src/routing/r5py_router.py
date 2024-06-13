@@ -1,5 +1,6 @@
 """ Module for routing with R5py. """
 
+import datetime
 from ..config import (
     ALLOW_MISSING_DATA_DEFAULT,
     NORMALIZED_DATA_SUFFIX,
@@ -38,6 +39,18 @@ def init_travel_time_matrix_computer(
     """Route with TravelTimeMatrixComputer."""
     LOG.info("Initing TravelTimeMatrixComputer")
 
+    # max_time is set to a large value to ensure that all routes are computed
+    # if the max_time is met, the route is not finished
+    # the travel times are not actual times, but rather the cost of the route
+
+    # Maximum allowable seconds for a C int
+    max_c_int_seconds = 2147483647
+    # just to be sure that the custom costs route planning wont fail because max_time is too short
+    # Set a very large number of seconds directly
+
+    # Set the max_time using the maximum C int value
+    max_time = datetime.timedelta(seconds=max_c_int_seconds)
+
     travel_time_matrix_computer_custom_cost = TravelTimeMatrixComputer(
         custom_cost_transport_network,
         origins=origins,
@@ -45,6 +58,7 @@ def init_travel_time_matrix_computer(
         transport_modes=transport_mode,
         speed_walking=speed_walking,
         speed_cycling=speed_cycling,
+        max_time=max_time,
     )
 
     LOG.info("Finished initing TravelTimeMatrixComputer")
@@ -93,6 +107,7 @@ def _build_custom_cost_networks_params(
         custom_cost_segment_weight_factors.append(
             exposure_dict.get(exposure_name_normalized)
         )
+        # tyomaa
         allow_missing_datas.append(
             exposure_confs.get(
                 DataSourceModel.AllowMissingData.value, ALLOW_MISSING_DATA_DEFAULT

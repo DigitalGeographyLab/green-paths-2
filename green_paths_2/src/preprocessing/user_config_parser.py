@@ -456,7 +456,7 @@ class UserConfig:
                 self.errors.append(
                     "Routing Exposure parameter name not found in Preprocessing data sources. Check that the name matches with the data source name."
                 )
-            if not sensitivity or not isinstance(sensitivity, (int, float)):
+            if sensitivity is None or not isinstance(sensitivity, (int, float)):
                 self.errors.append(
                     "Invalid sensitivity configuration in routing parameters. Should be float or integer."
                 )

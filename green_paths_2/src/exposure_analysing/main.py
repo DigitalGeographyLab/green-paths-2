@@ -65,6 +65,7 @@ def exposure_analysing_pipeline(
             osm_network_store,
             actual_travel_times_store,
         ) = get_datas_from_sources(
+            user_config=user_config,
             exposure_gdf=exposure_gdf,
             osm_network_gdf=processed_osm_network_gdf,
             routing_results_gdf=routing_results_gdf,
@@ -88,6 +89,8 @@ def exposure_analysing_pipeline(
             actual_travel_times_store=actual_travel_times_store,
             data_names=[data.get(NAME_KEY) for data in user_config.data_sources],
         )
+
+        # TODO: mieti tehokkuutta -> voiko muisti loppua kesken? voisko nää jutut tehdä tehokkaammin???
 
         exposure_calculator.construct_master_statistics_dict()
 

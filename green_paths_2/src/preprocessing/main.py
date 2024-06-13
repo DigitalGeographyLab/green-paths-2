@@ -30,6 +30,7 @@ from ..config import (
     GEOMETRY_KEY,
     LENGTH_KEY,
     OSM_ID_KEY,
+    OSM_NETWORK_CSV_CACHE_PATH,
     OSM_NETWORK_GDF_CACHE_PATH,
     RASTER_FILE_SUFFIX,
     REPROJECTED_RASTER_FILE_SUFFIX,
@@ -216,7 +217,13 @@ def preprocessing_pipeline(
                 segment_store_gdf_with_exposure, SEGMENT_STORE_GDF_CACHE_PATH
             )
 
-            save_gdf_to_cache(filtered_osm_network_gdf, OSM_NETWORK_GDF_CACHE_PATH)
+            # check user configurations for keep geometry
+            if user_config.analysing and user_config.analysing.keep_geometry:
+                save_gdf_to_cache(filtered_osm_network_gdf, OSM_NETWORK_GDF_CACHE_PATH)
+            else:
+                # save as csv, without geometries
+                save_gdf_to_cache(filtered_osm_network_gdf, OSM_NETWORK_CSV_CACHE_PATH)
+
         else:
             LOG.info("Not saving preprocessing results to cache.")
 

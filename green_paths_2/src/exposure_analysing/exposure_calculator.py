@@ -5,7 +5,7 @@ from ..config import (
     CUMULATIVE_EXPOSURE_TIME_METERS_SUFFIX,
     FROM_ID_KEY,
     GEOMETRY_KEY,
-    TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUFFIX,
+    TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_AVERAGE_SUFFIX,
     LENGTH_KEY,
     MAX_EXPOSURE_SUFFIX,
     MIN_EXPOSURE_SUFFIX,
@@ -14,6 +14,7 @@ from ..config import (
     SUM_EXPOSURE_SUFFIX,
     TO_ID_KEY,
     TRAVEL_TIME_KEY,
+    TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUM_SUFFIX,
 )
 from ..data_utilities import string_to_list
 
@@ -257,12 +258,14 @@ class ExposureCalculator:
             Master statistics dict.
         """
         LOG.info("Starting to construct master exposure dict.")
+        LOG.info(f"Running analysis for {len(self.routing_results)} paths.")
 
         if not self.routing_results:
             raise ValueError("No routing results found.")
-
+        last_logged_percentage = 0
         # construct a master exposure dict for all paths
-        for path_data in self.routing_results:
+        for ind, path_data in enumerate(self.routing_results):
+            current_percentage = (ind + 1) * 100 // len(self.routing_results)
             invalid_osm_ids = 0
             path_exposure_data = self._init_path_exposure_dict(path_data)
             path_data_osm_ids = path_data.get(OSM_IDS_KEY, False)
@@ -278,6 +281,16 @@ class ExposureCalculator:
 
             # after each path is processed, update master exposure list
             self.update_master_statistics_store(path_statistics)
+
+            # print progress
+            if (
+                current_percentage % 5 == 0
+                and current_percentage > last_logged_percentage
+            ):
+                LOG.info(
+                    f"Processed {ind + 1} / {len(self.routing_results)} paths ({current_percentage}%)."
+                )
+                last_logged_percentage = current_percentage
 
         LOG.warning(f"Found total of {invalid_osm_ids} paths with invalid osm_ids.")
 
@@ -313,11 +326,11 @@ class ExposureCalculator:
             statistics_dict_per_path[f"{path_attribute_key}{MAX_EXPOSURE_SUFFIX}"] = (
                 None
             )
-            statistics_dict_per_path[f"{path_attribute_key}{SUM_EXPOSURE_SUFFIX}"] = (
-                None
-            )
             statistics_dict_per_path[
-                f"{path_attribute_key}{TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUFFIX}"
+                f"{path_attribute_key}{TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUM_SUFFIX}"
+            ] = None
+            statistics_dict_per_path[
+                f"{path_attribute_key}{TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_AVERAGE_SUFFIX}"
             ] = None
             statistics_dict_per_path[
                 f"{path_attribute_key}{CUMULATIVE_EXPOSURE_TIME_METERS_SUFFIX}"
@@ -376,7 +389,7 @@ class ExposureCalculator:
         )
         return [(path_attribute_key, combined_geom_linestring)]
 
-    def _calculate_time_weighted_total_exposure(
+    def _calculate_time_weighted_exposure(
         self, exposure_values: dict, path_times: dict
     ) -> float:
         """
@@ -394,7 +407,7 @@ class ExposureCalculator:
         Returns
         -------
         float
-            Traversal time weighted total exposure.
+            Traversal time weighted total exposure sum.
         """
         total_weighted_exposure = 0.0
         for osm_id, exposure_value in exposure_values.items():
@@ -403,12 +416,6 @@ class ExposureCalculator:
                 continue
             weighted_exposure = exposure_value * time_for_osmid
             total_weighted_exposure += weighted_exposure
-
-        path_total_traversal_time = sum(path_times.values())
-        if path_total_traversal_time < 1 or total_weighted_exposure == 0:
-            return 0.0
-
-        total_weighted_exposure = total_weighted_exposure / path_total_traversal_time
         return total_weighted_exposure
 
     def find_range(self, value: float, ranges: list[int, float]) -> str:
@@ -542,22 +549,31 @@ class ExposureCalculator:
                 )
             )
 
-            attribute_key_values.append(
-                (
-                    f"{path_attribute_key}{SUM_EXPOSURE_SUFFIX}",
-                    round(sum(exposure_values), 2),
-                )
-            )
-
-            weighted_exposure_total = self._calculate_time_weighted_total_exposure(
+            weighted_exposure_total = self._calculate_time_weighted_exposure(
                 path_attribute_values,
                 path_travel_times,
             )
 
             attribute_key_values.append(
                 (
-                    f"{path_attribute_key}{TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUFFIX}",
+                    f"{path_attribute_key}{TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUM_SUFFIX}",
                     round(weighted_exposure_total, 2),
+                )
+            )
+
+            # calculate average exposure weighted by traversal time
+            path_total_traversal_time = sum(path_travel_times.values())
+            if path_total_traversal_time < 1 or weighted_exposure_total == 0:
+                weighted_exposure_average = 0.0
+            else:
+                weighted_exposure_average = (
+                    weighted_exposure_total / path_total_traversal_time
+                )
+
+            attribute_key_values.append(
+                (
+                    f"{path_attribute_key}{TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_AVERAGE_SUFFIX}",
+                    round(weighted_exposure_average, 2),
                 )
             )
 
@@ -663,17 +679,18 @@ class ExposureCalculator:
         """
         LOG.info("Combining paths statistics.")
 
-        for path_exposure_data in self.get_master_statistics_store():
+        for ind, path_exposure_data in enumerate(self.get_master_statistics_store()):
             # init empty dict for each path
             path_statistics = {}
 
             # loop through all the path attributes keys and values
             # each attribute is one row from the gdf so to speak
+            last_logged_percentage = 0
             for (
                 path_attribute_key,
                 path_attribute_values,
             ) in path_exposure_data.items():
-
+                current_percentage = (ind + 1) * 100 // len(path_exposure_data.items())
                 # add keys to statistics dict
                 path_statistics, is_od_key = self._init_keys_for_path_exposure_dict(
                     path_attribute_key,
@@ -697,5 +714,15 @@ class ExposureCalculator:
 
             # add to master combined list after each whole path is processed
             self.update_master_combined_statistics_store(path_statistics)
+
+            # print progress
+            # if (
+            #     current_percentage % 1000 == 0
+            #     and current_percentage > last_logged_percentage
+            # ):
+            #     LOG.info(
+            #         f"Calculated and combined {ind + 1} / {self.get_master_statistics_store()} paths ({current_percentage}%)."
+            #     )
+            #     last_logged_percentage = current_percentage
 
         LOG.info("Finished combining path statistics.")

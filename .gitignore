@@ -117,4 +117,7 @@ green_paths_2/src/cache/**/*
 
 green_paths_2/src/visualizations
 green_paths_2/data/*
+green_paths_2/src/user/*
+green_paths_2/src/user/**
 green_paths_2/src/user/data/*
+green_paths_2/src/database/*

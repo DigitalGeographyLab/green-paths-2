@@ -21,6 +21,9 @@ R5_JAR_FILE_PATH = "https://github.com/DigitalGeographyLab/r5/releases/download/
 # DEFAULT VALUE FOR CUSTOM COST TRANSPORT NETWORK'S ALLOW MISSING DATA (OSMIDS)
 ALLOW_MISSING_DATA_DEFAULT = True
 
+# SQLITE3 DB PATH
+GP2_DB_PATH = "green_paths_2/src/database/gp2.db"
+
 
 # KEYS
 
@@ -52,7 +55,11 @@ MAX_EXPOSURE_SUFFIX = "_max_exposure"
 
 SUM_EXPOSURE_SUFFIX = "_sum_exposure"
 
-TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUFFIX = "_traversal_time_weighted_path_exposure"
+TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_AVERAGE_SUFFIX = (
+    "_time_weighted_path_exposure_avg"
+)
+
+TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUM_SUFFIX = "_time_weighted_path_exposure_sum"
 
 # seconds
 CUMULATIVE_EXPOSURE_TIME_METERS_SUFFIX = "_cumulative_exposure_time_meters"
@@ -98,6 +105,8 @@ SEGMENT_STORE_GPKG_FILE_NAME: str = "segment_store.gpkg"
 
 OSM_NETWORK_GPKG_FILE_NAME: str = "osm_network.gpkg"
 
+OSM_NETWORK_CSV_FILE_NAME: str = "osm_network.csv"
+
 ROUTING_RESULTS_CSV_FILE_NAME: str = "routing_results.csv"
 
 TRAVEL_TIMES_CSV_FILE_NAME: str = "travel_times.csv"
@@ -140,6 +149,13 @@ OSM_NETWORK_GDF_CACHE_PATH = os.path.join(
     PREPROCESSING_CACHE_DIR_NAME,
     OSM_NETWORK_GPKG_FILE_NAME,
 )
+
+OSM_NETWORK_CSV_CACHE_PATH = os.path.join(
+    DATA_CACHE_DIR_PATH,
+    PREPROCESSING_CACHE_DIR_NAME,
+    OSM_NETWORK_CSV_FILE_NAME,
+)
+
 
 CACHE_ROUTING_RESULTS_PATH = os.path.join(DATA_CACHE_DIR_PATH, ROUTING_CACHE_DIR_NAME)
 
@@ -184,7 +200,7 @@ SEGMENT_VALUES_ROUND_DECIMALS = 3
 
 SEGMENT_SAMPLING_POINTS_KEY = "sampling_points"
 
-DATA_COVERAGE_SAFETY_PERCENTAGE = 50
+DATA_COVERAGE_SAFETY_PERCENTAGE = 33
 
 DEFAULT_R5_TRAVEL_SPEED_WALKING = 3.6
 
