@@ -4,11 +4,12 @@ import geopandas as gpd
 import rasterio
 import shapely
 
-from green_paths_2.src.config import RASTER_CELL_RESOLUTION_KEY
+from green_paths_2.src.config import GEOMETRY_KEY, RASTER_CELL_RESOLUTION_KEY
 
 from ..logging import setup_logger, LoggerColors
 from ..timer import time_logger
-from shapely import wkt
+from shapely.geometry import MultiLineString
+from shapely.wkt import dumps
 from pyproj import CRS
 
 import geopandas as gpd
@@ -227,3 +228,13 @@ def get_most_accurate_data_source_resolution(data_sources) -> list:
             # take the min from tuple of dimensions
             resolutions.append(min(raster_resolution))
     return min(resolutions)
+
+
+def convert_geometries_to_wkt(
+    data: dict[str, dict[str, float]]
+) -> dict[str, dict[str, float]]:
+    """Convert geometries to WKT format."""
+    for _, values in data.items():
+        if GEOMETRY_KEY in values and isinstance(values[GEOMETRY_KEY], MultiLineString):
+            values[GEOMETRY_KEY] = dumps(values[GEOMETRY_KEY])
+    return data

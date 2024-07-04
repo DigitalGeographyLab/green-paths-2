@@ -145,20 +145,20 @@ data_sources:
   #   original_crs: 32630
 
 
-  # - name: aqi
-  #   filepath: /Users/hcroope/Downloads/allPollutants_2024-05-29T16/allPollutants_2024-05-29T16.nc
-  #   # filepath: green_paths_2/src/user/data/air_quality/allPollutants_2023-12-15T04.nc
-  #   data_type: raster
-  #   original_crs: 4326 # mandatory
-  #   # layer_name: Helsinki_4326
-  #   data_column: AQI  # mandatory
-  #   no_data_value: 1
-  #   min_data_value: 1 # mandatory
-  #   max_data_value: 5 # mandatory
-  #   good_exposure: False # mandatory
-  #   raster_cell_resolution: 10 # optional
-  #   save_raster_file: True # optional
-  #   custom_processing_function: convert_aq_nc_to_tif_and_scale_offset
+  - name: aqi
+    filepath: /Users/hcroope/Downloads/allPollutants_2024-05-29T16/allPollutants_2024-05-29T16.nc
+    # filepath: green_paths_2/src/user/data/air_quality/allPollutants_2023-12-15T04.nc
+    data_type: raster
+    original_crs: 4326 # mandatory
+    # layer_name: Helsinki_4326
+    data_column: AQI  # mandatory
+    no_data_value: 1
+    min_data_value: 1 # mandatory
+    max_data_value: 5 # mandatory
+    good_exposure: False # mandatory
+    raster_cell_resolution: 10 # optional
+    save_raster_file: True # optional
+    custom_processing_function: convert_aq_nc_to_tif_and_scale_offset
 
   # - name: noise
   #   filepath:  green_paths_2/src/user/data/Helsinki_noise_data_2022/Melualueet_2022_01_kadut_maant_LAeq7-22_NPM_20231116_123645.gml # mandatory
@@ -181,10 +181,9 @@ routing:
     # origins: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
     # origins: "green_paths_2/src/cache/data/origin_point.gpkg"
     
-    
-    # origins: green_paths_2/src/cache/data/HKI_200_ODS.gpkg
+    origins: green_paths_2/src/cache/data/HKI_200_ODS.gpkg
 
-    origins: "green_paths_2/src/cache/data/random_point_1.gpkg"
+    # origins: "green_paths_2/src/cache/data/random_point_1.gpkg"
     # origins:   green_paths_2/src/cache/data/100_ods_nort_london.gpkg
     # origins: green_paths_2/src/cache/data/1000_ODS_NO_DUP_CENTROIDS.gpkg
     
@@ -202,10 +201,6 @@ routing:
     destinations: green_paths_2/src/cache/data/HKI_200_ODS.gpkg
 
     # destinations: green_paths_2/src/cache/data/100_ods_nort_london.gpkg
-
-  
-
-
     
     # destinations: "green_paths_2/src/cache/data/destinations.csv"
     # destinations: green_paths_2/src/cache/data/destinations_points_shp.shp
@@ -216,8 +211,8 @@ routing:
     exposure_parameters:
       - name: gvi_lines
         sensitivity: 2.5
-      # - name: aqi
-      #   sensitivity: 2.5
+      - name: aqi
+        sensitivity: 2.5
       # - name: noise
       #   sensitivity: 2.5
       # - name: ndvi_london
@@ -228,11 +223,19 @@ routing:
 
 
 analysing:
-  keep_geometry: False
-  # cumulative_ranges:
-  #   gvi:
-  #     # - [0, 0.99]
-  #     # - [1, 1.99]
-  #     # - [2, 2.99]
-  #     # - [3, 3.99]
-  #     - [4, 5]
+  keep_geometry: True
+  # batch_percentage: 50
+  save_output_name: roope_results_test_gpkg_no_geom_iguess
+  cumulative_ranges:
+    gvi_lines:
+      # - [0, 0.99]
+      # - [1, 1.99]
+      # - [2, 2.99]
+      - [0,1]
+      - [20, 50]
+    aqi:
+      - [0, 0.99]
+      - [1, 1.99]
+      - [2, 2.99]
+      - [3, 3.99]
+      - [4, 5]

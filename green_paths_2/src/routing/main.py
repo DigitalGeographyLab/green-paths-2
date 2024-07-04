@@ -1,18 +1,22 @@
 """ Routing pipeline for Green Paths 2. """
 
-# DISCLAIMER:
 # WE NEED TO RUN _set_environment_and_import_r5py()
 # WHICH SETS ENVIRONMENT VARIABLES AND IMPORTS GREEN PATHS 2 PATCH VERSION OF R5PY
 # LIKE THIS BEFORE OTHER IMPORTS DUE TO NEED FOR --r5-classpath ARGUMENT BEFORE R5PY IMPORTS
 # IT IS DIRTY, AND THERE MIGHT BE A BETTER WAY TO DO THIS
 
+from green_paths_2.src.database_controller import DatabaseController
+from green_paths_2.src.routing.routing_db_controller import (
+    format_routing_results,
+    format_travel_times,
+    get_normalized_exposures_from_db,
+)
 from ..config import (
-    OSM_ID_KEY,
-    ROUTING_CACHE_DIR_NAME,
-    ROUTING_RESULTS_CSV_CACHE_PATH,
-    SAVE_TO_CACHE_KEY,
-    SEGMENT_STORE_GDF_CACHE_PATH,
-    TRAVEL_TIMES_CSV_CACHE_PATH,
+    DB_ROUTING_RESULTS_COLUMNS,
+    DB_TRAVEL_TIMES_COLUMNS,
+    GP2_DB_PATH,
+    ROUTING_RESULTS_TABLE,
+    TRAVEL_TIMES_TABLE,
 )
 
 from ..routing.routing_utilities import (
@@ -31,25 +35,16 @@ from ..green_paths_exceptions import PipeLineRuntimeError, R5pyError
 from ..logging import setup_logger, LoggerColors
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
-
-
-import geopandas as gpd
 from ..timer import time_logger
-from ..cache_cleaner import clear_cache_dirs
 
 from ..data_utilities import (
     convert_gdf_to_dict,
-    convert_travel_times_dicts_to_df,
-    get_and_convert_gdf_to_dict,
-    save_gdf_to_cache,
 )
 from ..preprocessing.user_config_parser import UserConfig
 from ..preprocessing.user_data_handler import UserDataHandler
 from ..routing.router_controller import route_green_paths_2_paths
 from ..routing.routing_utilities import (
     get_normalized_data_source_names,
-    test_2_init_single_hki_od_points,
-    test_init_ods,
     validate_segmented_osm_network_path,
 )
 
@@ -58,7 +53,6 @@ from ..routing.routing_utilities import (
 def routing_pipeline(
     data_handler: UserDataHandler,
     user_config: UserConfig,
-    exposure_gdf: gpd.GeoDataFrame = None,
 ):
     """
     Run the routing pipeline.
@@ -69,8 +63,6 @@ def routing_pipeline(
         The UserDataHandler object.
     user_config : UserConfig
         The UserConfig object.
-    exposure_gdf : gpd.GeoDataFrame, optional
-        The exposure data as a GeoDataFrame. Defaults to None.
 
     Returns:
     ----------
@@ -87,67 +79,60 @@ def routing_pipeline(
 
     LOG.info("\n\n\nStarting routing pipeline\n\n\n")
     try:
-
-        # clear routing cache
-        clear_cache_dirs([ROUTING_CACHE_DIR_NAME])
-
+        # validate segmented osm network path
         osm_segmented_network_path = validate_segmented_osm_network_path(
             user_config.osm_network.osm_pbf_file_path
         )
 
+        # get data source names and create normalized data source names
         data_source_names = data_handler.get_data_source_names()
         normalized_data_source_names = get_normalized_data_source_names(
             data_source_names
         )
 
-        # get exposure data, from parameter or cache if in parameters
-        if exposure_gdf is not None:
-            LOG.info("Using parameter exposure data for routing.")
-            exposure_dict = convert_gdf_to_dict(exposure_gdf)
-        else:
-            LOG.info("Loading data from cache for routing pipeline")
-            exposure_dict = get_and_convert_gdf_to_dict(
-                SEGMENT_STORE_GDF_CACHE_PATH,
-                OSM_ID_KEY,
-                normalized_data_source_names,
-                orient="dict",
-            )
+        db_handler = DatabaseController(GP2_DB_PATH)
 
-        if not exposure_dict:
-            raise ValueError(
-                "Exposure data not found for routing pipeline. Not as parameter nor from cache."
-            )
+        # get normalized exposure values from db
+        normalized_exposures_dict = get_normalized_exposures_from_db(
+            db_handler=db_handler,
+            normalized_data_source_names=normalized_data_source_names,
+        )
 
-        # origins, destinations = test_init_ods()
+        # handle OD pairs
         origins, destinations = init_origin_destinations_from_files(
             user_config.routing, user_config.project_crs
         )
 
-        print("origin is: ")
-        print(origins)
-        print("destination is: ")
-        print(destinations)
-
+        # use r5py to route
+        # TODO: split network creation and routing and create functions for API
         green_paths_route_results, actual_travel_times = route_green_paths_2_paths(
             osm_segmented_network_path,
-            exposure_dict,
+            normalized_exposures_dict,
             origins,
             destinations,
             user_config.routing,
         )
 
-        # TODO: do we need / are we using travel_times_gdf?
+        # convert route results to dict
+        green_paths_route_results = convert_gdf_to_dict(
+            green_paths_route_results, orient="records"
+        )
 
-        has_save_to_cache = hasattr(user_config, SAVE_TO_CACHE_KEY)
+        # create tables for routing results and travel times
+        db_handler.create_table_from_params(
+            ROUTING_RESULTS_TABLE, DB_ROUTING_RESULTS_COLUMNS
+        )
+        db_handler.create_table_from_params(TRAVEL_TIMES_TABLE, DB_TRAVEL_TIMES_COLUMNS)
 
-        travel_times_gdf = convert_travel_times_dicts_to_df(actual_travel_times)
+        # format routing results and travel times for db
+        formatted_routing_results = format_routing_results(green_paths_route_results)
+        formatted_travel_times = format_travel_times(actual_travel_times)
 
-        if has_save_to_cache and user_config.save_to_cache:
-            save_gdf_to_cache(green_paths_route_results, ROUTING_RESULTS_CSV_CACHE_PATH)
-            save_gdf_to_cache(travel_times_gdf, TRAVEL_TIMES_CSV_CACHE_PATH)
+        # add routing results and travel times to db
+        db_handler.add_many_dict(ROUTING_RESULTS_TABLE, formatted_routing_results)
+        db_handler.add_many_dict(TRAVEL_TIMES_TABLE, formatted_travel_times)
 
         LOG.info("Green Paths 2 routing pipeline completed.")
-        return green_paths_route_results, travel_times_gdf
     except PipeLineRuntimeError as e:
         LOG.error(f"Routing pipeline failed with error: {e}")
         raise e

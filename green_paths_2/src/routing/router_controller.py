@@ -97,4 +97,7 @@ def route_green_paths_2_paths(
     # just get all because filtering with osm_id would take too long
     actual_travel_times = custom_cost_transport_network.get_base_travel_times()
 
+    # make sure that the osm_ids are python lists (should be already)
+    routing_results["osm_ids"] = routing_results["osm_ids"].apply(list)
+
     return routing_results, actual_travel_times

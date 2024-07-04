@@ -162,7 +162,7 @@ class SegmentValueStore:
                 )
 
     def validate_user_min_max_values(self, data_sources: list[DataSource]) -> None:
-        """Validate user defined min and max values."""
+        """Validate user defined min and max values. If some values not in range, print warning."""
         values_not_in_range = []
         data_values_not_in_range = []
         for data_key, data_source in data_sources.items():

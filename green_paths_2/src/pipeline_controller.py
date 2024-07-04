@@ -54,20 +54,22 @@ def handle_pipelines(pipeline_name: str, use_exposure_cache: bool = False):
                 exposure_analysing_pipeline(user_config)
             else:
                 osm_network_gdf = handle_osm_network_process(user_config)
-                exposure_gdf, processed_osm_network_gdf = preprocessing_pipeline(
+                preprocessing_pipeline(  # exposure_gdf, processed_osm_network_gdf =
                     osm_network_gdf, data_handler, user_config
                 )
                 LOG.info("\n\n\n * * * \n\n\n")
-                green_paths_route_results_gdf, actual_travel_times_gdf = (
-                    routing_pipeline(data_handler, user_config, exposure_gdf)
-                )
+
+                routing_pipeline(
+                    data_handler, user_config  # , exposure_gdf
+                )  # green_paths_route_results_gdf, actual_travel_times_gdf = (
+
                 LOG.info("\n\n\n * * * \n\n\n")
                 exposure_analysing_pipeline(
                     user_config,
-                    exposure_gdf=exposure_gdf,
-                    processed_osm_network_gdf=processed_osm_network_gdf,
-                    routing_results_gdf=green_paths_route_results_gdf,
-                    actual_travel_times_gdf=actual_travel_times_gdf,
+                    # exposure_gdf=exposure_gdf,
+                    # processed_osm_network_gdf=processed_osm_network_gdf,
+                    # routing_results_gdf=green_paths_route_results_gdf,
+                    # actual_travel_times_gdf=actual_travel_times_gdf,
                 )
     except PipeLineRuntimeError as e:
         LOG.error(f"Pipeline controller failed with error: {e}")
