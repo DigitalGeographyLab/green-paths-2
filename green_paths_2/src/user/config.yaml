@@ -223,8 +223,8 @@ routing:
 
 
 analysing:
-  keep_geometry: True
-  # batch_percentage: 50
+  # keep_geometry: True
+  batch_percentage: 50
   save_output_name: roope_results_test_gpkg_no_geom_iguess
   cumulative_ranges:
     gvi_lines:

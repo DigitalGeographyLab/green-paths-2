@@ -21,12 +21,16 @@ from green_paths_2.src.data_utilities import combine_multilinestrings
 
 
 class ExposuresCalculator:
-    """Class for calculating exposures for paths."""
+    """
+    Class for calculating exposures for paths.
+    Single_path_results to keep track of single path results during calculating of all data source exposures.
+    Batch_combined_path_results to keep track of all paths combined results in the batch.
+    """
 
     def __init__(self):
         self.segment_cache = {}
         self.single_path_results = {}
-        # batch
+        # all paths combined in the batch
         self.batch_combined_path_results = []
 
     def clear_segment_cache(self) -> None:
@@ -63,7 +67,7 @@ class ExposuresCalculator:
         """
         return self.batch_combined_path_results
 
-    def _add_to_path_results(self, path_results: dict) -> None:
+    def _add_to_path_batch_results(self, path_results: dict) -> None:
         """
         Add the path results to the combined path results.
 
@@ -121,12 +125,9 @@ class ExposuresCalculator:
         """
         for segment in path_segments:
             osm_id = segment[OSM_ID_KEY]
-            # add new key to existing segment, from travel times most likely
+            # add new key to existing segment
             if osm_id not in self.segment_cache.keys():
                 continue
-            # print(osm_id)
-            # print("onkoooo")
-            # print(osm_id in self.segment_cache.keys())
             self.segment_cache[osm_id][new_key] = segment[new_key]
 
     def _get_segments_from_cache(self, path_osm_ids: list[str]) -> list[dict]:
@@ -149,14 +150,13 @@ class ExposuresCalculator:
             if osmid in self.segment_cache.keys()
         ]
 
-    # Function to classify and accumulate values into ranges
     def classify_and_accumulate(
         self,
         exposure: float,
         time: float,
         cumulative_values: dict,
         ranges: list[tuple[int, int]],
-    ):
+    ) -> dict:
         """
         Find out which range the exposure belongs to and accumulate the time.
 
@@ -191,8 +191,22 @@ class ExposuresCalculator:
         self,
         exposure_data_and_time_values: list[tuple],
         ranges_for_data: list[tuple[int, int]],
-    ):
-        """todo"""
+    ) -> dict:
+        """
+        Calculate cumulative exposures for the given data source.
+
+        Parameters
+        ----------
+        exposure_data_and_time_values : list[tuple]
+            List of tuples containing exposure data and time values.
+        ranges_for_data : list[tuple[int, int]]
+            List of ranges for the data source.
+
+        Returns
+        -------
+        dict
+            Cumulative exposures.
+        """
         # Initialize cumulative values for each range
         cumulative_values = {f"{r[0]}-{r[1]}": 0 for r in ranges_for_data}
         cumulative_values[OTHER_KEY] = 0
@@ -219,6 +233,7 @@ class ExposuresCalculator:
     ):
         """
         Calculate the exposures for each exposure data source for path.
+        Use the whole path times sum to calculate the average exposure.
 
         Parameters
         ----------
@@ -227,19 +242,30 @@ class ExposuresCalculator:
         data_name : str
             Data name.
         """
+        # all travel times and lengths from path segments
+        times_sum = sum([item[TRAVEL_TIME_KEY] for item in path_segments])
+        lengths_sum = sum([item[LENGTH_KEY] for item in path_segments])
+
+        # save the metadata to the path result dict
+        self._save_path_metadata_to_cache(
+            route=route,
+            path_segments=path_segments,
+            keep_geometries=keep_geometries,
+            times_sum=times_sum,
+            lengths_sum=lengths_sum,
+        )
+        # loop through all the data sources, calculate exposures and save them to the path result dict
         for data_name in data_names:
+            # get exposure data and time values for the current data source being looped
+            # only get the values where data is found
             exposure_data_and_time_values = [
                 (item[data_name], item[TRAVEL_TIME_KEY])
                 for item in path_segments
                 if item[data_name] is not None
             ]
 
-            # Extract exposures and lengths
+            # Extract exposures and lengths for the data source
             exposures = [t[0] for t in exposure_data_and_time_values]
-            times = [t[1] for t in exposure_data_and_time_values]
-
-            # Calculate max and min of exposures
-
             if not exposures:
                 # If no exposures found for certain data source, skip the data source
                 continue
@@ -250,10 +276,10 @@ class ExposuresCalculator:
             weighted_sum = sum(
                 exposure * time for exposure, time in exposure_data_and_time_values
             )
-            lengths_sum = sum([item[LENGTH_KEY] for item in path_segments])
-            times_sum = sum(times)
 
             # Calculate the time-weighted average exposure
+            # use the total time sum to calculate the average exposure
+            # this includes segments where data is not found, but gives more realistic average
             average_exposure = weighted_sum / times_sum if times_sum != 0 else 0
             # get cumulative ranges for the current data source being looped
             if cumulative_ranges and hasattr(cumulative_ranges, data_name):
@@ -269,31 +295,49 @@ class ExposuresCalculator:
             # for each data source
             self._save_path_exposure_to_cache(
                 data_name=data_name,
-                route=route,
-                path_segments=path_segments,
                 min_exposure=min_exposure,
                 max_exposure=max_exposure,
                 average_exposure=average_exposure,
                 weighted_sum=weighted_sum,
-                times_sum=times_sum,
-                lengths_sum=lengths_sum,
                 cumulative_exposures=cumulative_exposures,
-                keep_geometries=keep_geometries,
             )
+
+    def _save_path_metadata_to_cache(
+        self,
+        path_segments: list[dict],
+        route: dict,
+        keep_geometries: bool,
+        times_sum: float,
+        lengths_sum: float,
+    ) -> None:
+        """
+        Save the path metadata to the cache.
+
+        Parameters
+        ----------
+        route : dict
+            Route dictionary.
+        """
+        self.single_path_results[FROM_ID_KEY] = route[FROM_ID_KEY]
+        self.single_path_results[TO_ID_KEY] = route[TO_ID_KEY]
+        self.single_path_results[TRAVEL_TIME_KEY] = round(times_sum, 2)
+        self.single_path_results[LENGTH_KEY] = round(lengths_sum, 2)
+        if keep_geometries:
+            # get geometries and convert to shapely objects from WKT
+            segment_geometries = [loads(item[GEOMETRY_KEY]) for item in path_segments]
+            # save geometry to the result dict
+            combined_geoms = combine_multilinestrings(segment_geometries)
+            # convert geoms to WKT, for storing to sqlitesdb
+            self.single_path_results[GEOMETRY_KEY] = combined_geoms.wkt
 
     def _save_path_exposure_to_cache(
         self,
         data_name: str,
-        route: dict,
-        path_segments: list[dict],
         min_exposure: float,
         max_exposure: float,
         average_exposure: float,
         weighted_sum: float,
-        times_sum: float,
-        lengths_sum: float,
         cumulative_exposures: dict,
-        keep_geometries: bool = False,
     ) -> None:
         """
         Save the path exposure results for exposure data source to the cache.
@@ -322,23 +366,6 @@ class ExposuresCalculator:
         cumulative_exposures : dict
             Cumulative exposures.
         """
-        # kinda workaround to save generic items to dict, should make better
-        if FROM_ID_KEY not in self.single_path_results.keys():
-            self.single_path_results[FROM_ID_KEY] = route[FROM_ID_KEY]
-        if TO_ID_KEY not in self.single_path_results.keys():
-            self.single_path_results[TO_ID_KEY] = route[TO_ID_KEY]
-        if GEOMETRY_KEY not in self.single_path_results.keys() and keep_geometries:
-            # get geometries and convert to shapely objects from WKT
-            segment_geometries = [loads(item[GEOMETRY_KEY]) for item in path_segments]
-            # save geometry to the result dict
-            combined_geoms = combine_multilinestrings(segment_geometries)
-            # convert geoms to WKT, for storing to sqlitesdb
-            self.single_path_results[GEOMETRY_KEY] = combined_geoms.wkt
-        if TRAVEL_TIME_KEY not in self.single_path_results.keys():
-            self.single_path_results[TRAVEL_TIME_KEY] = round(times_sum, 2)
-        if LENGTH_KEY not in self.single_path_results.keys():
-            self.single_path_results[LENGTH_KEY] = round(lengths_sum, 2)
-
         # save all the results to the path result dict
         self.single_path_results[f"{data_name}{MAX_EXPOSURE_SUFFIX}"] = round(
             max_exposure, 2
@@ -358,7 +385,7 @@ class ExposuresCalculator:
             # Serialize to JSON string in order to store to sqlite db
             self.single_path_results[cumulative_key] = json.dumps(cumulative_exposures)
 
-    def calculate_combined_path_exposures(
+    def calculate_and_save_combined_path_exposures(
         self,
         path_osm_ids: list[str],
         data_names: list[str],
@@ -390,4 +417,4 @@ class ExposuresCalculator:
         )
         # get and add current path results to the combined path results
         path_combined = self._get_single_path_results()
-        self._add_to_path_results(path_combined)
+        self._add_to_path_batch_results(path_combined)

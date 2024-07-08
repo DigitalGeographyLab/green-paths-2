@@ -15,10 +15,10 @@ from green_paths_2.src.exposure_analysing.exposures_calculator import (
 
 from ..config import (
     ANALYSING_KEY,
-    BATCH_PROCENTAGE_KEY,
+    CSV_FILE_NAME,
     CUMULATIVE_RANGES_KEY,
-    DEFAULT_BATCH_PROCENTAGE,
     GP2_DB_PATH,
+    GPKG_FILE_NAME,
     KEEP_GEOMETRY_KEY,
     NAME_KEY,
     OSM_IDS_KEY,
@@ -27,7 +27,6 @@ from ..config import (
     OUTPUT_RESULTS_TABLE,
     ROUTING_RESULTS_TABLE,
     SAVE_OUTPUT_NAME_KEY,
-    SAVE_OUTPUT_TYPE_KEY,
     TRAVEL_TIME_KEY,
 )
 from ..exposure_analysing.exposure_data_handlers import (
@@ -119,8 +118,8 @@ def exposure_analysing_pipeline(user_config: UserConfig):
                     [ANALYSING_KEY, KEEP_GEOMETRY_KEY]
                 )
 
-                # calculate path exposures
-                exposure_calculator.calculate_combined_path_exposures(
+                # calculate and save path exposures
+                exposure_calculator.calculate_and_save_combined_path_exposures(
                     path_osm_ids, data_names, path, cumulative_ranges, keep_geometries
                 )
                 # clear single path cache after each path
@@ -140,6 +139,7 @@ def exposure_analysing_pipeline(user_config: UserConfig):
 
             db_handler.add_many_list(OUTPUT_RESULTS_TABLE, batch_path_results)
 
+            # after each batch processed and added to db, clear the batch specific cache
             exposure_calculator.clear_batch_combined_path_results()
 
         # after all chunks are processed, get all and save to csv of gpkg
@@ -151,15 +151,14 @@ def exposure_analysing_pipeline(user_config: UserConfig):
             output_all_final_results, columns=output_column_names
         )
 
-        # see if user configurations have output file name and type
-        # if not use defaults
+        # see if user configurations have output file name, if not use defaults
         output_file_name = user_config.get_nested_attribute(
             [ANALYSING_KEY, SAVE_OUTPUT_NAME_KEY]
         )
         if not output_file_name:
             output_file_name = OUTPUT_RESULTS_FILE_NAME
 
-        output_file_type = "gpkg" if keep_geometries else "csv"
+        output_file_type = GPKG_FILE_NAME if keep_geometries else CSV_FILE_NAME
 
         time_now = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S")
         results_output_path = os.path.join(

@@ -89,6 +89,10 @@ SAVE_OUTPUT_NAME_KEY = "save_output_name"
 
 SAVE_OUTPUT_TYPE_KEY = "save_output_type"
 
+GPKG_FILE_NAME = "gpkg"
+
+CSV_FILE_NAME = "csv"
+
 MIN_EXPOSURE_SUFFIX = "_min_exposure"
 
 MAX_EXPOSURE_SUFFIX = "_max_exposure"
