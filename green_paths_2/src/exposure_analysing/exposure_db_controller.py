@@ -57,18 +57,3 @@ class ExposureDbController:
             TRAVEL_TIMES_TABLE, path_osm_ids
         )
         return segments_travel_time
-
-    # GPT
-    # def fetch_data_from_sqlite(db_path, table_name):
-    #     conn = sqlite3.connect(db_path)
-    #     df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
-    #     conn.close()
-    #     return df
-
-    # # Example usage
-    # db_path = "your_database.db"
-    # table_name = "final_results"
-    # output_path = "final_results.gpkg"  # or 'final_results.csv'
-
-    # # Convert and save to GPKG or CSV
-    # convert_to_gpkg_or_csv(df, output_path)

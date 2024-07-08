@@ -183,9 +183,6 @@ def preprocessing_pipeline(
         # combine exposures to geometries and convert the segment store to a GeoDataFrame
         segment_store.combine_exposures_to_geometries_and_lenghts(osm_network_gdf)
 
-        # roope todo -> poista tää?
-        # segment_store.convert_segment_store_to_gdf()
-
         segment_store_dict = segment_store.get_store()
         segment_store_wkt = convert_geometries_to_wkt(segment_store_dict)
         db_handler = DatabaseController(GP2_DB_PATH)

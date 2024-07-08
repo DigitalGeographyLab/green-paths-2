@@ -344,7 +344,6 @@ def reproject_raster_to_crs(
         raise ValueError(f"Error in reprojecting raster: {e}")
 
 
-# TODO: test -> gpt4 created
 def calculate_segment_raster_values_from_raster_file(
     network_gdf: gpd.GeoDataFrame,
     raster_file_path: str,
