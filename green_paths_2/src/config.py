@@ -21,8 +21,34 @@ R5_JAR_FILE_PATH = "https://github.com/DigitalGeographyLab/r5/releases/download/
 # DEFAULT VALUE FOR CUSTOM COST TRANSPORT NETWORK'S ALLOW MISSING DATA (OSMIDS)
 ALLOW_MISSING_DATA_DEFAULT = True
 
+# SQLITE DATABASE
+
 # SQLITE3 DB PATH
 GP2_DB_PATH = "green_paths_2/src/database/gp2.db"
+
+# TABLES
+
+SEGMENT_STORE_TABLE = "segment_store"
+
+ROUTING_RESULTS_TABLE = "routing_results"
+
+TRAVEL_TIMES_TABLE = "travel_times"
+
+OUTPUT_RESULTS_TABLE = "output_results"
+
+
+# TABLES SCHEMAS
+
+DB_ROUTING_RESULTS_COLUMNS = [
+    {"name": "from_id", "type": "TEXT"},
+    {"name": "to_id", "type": "TEXT"},
+    {"name": "osm_ids", "type": "TEXT"},
+]
+
+DB_TRAVEL_TIMES_COLUMNS = [
+    {"name": "osm_id", "type": "INTEGER PRIMARY KEY"},
+    {"name": "travel_time", "type": "REAL"},
+]
 
 
 # KEYS
@@ -49,6 +75,24 @@ SAVE_TO_CACHE_KEY = "save_to_cache"
 
 RASTER_CELL_RESOLUTION_KEY = "raster_cell_resolution"
 
+CUMULATIVE_RANGES_KEY = "cumulative_ranges"
+
+BATCH_PROCENTAGE_KEY = "batch_percentage"
+
+OTHER_KEY = "other"
+
+ANALYSING_KEY = "analysing"
+
+KEEP_GEOMETRY_KEY = "keep_geometry"
+
+SAVE_OUTPUT_NAME_KEY = "save_output_name"
+
+SAVE_OUTPUT_TYPE_KEY = "save_output_type"
+
+GPKG_FILE_NAME = "gpkg"
+
+CSV_FILE_NAME = "csv"
+
 MIN_EXPOSURE_SUFFIX = "_min_exposure"
 
 MAX_EXPOSURE_SUFFIX = "_max_exposure"
@@ -62,7 +106,7 @@ TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_AVERAGE_SUFFIX = (
 TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUM_SUFFIX = "_time_weighted_path_exposure_sum"
 
 # seconds
-CUMULATIVE_EXPOSURE_TIME_METERS_SUFFIX = "_cumulative_exposure_time_meters"
+CUMULATIVE_EXPOSURE_SECONDS_SUFFIX = "_cumulative_exposure_seconds"
 
 # KEY LISTS
 
@@ -76,6 +120,8 @@ ORIGIN_DESTINATION_KEYS = [FROM_ID_KEY, TO_ID_KEY]
 USER_CONFIG_PATH = "green_paths_2/src/user/config.yaml"
 
 OUTPUT_RASTER_DIR_PATH = "green_paths_2/src/cache/raster"
+
+OUTPUT_FINAL_RESULTS_DIR_PATH = "results_output"
 
 
 # # CACHE
@@ -128,6 +174,8 @@ EXPOSURE_ANALYSIS_RESULTS_GPKG_NAME = "exposure_analysis_results.gpkg"
 EXPOSURE_ANALYSIS_RESULTS_CSV_NAME = "exposure_analysis_results.csv"
 
 TIF_FILE_EXTENSION = ".tif"
+
+OUTPUT_RESULTS_FILE_NAME = "output_results"
 
 
 # COMBINATION PATHS
@@ -205,6 +253,8 @@ DATA_COVERAGE_SAFETY_PERCENTAGE = 33
 DEFAULT_R5_TRAVEL_SPEED_WALKING = 3.6
 
 DEFAULT_R5_TRAVEL_SPEED_CYCLING = 12.0
+
+DEFAULT_BATCH_PROCENTAGE = 10
 
 
 # default values for optional user configuration attributes

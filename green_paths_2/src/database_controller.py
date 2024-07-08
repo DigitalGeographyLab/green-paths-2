@@ -1,6 +1,9 @@
+from collections import defaultdict
 import sqlite3
-from typing import List, Tuple, Any
+from typing import Dict, List, Tuple, Any
 from shapely.wkt import dumps, loads
+
+from green_paths_2.src.config import SEGMENT_STORE_TABLE
 
 
 class DatabaseController:
@@ -10,56 +13,271 @@ class DatabaseController:
     def connect(self):
         return sqlite3.connect(self.db_path)
 
-    def create_table(self, create_table_sql: str):
-        try:
-            conn = self.connect()
-            cursor = conn.cursor()
-            cursor.execute(create_table_sql)
-            conn.commit()
+    def drop_table(self, table: str):
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute(f"DROP TABLE IF EXISTS {table}")
+        conn.commit()
+        conn.close()
+
+    def create_table_from_dict_data(self, table: str, data: Dict[str, Any]):
+        """Creates db tables based on dict data"""
+        # drop the table if it already exists
+        # for the tables can have different columns
+        self.drop_table(table)
+        columns = []
+        for key, value in data.items():
+            if key == "osm_id":
+                columns.append(f"{key} INTEGER PRIMARY KEY")
+            elif key == "geometry":
+                columns.append(f"{key} TEXT")
+            elif isinstance(value, float):
+                columns.append(f"{key} REAL")
+            elif isinstance(value, int):
+                columns.append(f"{key} INTEGER")
+            else:
+                columns.append(f"{key} TEXT")
+        columns_str = ", ".join(columns)
+        create_table_sql = f"CREATE TABLE IF NOT EXISTS {table} ({columns_str})"
+
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute(create_table_sql)
+        conn.commit()
+        conn.close()
+
+    def create_table_from_params(self, table: str, columns: List[Dict[str, str]]):
+        # Drop the table if it already exists
+        self.drop_table(table)
+
+        columns_str = ", ".join([f"{col['name']} {col['type']}" for col in columns])
+        create_table_sql = f"CREATE TABLE IF NOT EXISTS {table} ({columns_str})"
+
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute(create_table_sql)
+        conn.commit()
+        conn.close()
+
+    def add_single(self, table: str, data: Dict[str, Any]):
+        keys = data.keys()
+        columns = ", ".join(keys)
+        placeholders = ", ".join(["?" for _ in keys])
+        values = tuple(data[key] if data[key] is not None else None for key in keys)
+
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute(
+            f"INSERT INTO {table} ({columns}) VALUES ({placeholders})", values
+        )
+        conn.commit()
+        conn.close()
+
+    def add_many_dict(self, table: str, data: Dict[str, Dict[str, Any]]) -> None:
+        """
+        Add many records to the database from a dictionary of dictionaries
+
+        Parameters
+        ----------
+        table : str
+            The table to add the records to.
+        data : Dict[str, Dict[str, Any]]
+            The data to add to the table.
+        """
+
+        if not data:
+            return
+        keys = next(iter(data.values())).keys()
+        columns = ", ".join(keys)
+        placeholders = ", ".join(["?" for _ in keys])
+
+        values_list = [tuple(d.values()) for d in data.values()]
+
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.executemany(
+            f"INSERT INTO {table} ({columns}) VALUES ({placeholders})", values_list
+        )
+        conn.commit()
+        conn.close()
+
+    def get_all_columns(self, table: str) -> List[str]:
+        """
+        Get all columns from a table
+
+        Parameters
+        ----------
+        table : stro
+            The table to get the columns from.
+        """
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute(f"PRAGMA table_info({table});")
+        columns = [col[1] for col in cursor.fetchall()]
+        conn.close()
+        return columns
+
+    def normalize_data(
+        self, data: List[Dict[str, Any]], all_columns: List[str]
+    ) -> List[Dict[str, Any]]:
+        """
+        Normalize data to have the same columns as the table, add None to those that are missing.
+        This has to be done in order to be able to add paths with missing columns to the database.
+
+        Parameters
+        ----------
+        data : List[Dict[str, Any]]
+            The data to normalize.
+        all_columns : List[str]
+            The columns to normalize the data to.
+        """
+        normalized_data = []
+        for item in data:
+            normalized_item = {col: item.get(col, None) for col in all_columns}
+            normalized_data.append(normalized_item)
+        return normalized_data
+
+    def add_many_list(self, table: str, data: List[Dict[str, Any]]) -> None:
+        """
+        Add many records to the database from list of dictionaries
+
+        Parameters
+        ----------
+        table : str
+            The table to add the records to.
+        data : List[Dict[str, Any]]
+            The data to add to the table.
+        """
+        if not data:
+            return
+
+        # Assuming all dicts have the same keys
+        all_columns = self.get_all_columns(table)
+        normalized_data = self.normalize_data(data, all_columns)
+
+        keys = all_columns
+        columns = ", ".join(keys)
+        placeholders = ", ".join(["?" for _ in keys])
+
+        values_list = [tuple(d.values()) for d in normalized_data]
+
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.executemany(
+            f"INSERT INTO {table} ({columns}) VALUES ({placeholders})", values_list
+        )
+        conn.commit()
+        conn.close()
+
+    def get_normalized_exposures_by_column_from_segment_table(
+        self, target_column: str
+    ) -> Dict[str, float]:
+        """Get normalized exposures by column from the database.
+
+        Parameters
+        ----------
+        target_column : str
+            The target column to get the normalized exposures from.
+
+        Returns
+        -------
+        Dict[str, float]
+            A dictionary where the keys are the OSM IDs and the values are the normalized exposures.
+        """
+        conn = self.connect()
+        cursor = conn.cursor()
+
+        query = f"SELECT osm_id, {target_column} FROM {SEGMENT_STORE_TABLE}"
+        cursor.execute(query)
+        result = {}
+        for row in cursor.fetchall():
+            # Ensure the key is a string
+            osm_id = str(row[0])
+            target_value = row[1]
+            # Ensure the value is a float, handle NoneType gracefully
+            try:
+                target_value = float(target_value)
+            except (ValueError, TypeError):
+                # Handle or skip None values as needed
+                target_value = None
+            if target_value is not None:
+                result[osm_id] = target_value
             conn.close()
-        except sqlite3.Error as e:
-            print(e)
+        return result
 
-    def add_one(self, table: str, columns: Tuple[str], values: Tuple[Any]):
-        try:
-            conn = self.connect()
-            cursor = conn.cursor()
-            cursor.execute(
-                f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join(['?' for _ in values])})",
-                values,
-            )
-            conn.commit()
-            conn.close()
-        except sqlite3.Error as e:
-            print(e)
+    # get multiple records by column values
 
-    def add_many(self, table: str, columns: Tuple[str], values_list: List[Tuple[Any]]):
-        try:
-            conn = self.connect()
-            cursor = conn.cursor()
-            cursor.executemany(
-                f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join(['?' for _ in values_list[0]])})",
-                values_list,
-            )
-            conn.commit()
-            conn.close()
-        except sqlite3.Error as e:
-            print(e)
+    # Function to select rows based on one or many osm_id values
+    def select_rows_by_osm_ids(self, table: str, osm_ids: List[int]) -> List[dict]:
+        conn = self.connect()
+        cursor = conn.cursor()
+        placeholders = ", ".join(["?"] * len(osm_ids))
+        query = f"SELECT * FROM {table} WHERE osm_id IN ({placeholders})"
+        cursor.execute(query, osm_ids)
+        rows = cursor.fetchall()
+        conn.close()
+        columns = [description[0] for description in cursor.description]
+        return [dict(zip(columns, row)) for row in rows]
 
-    def get_all(self, table: str):
-        try:
-            conn = self.connect()
-            cursor = conn.cursor()
-            cursor.execute(f"SELECT * FROM {table}")
-            rows = cursor.fetchall()
-            conn.close()
-            return rows
-        except sqlite3.Error as e:
-            print(e)
-            return []
+    def fetch_batch(self, table: str, limit: int, offset: int) -> List[Dict[str, Any]]:
+        conn = self.connect()
+        query = f"SELECT * FROM {table} LIMIT ? OFFSET ?"
+        cursor = conn.cursor()
+        cursor.execute(query, (limit, offset))
+        rows = cursor.fetchall()
+        columns = [description[0] for description in cursor.description]
+        conn.close()
+        return [dict(zip(columns, row)) for row in rows]
+
+    def get_all(self, table: str, column_names: bool = False) -> List[Dict[str, Any]]:
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM {table}")
+        rows = cursor.fetchall()
+        if column_names:
+            column_names = [description[0] for description in cursor.description]
+        else:
+            column_names = None
+        conn.close()
+        return rows, column_names
+
+    def get_row_count(self, table: str) -> int:
+        conn = self.connect()
+        query = f"SELECT COUNT(*) FROM {table}"
+        cursor = conn.cursor()
+        cursor.execute(query)
+        count = cursor.fetchone()[0]
+        return count
+
+    # create index for table
+    def create_index(self, table: str, column: str) -> None:
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute(f"CREATE INDEX {column} ON {table}({column});")
+        conn.commit()
+        conn.close()
 
 
-# # Usage example
+# todo -> maybe move elsewhere:
+def split_data_by_length(
+    data: Dict[str, Dict[str, Any]]
+) -> Dict[int, Dict[str, Dict[str, Any]]]:
+    """
+    Splits the data into subsets based on the number of keys in each record.
+
+    :param data: The data dictionary to split.
+    :return: A dictionary where the keys are the lengths and the values are dictionaries of records with that length.
+    """
+    split_data = defaultdict(dict)
+
+    for record_id, record in data.items():
+        length = len(record)
+        split_data[length][record_id] = record
+
+    return split_data
+
+
+# # Usage example form gpt
 # if __name__ == "__main__":
 #     db_handler = SQLiteHandler('routing_data.db')
 

@@ -1,17 +1,20 @@
 """ Main module for preprocessing. """
 
 import os
-import gc
 import geopandas as gpd
+
+from green_paths_2.src.database_controller import (
+    DatabaseController,
+    split_data_by_length,
+)
 from ..data_utilities import (
     determine_file_type,
-    filter_gdf_by_columns_if_found,
-    save_gdf_to_cache,
 )
 from ..preprocessing.custom_functions import (
     apply_custom_processing_function,
 )
 from ..preprocessing.spatial_operations import (
+    convert_geometries_to_wkt,
     create_buffer_for_geometries,
 )
 
@@ -27,15 +30,11 @@ from ..preprocessing.raster_operations import (
 )
 from ..logging import setup_logger, LoggerColors
 from ..config import (
-    GEOMETRY_KEY,
-    LENGTH_KEY,
+    GP2_DB_PATH,
     OSM_ID_KEY,
-    OSM_NETWORK_CSV_CACHE_PATH,
-    OSM_NETWORK_GDF_CACHE_PATH,
     RASTER_FILE_SUFFIX,
     REPROJECTED_RASTER_FILE_SUFFIX,
-    SAVE_TO_CACHE_KEY,
-    SEGMENT_STORE_GDF_CACHE_PATH,
+    SEGMENT_STORE_TABLE,
 )
 from ..preprocessing.data_types import DataTypes
 from ..green_paths_exceptions import (
@@ -43,13 +42,12 @@ from ..green_paths_exceptions import (
     PipeLineRuntimeError,
 )
 from ..preprocessing.user_config_parser import UserConfig
-from ..routing.main import routing_pipeline
 from ..segment_value_store import SegmentValueStore
 from ..timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 
-# TODO: -> conf Dasking/multiprocess this?
+# TODO: -> conf Dasking/multiprocess?
 
 
 @time_logger
@@ -132,8 +130,7 @@ def preprocessing_pipeline(
                     else data_conf_filepath
                 )
 
-                # check raster crs and reproject if needed
-
+                # check raster crs and reproject not project crs
                 if check_raster_file_crs(raster_path) != user_config.project_crs:
                     reprojected_raster_filepath = raster_path.replace(
                         RASTER_FILE_SUFFIX, REPROJECTED_RASTER_FILE_SUFFIX
@@ -177,61 +174,35 @@ def preprocessing_pipeline(
 
         # TODO: ehkä tähän pitäis ottaa joku checki jos on tullu null arvoja teiltä?
 
-        # check if user defined min and max values are valid
+        # check if user defined min and max values are valid, if not print error
         segment_store.validate_user_min_max_values(all_data_sources)
 
         # save normalized values to the master segment store
         segment_store.save_normalized_values_to_store(all_data_sources)
 
-        # TODO: remove these test prints...
-        # use some osmid which is found from data
-        # some_test_osmid = list(segment_store.get_all_segment_osmids())[0]
-        # some_test_osmid_2 = list(segment_store.get_all_segment_osmids())[-1]
-        # print(segment_store.get_segment_values(some_test_osmid))
-        # print(segment_store.get_segment_values(some_test_osmid_2))
-
-        # print("tää pitäs olla nan/FALSE")
-        # print(segment_store.get_segment_values(-1000000034693))
-
         # combine exposures to geometries and convert the segment store to a GeoDataFrame
         segment_store.combine_exposures_to_geometries_and_lenghts(osm_network_gdf)
-        segment_store.convert_segment_store_to_gdf()
-        segment_store_gdf_with_exposure = segment_store.get_master_segment_gdf()
 
-        if user_config.analysing and user_config.analysing.keep_geometry:
-            columns_to_keep_from_network = [OSM_ID_KEY, GEOMETRY_KEY, LENGTH_KEY]
-        else:
-            columns_to_keep_from_network = [OSM_ID_KEY, LENGTH_KEY]
+        segment_store_dict = segment_store.get_store()
+        segment_store_wkt = convert_geometries_to_wkt(segment_store_dict)
+        db_handler = DatabaseController(GP2_DB_PATH)
 
-        filtered_osm_network_gdf = filter_gdf_by_columns_if_found(
-            osm_network_gdf,
-            columns_to_keep_from_network,
-            keep=True,
+        table_structure_from_data = next(iter(segment_store_wkt.values()))
+
+        db_handler.create_table_from_dict_data(
+            SEGMENT_STORE_TABLE, table_structure_from_data
         )
 
-        has_save_to_cache = hasattr(user_config, SAVE_TO_CACHE_KEY)
+        # Split data by length
+        split_data = split_data_by_length(segment_store_dict)
 
-        if has_save_to_cache and user_config.save_to_cache:
-            LOG.info("Saving segment_store and osm_network to cache.")
-            save_gdf_to_cache(
-                segment_store_gdf_with_exposure, SEGMENT_STORE_GDF_CACHE_PATH
-            )
+        for _, subset in split_data.items():
+            db_handler.add_many_dict(SEGMENT_STORE_TABLE, subset)
 
-            # check user configurations for keep geometry
-            if user_config.analysing and user_config.analysing.keep_geometry:
-                save_gdf_to_cache(filtered_osm_network_gdf, OSM_NETWORK_GDF_CACHE_PATH)
-            else:
-                # save as csv, without geometries
-                save_gdf_to_cache(filtered_osm_network_gdf, OSM_NETWORK_CSV_CACHE_PATH)
-
-        else:
-            LOG.info("Not saving preprocessing results to cache.")
+        # make the osm_id index
+        db_handler.create_index(SEGMENT_STORE_TABLE, OSM_ID_KEY)
 
         LOG.info("End of preprocessing pipeline.")
-        # delete current data and free memory
-        del data_source
-        gc.collect()
-        return segment_store_gdf_with_exposure, filtered_osm_network_gdf
     except PipeLineRuntimeError as e:
         LOG.error(f"Preprocessing pipeline failed with error: {e}")
         raise e

@@ -93,6 +93,24 @@ call poetry --version
 call poetry config virtualenvs.create false
 call poetry install
 
+
+:: Create database directory if it doesn't exist
+set DB_DIR=green_paths_2\src\database
+set DB_PATH=%DB_DIR%\gp2.db
+
+if not exist %DB_DIR% (
+    mkdir %DB_DIR%
+)
+
+:: Check if the database file exists, and create it if it doesn't
+if not exist %DB_PATH% (
+    echo Creating SQLite database at %DB_PATH%
+    sqlite3 %DB_PATH% "VACUUM;"
+    echo Database created.
+) else (
+    echo Database already exists at %DB_PATH%
+)
+
 echo:
 echo Installation and setup are complete.
 echo Please activate the Conda environment.

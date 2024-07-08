@@ -69,7 +69,7 @@ def init_travel_time_matrix_computer(
 def route_travel_time_matrix_computer(
     travel_time_matrix_computer,
 ):
-    LOG.info("Initing TravelTimeMatrixComputer")
+    LOG.info("Computing traveltimes with TravelTimeMatrixComputer")
     travel_time_matrix_computer_results = (
         travel_time_matrix_computer.compute_travel_times()
     )

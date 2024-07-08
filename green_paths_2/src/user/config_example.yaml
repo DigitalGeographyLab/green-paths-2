@@ -219,8 +219,6 @@ data_sources:
     save_raster_file: True # optional. If the raster file should be saved to the cache or not. Mostly for testing and visualizing purposes.
     custom_processing_function: convert_aq_nc_to_tif_and_scale_offset # optional. A custom processing function that can be used to process the data source before the exposure analysis.
 
-
-
 routing:
     transport_mode: walking # mandatory. The transport mode for the routing. Can be either walking or cycling.
     origins: path/to/origins_points.gpkg # mandatory. The path to the origins file. This can be either a vector file or a csv file. The file should have the coordinates of the origins.
@@ -240,8 +238,6 @@ routing:
       - name: gvi # mandatory. The name of the data source (should be the same as in the data_sources)
         sensitivity: 5 # mandatory. The sensitivity of the data source. This is used as a weight in the exposure value calculations for routing. Formula used in routing: base_travel_time_of_segment + (base_travel_time_of_segment * sensitivity * exposure_value_of_segment)
         allow_missing_data: True # optional, experimental. If the missing data should be allowed or not. If this is True, the segments with missing data will be ignored in the exposure analysis. default is true. If this is False, the missing data will crash the routing. This is experimental and should be used with caution. In most cases this should be True.
-
-
 
 analysing:
   keep_geometry: True # optional. If the geometry of the segments should be kept in the final results. If this is False, the geometry will be removed from the final results.

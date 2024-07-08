@@ -1,10 +1,19 @@
 """ Module for handling exposure data in the exposure analysing pipeline. Has also some general utilities """
 
+# TODO: need to clean this file for all obsolete code!
+
+
 import geopandas as gpd
 import pandas as pd
+from shapely import wkt
+
 from ..config import (
+    ANALYSING_KEY,
+    BATCH_PROCENTAGE_KEY,
+    DEFAULT_BATCH_PROCENTAGE,
     FINAL_EXPOSURE_ANALYSING_RESULTS_CSV_PATH,
     FINAL_EXPOSURE_ANALYSING_RESULTS_GPKG_PATH,
+    GEOMETRY_KEY,
     OSM_ID_KEY,
     OSM_NETWORK_CSV_CACHE_PATH,
     OSM_NETWORK_GDF_CACHE_PATH,
@@ -175,7 +184,6 @@ def combine_multilinestrings_to_single_linestring(
         return None
 
 
-# TODO: add support to GeoJson? etc.?
 def save_final_results_data(
     user_config: UserConfig, combined_master_statistics_store: list[dict]
 ) -> gpd.GeoDataFrame:
@@ -238,3 +246,58 @@ def save_final_results_data(
     except DataManagingError as e:
         LOG.info(f"Failed to save final results data to cache. Error: {e}")
         return pd.DataFrame()
+
+
+def save_to_gpkg_or_csv(df: pd.DataFrame, output_path: str) -> None:
+    """
+    Save the final output to GeoPackage or CSV depending if geometry column is present.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The final output data.
+    output_path : str
+        The path to save the output data.
+    """
+    if GEOMETRY_KEY in df.columns:
+        # Convert WKT geometries to GeoDataFrame
+        df[GEOMETRY_KEY] = df[GEOMETRY_KEY].apply(wkt.loads)
+        gdf = gpd.GeoDataFrame(df, geometry=GEOMETRY_KEY)
+        gdf.to_file(output_path, driver="GPKG")
+        LOG.info(f"Final output saved to GeoPackage: {output_path}")
+    else:
+        df.to_csv(output_path, index=False)
+        LOG.info(f"Final output saved to CSV: {output_path}")
+
+
+def get_batch_limit(user_config: UserConfig, routing_results_count: int):
+    """
+    Calculate the batch limit for analysing pipeline.
+
+    Parameters
+    ----------
+    user_config : UserConfig
+        User configuration.
+    routing_results_count : int
+        The count of routing results.
+    """
+
+    # get the routing results count to enable batch processing
+    LOG.info(f"the routing results count is {routing_results_count}. Splitting ")
+
+    # Retrieve user-defined batch percentage
+    batch_percentage_user = user_config.get_nested_attribute(
+        [ANALYSING_KEY, BATCH_PROCENTAGE_KEY]
+    )
+
+    # Convert user-defined percentage to a fraction
+    batch_percentage = (
+        batch_percentage_user / 100.0
+        if batch_percentage_user
+        else DEFAULT_BATCH_PROCENTAGE / 100.0
+    )
+
+    # Calculate batch limit
+    limit = max(1, int(routing_results_count * batch_percentage))
+
+    return limit

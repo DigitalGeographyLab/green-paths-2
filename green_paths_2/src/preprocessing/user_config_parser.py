@@ -38,6 +38,30 @@ class UserConfig:
         self.data_source_names = []
         self.errors = []
 
+    def get_nested_attribute(self, attr_chain: list[str], default=None):
+        """
+        Get nested attribute from the user config. If the attribute is not found, return the default value.
+        Attr_chain is a path to the attribute e.g. ["routing", "transport_mode"].
+
+        Parameters
+        ----------
+        attr_chain : list[str]
+            List of attributes to get.
+        default : any
+            Default value to return if attribute is not found.
+
+        Returns
+        -------
+        any
+            The attribute value if found, otherwise the default value.
+        """
+        for attr in attr_chain:
+            if hasattr(self, attr):
+                self = getattr(self, attr)
+            else:
+                return default
+        return self
+
     def parse_config(self):
         """
         Parse config file and populate attributes.

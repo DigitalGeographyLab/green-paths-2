@@ -2,7 +2,7 @@
 
 import numpy as np
 from ..config import (
-    CUMULATIVE_EXPOSURE_TIME_METERS_SUFFIX,
+    CUMULATIVE_EXPOSURE_SECONDS_SUFFIX,
     FROM_ID_KEY,
     GEOMETRY_KEY,
     TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_AVERAGE_SUFFIX,
@@ -18,7 +18,7 @@ from ..config import (
 )
 from ..data_utilities import string_to_list
 
-from ..exposure_analysing.exposure_data_handlers import (
+from .exposure_data_handlers import (
     combine_multilinestrings_to_single_linestring,
 )
 from ..logging import setup_logger, LoggerColors
@@ -333,7 +333,7 @@ class ExposureCalculator:
                 f"{path_attribute_key}{TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_AVERAGE_SUFFIX}"
             ] = None
             statistics_dict_per_path[
-                f"{path_attribute_key}{CUMULATIVE_EXPOSURE_TIME_METERS_SUFFIX}"
+                f"{path_attribute_key}{CUMULATIVE_EXPOSURE_SECONDS_SUFFIX}"
             ] = None
         else:
             # init empty dict for other path data
@@ -586,7 +586,7 @@ class ExposureCalculator:
             )
             attribute_key_values.append(
                 (
-                    f"{path_attribute_key}{CUMULATIVE_EXPOSURE_TIME_METERS_SUFFIX}",
+                    f"{path_attribute_key}{CUMULATIVE_EXPOSURE_SECONDS_SUFFIX}",
                     cumulative_exposure_lengths,
                 )
             )

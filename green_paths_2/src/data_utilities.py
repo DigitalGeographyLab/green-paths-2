@@ -4,6 +4,8 @@ import os
 import geopandas as gpd
 import pandas as pd
 
+from shapely.geometry import LineString
+
 from .config import (
     DATA_CACHE_DIR_PATH,
     OSM_CACHE_DIR_NAME,
@@ -276,3 +278,23 @@ def convert_travel_times_dicts_to_df(actual_travel_times: list[dict]):
         all_travel_times.update(travel_times)
 
     return pd.DataFrame(all_travel_times.items(), columns=["osm_id", "travel_time"])
+
+
+def combine_multilinestrings(multi_lines) -> LineString:
+    """
+    Combine MultiLineStrings to LineString.
+
+    Parameters:
+    ----------------
+    - multi_lines: List of MultiLineStrings.
+
+    Returns:
+    ----------------
+    - LineString.
+
+    """
+    combined_coords = []
+    for multi_line in multi_lines:
+        for line in multi_line.geoms:
+            combined_coords.extend(line.coords)
+    return LineString(combined_coords)

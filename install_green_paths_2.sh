@@ -89,12 +89,19 @@ conda activate dgl_gp2
 # Install Poetry
 pip install poetry
 
-# # Export Poetry dependencies to requirements.txt
-# poetry export -f requirements.txt --output requirements.txt --without-hashes
+# Create database directory if it doesn't exist
+DB_DIR="green_paths_2/src/database"
+DB_PATH="$DB_DIR/gp2.db"
+mkdir -p $DB_DIR
 
-# # Install dependencies via Conda when possible and fallback to pip for the rest
-# # Note: You might need to manually specify some dependencies here if they need to be installed via Conda for better compatibility
-# pip install -r requirements.txt
+# Check if the database file exists, and create it if it doesn't
+if [ ! -f "$DB_PATH" ]; then
+    echo "Creating SQLite database at $DB_PATH"
+    sqlite3 $DB_PATH "VACUUM;"
+    echo "Database created."
+else
+    echo "Database already exists at $DB_PATH"
+fi
 
 echo ''
 echo "Installation and setup are complete."
