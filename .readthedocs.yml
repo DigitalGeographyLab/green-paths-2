@@ -11,6 +11,6 @@ build:
 
 # Optionally set the version of Python and dependencies required
 python:
-  version: 3.8
+  interpreter: python3.8
   install:
     - requirements: docs/requirements.txt
