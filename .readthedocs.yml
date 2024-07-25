@@ -1,32 +1,33 @@
 version: 2
 
 build:
-    os: ubuntu-22.04
-    tools:
-      python: "mambaforge-22.9"
-    apt_packages:
-        - default-jre
+  os: ubuntu-22.04
+  tools:
+    python: "mambaforge-22.9"
+  apt_packages:
+      - default-jre
+  jobs:
+    pre_install:
+      - pip install
+      - bash ./install_green_paths_2.sh
 
-    conda:
-      environment: environment.yml
+conda:
+  environment: environment.yml
 
-    python:
-      install:
-        - method: pip
-          path: .
+python:
+  install:
+    - method: pip
+      path: .
 
-    jobs:
-      pre_install:
-        - pip install
-        - bash ./install_green_paths_2.sh
-      # post_create_environment:
-      #   # Install poetry
-      #   - pip install poetry
-      #   # Tell poetry to not use a virtual environment
-      #   - poetry config virtualenvs.create false
-      # post_install:
-      #   # Install dependencies
-      #   - poetry install --with docs
+
+  # post_create_environment:
+  #   # Install poetry
+  #   - pip install poetry
+  #   # Tell poetry to not use a virtual environment
+  #   - poetry config virtualenvs.create false
+  # post_install:
+  #   # Install dependencies
+  #   - poetry install --with docs
 
 # python:
 #     install:
