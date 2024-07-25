@@ -28,8 +28,13 @@ pysqlite3 = "^0.5.3"
 r5py = {path = "/Users/hcroope/omat/GP2/r5py_gp2"}
 gdal = "^3.9.1"
 geos = "^0.2.3"
+sphinx = "^7.4.7"
+jupyterlab = "^4.2.4"
+jupyter = "^1.0.0"
 
 
+
+[tool.poetry.group.dev.dependencies]
 
 [build-system]
 requires = ["poetry-core"]

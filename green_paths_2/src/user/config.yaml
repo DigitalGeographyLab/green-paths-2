@@ -160,46 +160,52 @@ data_sources:
     save_raster_file: True # optional
     custom_processing_function: convert_aq_nc_to_tif_and_scale_offset
 
-  # - name: noise
-  #   filepath:  green_paths_2/src/user/data/Helsinki_noise_data_2022/Melualueet_2022_01_kadut_maant_LAeq7-22_NPM_20231116_123645.gml # mandatory
-  #   data_type: vector # mandatory
-  #   raster_cell_resolution: 10 # mandatory -> this is the resolution of the raster cells in meters (e.g. 10 = 10mx10m)
-  #   data_column: db_hi # mandatory
-  #   no_data_value: 0
-  #   min_data_value: 0.216 # mandatory
-  #   max_data_value: 75 # mandatorya
-  #   good_exposure: False # mandatory
-  #   # columns_of_interest: ["db_hi", "geometry"] # optional
-  #   original_crs: 3879 # optional
-  #   raster_cell_resolution: 10 # optional
-  #   save_raster_file: True # optional
+  - name: noise
+    filepath:  green_paths_2/src/user/data/Helsinki_noise_data_2022/Melualueet_2022_01_kadut_maant_LAeq7-22_NPM_20231116_123645.gml # mandatory
+    data_type: vector # mandatory
+    raster_cell_resolution: 10 # mandatory -> this is the resolution of the raster cells in meters (e.g. 10 = 10mx10m)
+    data_column: db_hi # mandatory
+    no_data_value: 0
+    min_data_value: 0.216 # mandatory
+    max_data_value: 75 # mandatorya
+    good_exposure: False # mandatory
+    # columns_of_interest: ["db_hi", "geometry"] # optional
+    original_crs: 3879 # optional
+    raster_cell_resolution: 10 # optional
+    save_raster_file: True # optional
 
 routing:
-    # transport_mode: walking
-    travel_speed: 15
-    transport_mode: cycling
+    transport_mode: walking
+    travel_speed: 5.5
+    precalculate: True
+    # transport_mode: cycling
     # origins: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
     # origins: "green_paths_2/src/cache/data/origin_point.gpkg"
     
-    origins: green_paths_2/src/cache/data/HKI_200_ODS.gpkg
 
-    # origins: "green_paths_2/src/cache/data/random_point_1.gpkg"
-    # origins:   green_paths_2/src/cache/data/100_ods_nort_london.gpkg
-    # origins: green_paths_2/src/cache/data/1000_ODS_NO_DUP_CENTROIDS.gpkg
     
+    # origins:   green_paths_2/src/cache/data/100_ods_nort_london.gpkg
+
+
+
     # origins: green_paths_2/src/cache/data/population_hki_centroids.gpkg
     # origins: green_paths_2/src/cache/data/gothenburg_points.csv
     # origins: "green_paths_2/src/cache/data/origins.csv"
     # origins: "green_paths_2/src/cache/data/linnanmaki_origins.csv"
     # od_lon_name: longitude
-    # od_lat_name: latitude
-    # destinations: "green_paths_2/src/cache/data/destinations_points.gpkg"
+    # od_lat_name: latitude    
     # destinations: green_paths_2/src/cache/data/destination_point.gpkg
 
+    origins: "green_paths_2/src/cache/data/random_point_1.gpkg"
+    destinations: "green_paths_2/src/cache/data/destinations_points.gpkg"
 
+    # origins: green_paths_2/src/cache/data/HKI_200_ODS.gpkg
+    # destinations: green_paths_2/src/cache/data/HKI_200_ODS.gpkg
+
+    # origins: green_paths_2/src/cache/data/1000_ODS_NO_DUP_CENTROIDS.gpkg
     # destinations: green_paths_2/src/cache/data/1000_ODS_NO_DUP_CENTROIDS.gpkg
-    destinations: green_paths_2/src/cache/data/HKI_200_ODS.gpkg
 
+ 
     # destinations: green_paths_2/src/cache/data/100_ods_nort_london.gpkg
     
     # destinations: "green_paths_2/src/cache/data/destinations.csv"
@@ -213,8 +219,8 @@ routing:
         sensitivity: 2.5
       - name: aqi
         sensitivity: 2.5
-      # - name: noise
-      #   sensitivity: 2.5
+      - name: noise
+        sensitivity: 2.5
       # - name: ndvi_london
       #   sensitivity: 5
       # - name: shade
@@ -224,18 +230,17 @@ routing:
 
 analysing:
   # keep_geometry: True
-  batch_percentage: 50
-  save_output_name: roope_results_test_gpkg_no_geom_iguess
-  cumulative_ranges:
-    gvi_lines:
-      # - [0, 0.99]
-      # - [1, 1.99]
-      # - [2, 2.99]
-      - [0,1]
-      - [20, 50]
-    aqi:
-      - [0, 0.99]
-      - [1, 1.99]
-      - [2, 2.99]
-      - [3, 3.99]
-      - [4, 5]
+  save_output_name: roope_pe_testi
+  # cumulative_ranges:
+  #   gvi_lines:
+  #     # - [0, 0.99]
+  #     # - [1, 1.99]
+  #     # - [2, 2.99]
+  #     - [0,1]
+  #     - [20, 50]
+    # aqi:
+    #   - [0, 0.99]
+    #   - [1, 1.99]
+    #   - [2, 2.99]
+    #   - [3, 3.99]
+    #   - [4, 5]
