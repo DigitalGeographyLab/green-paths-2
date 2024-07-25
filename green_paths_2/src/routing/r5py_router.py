@@ -3,7 +3,11 @@
 import datetime
 from ..config import (
     ALLOW_MISSING_DATA_DEFAULT,
+    EXPOSURE_PARAMETERS_KEY,
     NORMALIZED_DATA_SUFFIX,
+    PRECALCULATE_KEY,
+    ROUTING_KEY,
+    TRAVEL_SPEED_KEY,
 )
 
 import geopandas as gpd
@@ -79,7 +83,7 @@ def route_travel_time_matrix_computer(
 
 
 def _build_custom_cost_networks_params(
-    exposure_dict: dict, routing_config: dict
+    exposure_dict: dict, user_config: UserConfig
 ) -> tuple:
     """
     Populate the parameters for building custom cost networks.
@@ -99,7 +103,11 @@ def _build_custom_cost_networks_params(
     custom_cost_segment_weight_factors = []
     allow_missing_datas = []
 
-    for exposure_confs in routing_config.exposure_parameters:
+    exposure_parameters = user_config.get_nested_attribute(
+        [ROUTING_KEY, EXPOSURE_PARAMETERS_KEY]
+    )
+
+    for exposure_confs in exposure_parameters:
         exposure_name = exposure_confs.get(DataSourceModel.Name.value)
         exposure_name_normalized = f"{exposure_name}{NORMALIZED_DATA_SUFFIX}"
         names.append(exposure_name)
@@ -107,7 +115,6 @@ def _build_custom_cost_networks_params(
         custom_cost_segment_weight_factors.append(
             exposure_dict.get(exposure_name_normalized)
         )
-        # tyomaa
         allow_missing_datas.append(
             exposure_confs.get(
                 DataSourceModel.AllowMissingData.value, ALLOW_MISSING_DATA_DEFAULT
@@ -119,7 +126,7 @@ def _build_custom_cost_networks_params(
 
 @time_logger
 def build_custom_cost_network(
-    osm_segmented_network_path: str, exposure_dict: dict, routing_config: dict
+    osm_segmented_network_path: str, exposure_dict: dict, user_config: UserConfig
 ):
     """
     Build custom cost network.
@@ -141,7 +148,7 @@ def build_custom_cost_network(
     LOG.info("Building custom cost networks")
 
     names, sensitivities, custom_cost_segment_weight_factors, allow_missing_data = (
-        _build_custom_cost_networks_params(exposure_dict, routing_config)
+        _build_custom_cost_networks_params(exposure_dict, user_config)
     )
 
     LOG.info(
@@ -153,12 +160,23 @@ def build_custom_cost_network(
         {str(k): v for k, v in d.items()} for d in custom_cost_segment_weight_factors
     ]
 
+    precalculate = user_config.get_nested_attribute(
+        [ROUTING_KEY, PRECALCULATE_KEY], default=True
+    )
+
+    travel_speed = user_config.get_nested_attribute(
+        [ROUTING_KEY, TRAVEL_SPEED_KEY], default=0
+    )
+
     custom_cost_transport_network = CustomCostTransportNetwork(
         osm_pbf=osm_segmented_network_path,
         names=names,
         sensitivities=sensitivities,
         custom_cost_segment_weight_factors=custom_cost_segment_weight_factors,
         allow_missing_osmids=allow_missing_data,
+        precalculate=precalculate,
+        speed_walking=travel_speed,
+        speed_cycling=travel_speed,
     )
     LOG.info("Finished building network")
 

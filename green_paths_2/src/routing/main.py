@@ -110,7 +110,7 @@ def routing_pipeline(
             normalized_exposures_dict,
             origins,
             destinations,
-            user_config.routing,
+            user_config,
         )
 
         # convert route results to dict
