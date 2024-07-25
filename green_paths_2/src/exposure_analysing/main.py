@@ -2,7 +2,6 @@
 
 import json
 import os
-import geopandas as gpd
 import pandas as pd
 
 from green_paths_2.src.database_controller import DatabaseController
@@ -66,9 +65,7 @@ def exposure_analysing_pipeline(user_config: UserConfig):
         exposure_db_controller = ExposureDbController(db_handler)
         exposure_calculator = ExposuresCalculator()
         routing_results_count = db_handler.get_row_count(ROUTING_RESULTS_TABLE)
-        batch_limit = get_batch_limit(
-            user_config=user_config, routing_results_count=routing_results_count
-        )
+        batch_limit = get_batch_limit(routing_results_count=routing_results_count)
         # get data names as list so that we can loop each different data source
         data_names = [data.get(NAME_KEY) for data in user_config.data_sources]
         # process the routing results in batches

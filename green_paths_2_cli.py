@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 import argparse
 
 from green_paths_2.src.pipeline_controller import handle_pipelines
-from green_paths_2.src.cache_cleaner import clear_cache_dirs
+from green_paths_2.src.cache_cleaner import clear_db
 from green_paths_2.src.config_validator import validate_user_config
 from green_paths_2.src.logging import setup_logger, LoggerColors
 from green_paths_2.src.preprocessing.data_descriptor import (
@@ -58,15 +58,6 @@ def main():
 
     # Subparser for routing
     routing_parsers = subparsers.add_parser("routing", help="Run the routing pipeline.")
-    # Add arguments specific to action2 if needed
-
-    # TODO: add or remove cache to routing?
-    # routing_parsers.add_argument(
-    #     "-uc",
-    #     "--use_cache",
-    #     help="Flag for using cached exposure datas for routing",
-    #     action="store_true",
-    # )
 
     # Subparser for exposure analysing
     analysing_parsers = subparsers.add_parser(
@@ -113,15 +104,16 @@ def main():
 
     # Subparser for descriptor module
     cache_parsers = subparsers.add_parser(
-        "clear_cache", help="Clear cache directories based on the given folder names."
+        "clear_db_cache",
+        help="Clear db cache based on the given folder names, or all if no names given.",
     )
 
     cache_parsers.add_argument(
-        "-d",
-        "--dirs",
-        help="Specify one or more folder names. Use all to empty all cache folders. Example: -d osm raster visualizations. See possible folder names from the cache folder under src/cache.",
+        "-t",
+        "--table-names",
+        help="Specify one or more table names. To clear all tables, call without -t flag. Example: -t travel_times. Tables to clear are: output_results, routing_results, segment_store and travel_times.",
         nargs="+",
-        required=True,
+        required=False,
     )
 
     args, unknown = parser.parse_known_args()
@@ -130,8 +122,8 @@ def main():
         validate_user_config()
     elif args.action == "describe":
         DataDescriptor().describe(args.save_to_file)
-    elif args.action == "clear_cache":
-        clear_cache_dirs(args.dirs)
+    elif args.action == "clear_db_cache":
+        clear_db(args.table_names)
     elif args.action == "preprocessing":
         LOG.info("Running preprocessing pipeline. \n\n")
         handle_pipelines("preprocessing")

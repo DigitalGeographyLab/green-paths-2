@@ -1,4 +1,6 @@
 import json
+
+from green_paths_2.src.timer import time_logger
 from ..config import (
     FROM_ID_KEY,
     OSM_ID_KEY,
@@ -33,6 +35,7 @@ def get_normalized_exposures_from_db(
     return normalized_exposures_dict
 
 
+@time_logger
 def format_routing_results(green_paths_route_results: list[dict]) -> dict:
     """
     Format routing results to be stored in the database.

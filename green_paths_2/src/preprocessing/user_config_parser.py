@@ -541,6 +541,15 @@ class UserConfig:
 
             LOG.info("Analysing configuration validated.")
 
+        save_output_name: bool = analysing_config.get(
+            DataSourceModel.SaveOutputName.value
+        )
+
+        if save_output_name and not isinstance(save_output_name, str):
+            self.errors.append(
+                "Invalid save_output_name in analysing parameters. Should be str."
+            )
+
         keep_geometry: bool = analysing_config.get(DataSourceModel.KeepGeometry.value)
 
         if keep_geometry and not isinstance(keep_geometry, bool):

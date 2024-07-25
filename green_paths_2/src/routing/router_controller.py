@@ -2,11 +2,19 @@
 
 from r5py import TransportMode
 import geopandas as gpd
+import numpy as np
 
 from green_paths_2.src.config import (
     DEFAULT_R5_TRAVEL_SPEED_CYCLING,
     DEFAULT_R5_TRAVEL_SPEED_WALKING,
+    OSM_IDS_KEY,
+    ROUTING_KEY,
+    TRANSPORT_MODE_KEY,
+    TRAVEL_SPEED_KEY,
 )
+
+from green_paths_2.src.routing.routing_utilities import to_list_if_iterable
+from green_paths_2.src.timer import time_logger
 from ..green_paths_exceptions import R5pyError
 from ..preprocessing.data_types import (
     TravelModes,
@@ -24,12 +32,13 @@ from ..logging import setup_logger, LoggerColors
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 
 
+@time_logger
 def route_green_paths_2_paths(
     osm_segmented_network_path: str,
     exposure_dict: dict,
     origins: gpd.GeoDataFrame,
     destinations: gpd.GeoDataFrame,
-    routing_config: UserConfig,
+    user_config: UserConfig,
 ) -> gpd.GeoDataFrame:
     """
     Route Green Paths 2 paths using R5py (R5 routing engine).
@@ -39,8 +48,8 @@ def route_green_paths_2_paths(
     ----------
     normalized_data_source_names : list[str]
         List of normalized data source names.
-    routing_config : dict
-        Routing configuration.
+    user_config : dict
+        User configuration.
     osm_segmented_network_path : str
         Path to the OSM segmented network.
 
@@ -56,12 +65,13 @@ def route_green_paths_2_paths(
     """
     try:
         custom_cost_transport_network = build_custom_cost_network(
-            osm_segmented_network_path, exposure_dict, routing_config
+            osm_segmented_network_path, exposure_dict, user_config
         )
 
-        transport_config_mode = routing_config.transport_mode
-
-        travel_speed = getattr(routing_config, "travel_speed", None)
+        travel_speed = user_config.get_nested_attribute([ROUTING_KEY, TRAVEL_SPEED_KEY])
+        transport_config_mode = user_config.get_nested_attribute(
+            [ROUTING_KEY, TRANSPORT_MODE_KEY]
+        )
 
         # set travel mode and travel speed configurations
         if transport_config_mode == TravelModes.Walking.value:
@@ -97,7 +107,8 @@ def route_green_paths_2_paths(
     # just get all because filtering with osm_id would take too long
     actual_travel_times = custom_cost_transport_network.get_base_travel_times()
 
-    # make sure that the osm_ids are python lists (should be already)
-    routing_results["osm_ids"] = routing_results["osm_ids"].apply(list)
+    osm_ids_np = routing_results[OSM_IDS_KEY].values
+    vectorized_conversion = np.vectorize(to_list_if_iterable, otypes=[object])
+    routing_results[OSM_IDS_KEY] = vectorized_conversion(osm_ids_np)
 
     return routing_results, actual_travel_times

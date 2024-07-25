@@ -1,9 +1,9 @@
 from collections import defaultdict
 import sqlite3
-from typing import Dict, List, Tuple, Any
-from shapely.wkt import dumps, loads
+from typing import Dict, List, Any
 
 from green_paths_2.src.config import SEGMENT_STORE_TABLE
+from green_paths_2.src.timer import time_logger
 
 
 class DatabaseController:
@@ -46,6 +46,7 @@ class DatabaseController:
         conn.commit()
         conn.close()
 
+    @time_logger
     def create_table_from_params(self, table: str, columns: List[Dict[str, str]]):
         # Drop the table if it already exists
         self.drop_table(table)
@@ -73,7 +74,10 @@ class DatabaseController:
         conn.commit()
         conn.close()
 
-    def add_many_dict(self, table: str, data: Dict[str, Dict[str, Any]]) -> None:
+    @time_logger
+    def add_many_dict(
+        self, table: str, data: Dict[str, Dict[str, Any]], chunk_size: int = 10000
+    ) -> None:
         """
         Add many records to the database from a dictionary of dictionaries
 
@@ -83,6 +87,8 @@ class DatabaseController:
             The table to add the records to.
         data : Dict[str, Dict[str, Any]]
             The data to add to the table.
+        chunk_size : int
+            The size of the chunks to add to the database.
         """
 
         if not data:
@@ -95,10 +101,12 @@ class DatabaseController:
 
         conn = self.connect()
         cursor = conn.cursor()
-        cursor.executemany(
-            f"INSERT INTO {table} ({columns}) VALUES ({placeholders})", values_list
-        )
-        conn.commit()
+        for i in range(0, len(values_list), chunk_size):
+            chunk = values_list[i : i + chunk_size]
+            cursor.executemany(
+                f"INSERT INTO {table} ({columns}) VALUES ({placeholders})", chunk
+            )
+            conn.commit()
         conn.close()
 
     def get_all_columns(self, table: str) -> List[str]:
@@ -275,28 +283,3 @@ def split_data_by_length(
         split_data[length][record_id] = record
 
     return split_data
-
-
-# # Usage example form gpt
-# if __name__ == "__main__":
-#     db_handler = SQLiteHandler('routing_data.db')
-
-#     create_table_sql = '''
-#     CREATE TABLE IF NOT EXISTS routing_data (
-#         id INTEGER PRIMARY KEY AUTOINCREMENT,
-#         name TEXT NOT NULL,
-#         geom TEXT NOT NULL
-#     );
-#     '''
-#     db_handler.create_table(create_table_sql)
-
-#     # Adding one record
-#     db_handler.add_one('routing_data', ('name', 'geom'), ('example_point', dumps(Point(1.0, 2.0))))
-
-#     # Adding multiple records
-#     points = [('point1', dumps(Point(2.0, 3.0))), ('point2', dumps(Point(3.0, 4.0)))]
-#     db_handler.add_many('routing_data', ('name', 'geom'), points)
-
-#     # Retrieving all records
-#     records = db_handler.get_all('routing_data')
-#     print(records)

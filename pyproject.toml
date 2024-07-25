@@ -15,7 +15,6 @@ rioxarray = "^0.15.1"
 netcdf4 = "^1.6.5"
 scipy = "^1.12.0"
 ruamel-yaml = "^0.18.6"
-r5py = {git = "https://github.com/DigitalGeographyLab/r5py_gp2.git"}
 numpy = "^1.26.4"
 pyyaml = "^6.0.1"
 pyrosm = "^0.6.2"
@@ -26,6 +25,10 @@ fiona = "^1.9.6"
 geopandas = "^0.14.4"
 openpyxl = "^3.1.2"
 pysqlite3 = "^0.5.3"
+r5py = {path = "/Users/hcroope/omat/GP2/r5py_gp2"}
+gdal = "^3.9.1"
+geos = "^0.2.3"
+
 
 
 [build-system]

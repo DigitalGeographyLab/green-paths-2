@@ -2,7 +2,8 @@
 
 import os
 
-from .config import DATA_CACHE_DIR_PATH
+from green_paths_2.src.database_controller import DatabaseController
+from .config import GP2_DB_PATH
 from .green_paths_exceptions import DataManagingError
 from .logging import setup_logger, LoggerColors
 
@@ -30,25 +31,26 @@ def empty_folder(folder_path: str) -> None:
             LOG.error(f"Failed to delete {file_path}. Reason: {e}")
 
 
-def clear_cache_dirs(dirs: list[str]) -> None:
-    """
-    Empty cache directories.
+def clear_db(table_names: list[str]):
+    LOG.info("Clearing db tables")
+    db_handler = DatabaseController(GP2_DB_PATH)
+    conn = db_handler.connect()
+    cursor = conn.cursor()
+    if not table_names:
+        # get all table names to clear
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        table_names = cursor.fetchall()
+        table_names = [db_item[0] for db_item in table_names]
+        print(table_names)
 
-    Parameters:
-    ------------
-    - dirs: List of cache directories to empty.
+    for table_name in table_names:
+        clear_table(conn, cursor, table_name)
+    conn.close()
+    LOG.info(f"Tables cleared succesfully: {table_names}")
 
-    """
-    LOG.info(f"Emptying cache directories: {dirs}")
-    cache_root_dir_path = DATA_CACHE_DIR_PATH
-    for dir in dirs:
-        if dir == "all":
-            empty_folder(cache_root_dir_path)
-            return
-    else:
-        cache_dir_path = os.path.join(cache_root_dir_path, dir)
-        if os.path.exists(cache_dir_path):
-            empty_folder(os.path.join(cache_root_dir_path, dir))
-        else:
-            LOG.warning(f"Cache directory {cache_dir_path} is not valid, skippin.")
-    LOG.info("Given cache directories emptied.")
+
+def clear_table(conn, cursor, table_name):
+    # Clear the specified table
+    cursor.execute(f"DELETE FROM {table_name};")
+    # Commit changes
+    conn.commit()

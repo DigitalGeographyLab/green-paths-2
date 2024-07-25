@@ -117,12 +117,14 @@ green_paths_2/src/cache/**/*
 sqlite-autoconf-3430200.tar.gz
 sqlite-autoconf-3430200/
 
+green_paths_2/src/user/config.yaml
+
 green_paths_2/src/database/*
 results_output/*
 green_paths_2/src/database/*
 green_paths_2/src/visualizations
 green_paths_2/data/*
 green_paths_2/src/user/*
-green_paths_2/src/user/**
 green_paths_2/src/user/data/*
 green_paths_2/src/database/*
+

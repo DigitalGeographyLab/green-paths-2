@@ -7,7 +7,9 @@ import numpy as np
 # R5PY PATHS
 
 # GREEN PATSH 2 PATCHED R5 JAR FILE PATH
-R5_JAR_FILE_PATH = "https://github.com/DigitalGeographyLab/r5/releases/download/v7.1-gp2-2/r5-v7.1-gp2-1-1-ga342478-all.jar"
+# new release (precalculations)
+R5_JAR_FILE_PATH = "https://github.com/DigitalGeographyLab/r5/releases/download/v7.1-gp2-3/r5-v7.1-gp2-3-1-gbcaa62a-all.jar"
+
 
 # TODO: LOCAL FOR TESTING
 # R5_JAR_FILE_PATH = (
@@ -71,23 +73,27 @@ OSM_ID_KEY = "osm_id"
 
 OSM_IDS_KEY = "osm_ids"
 
-SAVE_TO_CACHE_KEY = "save_to_cache"
-
 RASTER_CELL_RESOLUTION_KEY = "raster_cell_resolution"
 
 CUMULATIVE_RANGES_KEY = "cumulative_ranges"
 
-BATCH_PROCENTAGE_KEY = "batch_percentage"
-
 OTHER_KEY = "other"
 
+ROUTING_KEY = "routing"
+
+TRAVEL_SPEED_KEY = "travel_speed"
+
+TRANSPORT_MODE_KEY = "transport_mode"
+
+EXPOSURE_PARAMETERS_KEY = "exposure_parameters"
+
 ANALYSING_KEY = "analysing"
+
+PRECALCULATE_KEY = "precalculate"
 
 KEEP_GEOMETRY_KEY = "keep_geometry"
 
 SAVE_OUTPUT_NAME_KEY = "save_output_name"
-
-SAVE_OUTPUT_TYPE_KEY = "save_output_type"
 
 GPKG_FILE_NAME = "gpkg"
 
@@ -128,15 +134,7 @@ OUTPUT_FINAL_RESULTS_DIR_PATH = "results_output"
 
 DATA_CACHE_DIR_PATH: str = "green_paths_2/src/cache"
 
-PREPROCESSING_CACHE_DIR_NAME: str = "preprocessing"
-
-ROUTING_CACHE_DIR_NAME: str = "routing"
-
-EXPOSURE_ANALYSING_CACHE_DIR_NAME: str = "final_exposure_results"
-
 OSM_CACHE_DIR_NAME: str = "osm"
-
-DATA_CACHE_DIR_NAME = "data"
 
 OSM_CACHE_SEGMENTED_DIR_NAME: str = "segmented"
 
@@ -147,16 +145,6 @@ LOGS_CACHE_DIR_NAME = "logs"
 
 # FILENAMES AND FILE EXTENSIONS
 
-SEGMENT_STORE_GPKG_FILE_NAME: str = "segment_store.gpkg"
-
-OSM_NETWORK_GPKG_FILE_NAME: str = "osm_network.gpkg"
-
-OSM_NETWORK_CSV_FILE_NAME: str = "osm_network.csv"
-
-ROUTING_RESULTS_CSV_FILE_NAME: str = "routing_results.csv"
-
-TRAVEL_TIMES_CSV_FILE_NAME: str = "travel_times.csv"
-
 OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION: str = "_segmented.osm.pbf"
 
 DESCRIPTOR_FILE_NAME = "data_description.txt"
@@ -165,71 +153,13 @@ RASTER_FILE_SUFFIX = ".tif"
 
 REPROJECTED_RASTER_FILE_SUFFIX = "_reprojected.tif"
 
-AQI_DATA_SOURCE_NAME = "aqi.nc"
-
 NORMALIZED_DATA_SUFFIX = "_normalized"
-
-EXPOSURE_ANALYSIS_RESULTS_GPKG_NAME = "exposure_analysis_results.gpkg"
-
-EXPOSURE_ANALYSIS_RESULTS_CSV_NAME = "exposure_analysis_results.csv"
 
 TIF_FILE_EXTENSION = ".tif"
 
 OUTPUT_RESULTS_FILE_NAME = "output_results"
 
-
-# COMBINATION PATHS
-
 AQI_DATA_CACHE_DIR_PATH = os.path.join(DATA_CACHE_DIR_PATH, RASTER_CACHE_DIR_NAME)
-
-AQI_DATA_SOURCE_FILE_PATH = os.path.join(
-    DATA_CACHE_DIR_PATH, DATA_CACHE_DIR_NAME, AQI_DATA_SOURCE_NAME
-)
-
-SEGMENT_STORE_GDF_CACHE_PATH = os.path.join(
-    DATA_CACHE_DIR_PATH,
-    PREPROCESSING_CACHE_DIR_NAME,
-    SEGMENT_STORE_GPKG_FILE_NAME,
-)
-
-OSM_NETWORK_GDF_CACHE_PATH = os.path.join(
-    DATA_CACHE_DIR_PATH,
-    PREPROCESSING_CACHE_DIR_NAME,
-    OSM_NETWORK_GPKG_FILE_NAME,
-)
-
-OSM_NETWORK_CSV_CACHE_PATH = os.path.join(
-    DATA_CACHE_DIR_PATH,
-    PREPROCESSING_CACHE_DIR_NAME,
-    OSM_NETWORK_CSV_FILE_NAME,
-)
-
-
-CACHE_ROUTING_RESULTS_PATH = os.path.join(DATA_CACHE_DIR_PATH, ROUTING_CACHE_DIR_NAME)
-
-ROUTING_RESULTS_GDF_CACHE_PATH = os.path.join(
-    CACHE_ROUTING_RESULTS_PATH,
-)
-
-ROUTING_RESULTS_CSV_CACHE_PATH = os.path.join(
-    CACHE_ROUTING_RESULTS_PATH, ROUTING_RESULTS_CSV_FILE_NAME
-)
-
-TRAVEL_TIMES_CSV_CACHE_PATH = os.path.join(
-    CACHE_ROUTING_RESULTS_PATH, TRAVEL_TIMES_CSV_FILE_NAME
-)
-
-FINAL_EXPOSURE_ANALYSING_RESULTS_GPKG_PATH = os.path.join(
-    DATA_CACHE_DIR_PATH,
-    EXPOSURE_ANALYSING_CACHE_DIR_NAME,
-    EXPOSURE_ANALYSIS_RESULTS_GPKG_NAME,
-)
-
-FINAL_EXPOSURE_ANALYSING_RESULTS_CSV_PATH = os.path.join(
-    DATA_CACHE_DIR_PATH,
-    EXPOSURE_ANALYSING_CACHE_DIR_NAME,
-    EXPOSURE_ANALYSIS_RESULTS_CSV_NAME,
-)
 
 
 # DEFAULT VALUES
@@ -237,10 +167,6 @@ FINAL_EXPOSURE_ANALYSING_RESULTS_CSV_PATH = os.path.join(
 FIX_INVALID_GEOMETRIES: bool = True
 
 RASTER_NO_DATA_VALUE = np.nan
-
-RASTER_CELL_RESOLUTION_DEFAULT = 10
-
-SAVE_RASTER_FILE_DEFAULT = False
 
 SEGMENT_POINTS_DEFAULT_SAMPLING_STRATEGY = "mean"
 
@@ -254,7 +180,7 @@ DEFAULT_R5_TRAVEL_SPEED_WALKING = 3.6
 
 DEFAULT_R5_TRAVEL_SPEED_CYCLING = 12.0
 
-DEFAULT_BATCH_PROCENTAGE = 10
+DEFAULT_BATCH_PROCENTAGE = 0.1
 
 
 # default values for optional user configuration attributes

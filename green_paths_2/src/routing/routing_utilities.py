@@ -2,6 +2,8 @@
 
 import os
 
+from jpype import JInt
+import jpype
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Point
@@ -18,6 +20,8 @@ from ..logging import setup_logger, LoggerColors
 
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
+
+JavaArrayListClass = None
 
 
 def set_environment_and_import_r5py(set_environmental_variables: bool = True) -> bool:
@@ -39,13 +43,20 @@ def set_environment_and_import_r5py(set_environmental_variables: bool = True) ->
             import sys
 
             # Correctly use extend to add R5 classpath argument
-            sys.argv.extend(["--r5-classpath", R5_JAR_FILE_PATH])
+            sys.argv.extend(
+                [
+                    "--r5-classpath",
+                    R5_JAR_FILE_PATH,
+                ]
+            )
 
         # dynamically import r5py and make it global
-        global r5py, CustomCostTransportNetwork, TravelTimeMatrixComputer
+        global r5py, CustomCostTransportNetwork, TravelTimeMatrixComputer, JavaArrayListClass
         import r5py
         from r5py import CustomCostTransportNetwork
         from r5py.r5.travel_time_matrix_computer import TravelTimeMatrixComputer
+
+        JavaArrayListClass = jpype.JClass("java.util.ArrayList")
 
         return True
     except R5pyError as e:
@@ -104,35 +115,6 @@ def validate_segmented_osm_network_path(osm_segmented_network_path: str) -> str:
     return osm_segmented_network_path
 
 
-def test_2_init_single_hki_od_points():
-
-    # "green_paths_2/src/cache/data/origin_point_hki.gpkg"
-
-    # "green_paths_2/src/cache/data/destination_point_hki.gpkg"
-
-    origin_point = gpd.read_file(
-        os.path.join("green_paths_2/src/cache/data/multiple_origin_points.gpkg")
-    )
-
-    # check that the crs is correct, if not, convert it
-    if not origin_point.crs or origin_point.crs != "EPSG:4326":
-        origin_point = origin_point.to_crs("EPSG:4326")
-
-    origin_point.geometry = origin_point.geometry.centroid
-
-    destination_point = gpd.read_file(
-        os.path.join("green_paths_2/src/cache/data/multiple_destinations_hki.gpkg")
-    )
-
-    # check that the crs is correct, if not, convert it
-    if not destination_point.crs or destination_point.crs != "EPSG:4326":
-        destination_point = destination_point.to_crs("EPSG:4326")
-
-    destination_point.geometry = destination_point.geometry.centroid
-
-    return origin_point, destination_point
-
-
 def init_origin_destinations_from_files(
     routing_config: UserConfig, project_crs: str | int
 ) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
@@ -183,30 +165,6 @@ def init_origin_destinations_from_files(
     origins = build_routing_ods_from_file(origins_path, target_crs=project_crs)
     destinations = build_routing_ods_from_file(
         destinations_path, target_crs=project_crs
-    )
-
-    return origins, destinations
-
-
-# TODO: remove this
-def test_init_ods():
-    population_grid = gpd.read_file(
-        os.path.join(
-            "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
-        )
-    )
-    import shapely
-
-    RAILWAY_STATION = shapely.Point(24.941521, 60.170666)
-    # take just the 10 first points from the population grid
-
-    origins = population_grid.copy()
-    # origins = origins.iloc[:100]
-    origins.geometry = origins.geometry.centroid
-
-    destinations = gpd.GeoDataFrame(
-        {"id": [1], "geometry": [RAILWAY_STATION]},
-        crs="EPSG:4326",
     )
 
     return origins, destinations
@@ -264,3 +222,13 @@ def build_routing_ods_from_file(
         gdf_from_file = gdf_from_file.to_crs(target_crs)
 
     return gdf_from_file
+
+
+def to_list_if_iterable(val) -> list:
+    """Convert val to list if it is iterable."""
+    if isinstance(val, (JavaArrayListClass, list, tuple)):
+        return list(val)
+    elif isinstance(val, (str, int, float, JInt)):
+        return [val]
+    else:
+        return val
