@@ -8,7 +8,6 @@ build:
       - default-jre
   jobs:
     pre_install:
-      - pip install
       - bash ./install_green_paths_2.sh
 
 conda:
