@@ -1,0 +1,13 @@
+name: dgl_gp2
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - openjdk=21
+  - sqlite
+  - pip
+  - pip:
+    - poetry
+    - sphinx
+    - sphinx-rtd-theme
+    # Add any other pip dependencies here
