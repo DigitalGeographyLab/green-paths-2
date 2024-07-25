@@ -103,6 +103,10 @@ else
     echo "Database already exists at $DB_PATH"
 fi
 
+# Installing these straight to the conda env, removes not found proj.db error when running preprocessing module
+# conda install -c conda-forge proj geos fiona
+conda install -c conda-forge gdal libpq -y
+
 echo ''
 echo "Installation and setup are complete."
 echo "Please activate the Conda environment." 

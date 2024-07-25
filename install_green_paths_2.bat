@@ -111,6 +111,9 @@ if not exist %DB_PATH% (
     echo Database already exists at %DB_PATH%
 )
 
+@REM Installing these straight to the conda env, removes not found proj.db error when running preprocessing module
+call conda install -c conda-forge gdal libpq -y
+
 echo:
 echo Installation and setup are complete.
 echo Please activate the Conda environment.
