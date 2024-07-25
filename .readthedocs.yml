@@ -6,11 +6,25 @@ build:
         python: "3.11"
     apt_packages:
         - default-jre
+    jobs:
+       pre_install:
+      - bash ./install_green_paths_2.sh
+      # post_create_environment:
+      #   # Install poetry
+      #   - pip install poetry
+      #   # Tell poetry to not use a virtual environment
+      #   - poetry config virtualenvs.create false
+      # post_install:
+      #   # Install dependencies
+      #   - poetry install --with docs
 
-python:
-    install:
-        - requirements: docs/requirements.txt
+# python:
+#     install:
+#         - requirements: docs/requirements.txt
 
 sphinx:
     configuration: docs/source/conf.py
     fail_on_warning: true
+
+
+    
