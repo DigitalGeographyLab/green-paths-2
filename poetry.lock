@@ -3038,8 +3038,10 @@ docs = ["GitPython", "contextily", "folium", "h3 (>=4.0.0b2)", "jupyterlab_myst"
 tests = ["pyarrow", "pytest", "pytest-asyncio", "pytest-cov", "pytest-lazy-fixtures", "r5py.sampledata.helsinki (>=0.1.1)", "r5py.sampledata.sao_paulo (>=0.1.1)"]
 
 [package.source]
-type = "directory"
-url = "../../r5py_gp2"
+type = "git"
+url = "https://github.com/DigitalGeographyLab/r5py_gp2.git"
+reference = "HEAD"
+resolved_reference = "bf6e6cd1325a5c587c5dd6122f20c812eaad2267"
 
 [[package]]
 name = "rasterio"
@@ -4201,4 +4203,4 @@ viz = ["matplotlib", "nc-time-axis", "seaborn"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "51930ee2c00e84d9b0dedd8358cae9a85ed66568bd796ed590c3f0e62111f8bb"
+content-hash = "bdbca8396d6b89aea72c9d53201712e92e69db425ef6b00163a7169cede49e93"
