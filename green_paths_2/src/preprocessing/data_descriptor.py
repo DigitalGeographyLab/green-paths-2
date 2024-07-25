@@ -25,9 +25,6 @@ from ..preprocessing.raster_operations import (
 )
 from ..preprocessing.spatial_operations import (
     check_if_raster_and_network_extends_overlap,
-    check_if_vector_data_and_network_extends_overlap,
-    create_buffer_for_geometries,
-    handle_gdf_crs,
     has_invalid_geometries,
 )
 from ..preprocessing.user_config_parser import UserConfig
@@ -37,32 +34,7 @@ from ..preprocessing.vector_processor import (
     load_vector_data,
 )
 
-
 LOG = setup_logger(__name__, LoggerColors.RED.value)
-
-
-# TODO: ROOPE -> lisää tää testeihin conf parseemiseen!!!
-# from pyproj import CRS, Transformer
-
-# def can_transform(source_crs_code, target_crs_code):
-#     try:
-#         source_crs = CRS.from_user_input(source_crs_code)
-#         target_crs = CRS.from_user_input(target_crs_code)
-#         transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
-#         test_point = (0, 0)  # Using a dummy point to test transformation
-#         transformer.transform(*test_point)
-#         return True
-#     except Exception as e:
-#         print(f"Error in transforming CRS: {e}")
-#         return False
-
-# # Example usage
-# source_crs_code = "EPSG:4326"  # Replace with your raster_crs
-# target_crs_code = "EPSG:3006"  # Replace with your target_crs
-# if can_transform(source_crs_code, target_crs_code):
-#     print("Transformation is possible.")
-# else:
-#     print("Cannot transform between the specified CRSs.")
 
 
 class DataDescriptor:
@@ -248,25 +220,6 @@ class DataDescriptor:
                     self._write_new_line_to_data_description_text(
                         f"Has invalid geometries: {data_has_invalid_geometries}",
                     )
-
-                    # TODO: roope poista?
-                    # vector_data_in_project_crs = handle_gdf_crs(
-                    #     name=data_name,
-                    #     gdf=vector_data,
-                    #     target_crs=project_crs,
-                    #     original_crs=data_source.get_original_crs(),
-                    # )
-
-                    # data_and_network_overlap = (
-                    #     check_if_vector_data_and_network_extends_overlap(
-                    #         vector_data_in_project_crs, network_in_project_crs_gdf
-                    #     )
-                    # )
-
-                    # self._write_new_line_to_data_description_text(
-                    #     f"Vector data and network extends overlap: {data_and_network_overlap}",
-                    # )
-
                 elif (
                     data_source.get_data_type() == DataTypes.Raster.value
                     or determine_file_type(data_source.get_filepath())

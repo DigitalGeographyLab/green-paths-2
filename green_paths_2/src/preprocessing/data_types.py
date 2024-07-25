@@ -8,9 +8,6 @@ class DataTypes(Enum):
     Raster = "raster"
 
 
-# TODO: mieti pitäskö olla muissakin kun datasourcemodelissa ne mitkä ei sinne kuulu...
-
-
 class DataSourceModel(Enum):
     Name = "name"
     Filepath = "filepath"
@@ -36,10 +33,8 @@ class DataSourceModel(Enum):
     TransportMode = "transport_mode"
     KeepGeometry = "keep_geometry"
     CumulativeRanges = "cumulative_ranges"
+    SaveOutputName = "save_output_name"
     DatasCoverageSafetyPercentage = "datas_coverage_safety_percentage"
-
-
-# TODO: maybe rename this file?
 
 
 class TravelModes(Enum):

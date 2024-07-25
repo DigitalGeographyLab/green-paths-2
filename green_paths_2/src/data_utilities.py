@@ -98,70 +98,7 @@ def determine_file_type(file_path: str) -> str | None:
         return None
 
 
-def get_gpkg_from_cache_as_gdf(
-    file_path: str,  # , set_index_column: str = None
-) -> gpd.GeoDataFrame:
-    """
-    Get exposure data from cache. Read .gpkg file from data/cache directory.
-    """
-    try:
-        if not os.path.exists(file_path):
-            LOG.error(f"Cached file not found for path: {file_path}.")
-            return gpd.GeoDataFrame()
-
-        exposure_gdf = gpd.read_file(file_path)
-
-        # index the gdf with osm_id if found in columns
-        # if not in columns, the osm_id is already the index
-        # if set_index_column and set_index_column in exposure_gdf.columns:
-        #     exposure_gdf.set_index(set_index_column, inplace=True)
-
-        return exposure_gdf
-    except:
-        LOG.error("Failed to read exposure data from cache.")
-        return gpd.GeoDataFrame()
-
-
 @time_logger
-def get_and_convert_gdf_to_dict(
-    path: str,
-    set_index_column: str = None,
-    data_source_names: list[str] = None,
-    orient: str = "dict",
-) -> dict:
-    """
-    Convert exposure data to dictionary, drop geometry.
-    """
-    try:
-        LOG.info(
-            f"Getting and converting GeoDataFrame or CSV to dict from path: {path}"
-        )
-        if not os.path.exists(path):
-            LOG.error(f"Cache might be empty, file not found for path: {path}.")
-            raise ValueError("Exposure data GeoDataFrame from cache is empty.")
-
-        if ".gpkg" in path:
-            data_gdf = get_gpkg_from_cache_as_gdf(path)
-        elif ".csv" in path:
-            data_gdf = pd.read_csv(path)
-
-        if data_gdf.empty:
-            LOG.error("Exposure data GeoDataFrame is empty.")
-            raise ValueError("Exposure data GeoDataFrame from cache is empty.")
-
-        if data_source_names:
-            data_source_names.append(set_index_column)
-            # keep only data_source_names columns
-            data_gdf = filter_gdf_by_columns_if_found(
-                data_gdf, data_source_names, keep=True
-            )
-
-        return convert_gdf_to_dict(data_gdf, set_index_column, orient)
-    except ValueError as e:
-        LOG.error(f"Failed to get and convert GeoDataFrame to dictionary. Error: {e}")
-        return {}
-
-
 def convert_gdf_to_dict(
     target_gdf: gpd.GeoDataFrame | pd.DataFrame,
     set_index_column: str = None,
@@ -203,36 +140,6 @@ def construct_osm_segmented_network_name(osm_source_path: str) -> str:
     )
 
 
-@time_logger
-def save_gdf_to_cache(gdf_to_save: gpd.GeoDataFrame, cache_file_path: str) -> None:
-    """
-    Save GeoDataFrame to cache as .gpkg file if is GeoDataFrame (has geometry)
-    or as .csv file if is DataFrame (without geometry).
-
-    Parameters:
-    ----------------
-    - gdf_to_save: GeoDataFrame to save.
-    - cache_path: Path to the cache file.
-
-    Raises:
-    - DataManagingError: If saving fails.
-    """
-    LOG.info(f"Saving GeoDataFrame to cache as .gpkg or .csv file: {cache_file_path}")
-    try:
-        if isinstance(gdf_to_save, gpd.GeoDataFrame) and not gdf_to_save.empty:
-            gdf_to_save.to_file(
-                cache_file_path,
-                driver="GPKG",
-            )
-            if not os.path.exists(cache_file_path):
-                LOG.error("Wasn't able to save gdf to cache.")
-        elif isinstance(gdf_to_save, pd.DataFrame) and not gdf_to_save.empty:
-            gdf_to_save.to_csv(cache_file_path, index=False)
-    except DataManagingError as e:
-        LOG.error(f"Failed to save GeoDataFrame to cache. Error: {e}")
-        raise e
-
-
 def list_to_string(lst) -> list[str]:
     """
     Convert list to string.
@@ -260,24 +167,6 @@ def string_to_list(string: str) -> list[str]:
     # Strip square brackets and split the string into a list
     list_from_string = string.strip("[]").split(",")
     return [elem for elem in list_from_string]
-
-
-def convert_travel_times_dicts_to_df(actual_travel_times: list[dict]):
-    """
-    Convert travel times to GeoDataFrame.
-
-    Parameters:
-    - actual_travel_times: List of dictionaries containing actual travel times.
-
-    Returns:
-    - GeoDataFrame containing the actual travel times.
-    """
-    all_travel_times = {}
-    for travel_time_data in actual_travel_times:
-        _, travel_times = travel_time_data
-        all_travel_times.update(travel_times)
-
-    return pd.DataFrame(all_travel_times.items(), columns=["osm_id", "travel_time"])
 
 
 def combine_multilinestrings(multi_lines) -> LineString:
