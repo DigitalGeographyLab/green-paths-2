@@ -7,8 +7,8 @@ build:
     apt_packages:
         - default-jre
     jobs:
-       pre_install:
-      - bash ./install_green_paths_2.sh
+      pre_install:
+        - bash ./install_green_paths_2.sh
       # post_create_environment:
       #   # Install poetry
       #   - pip install poetry
