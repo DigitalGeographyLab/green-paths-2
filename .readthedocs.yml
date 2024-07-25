@@ -1,16 +1,17 @@
 version: 2
 
-# Build documentation in the docs/ directory with Sphinx
-sphinx:
-  configuration: docs/source/conf.py
-
 build:
-  os: ubuntu-20.04
-  tools:
-    python: "3.8"
+    os: ubuntu-22.04
+    tools:
+        python: "3.11"
+    apt_packages:
+        - default-jre
 
-# Optionally set the version of Python and dependencies required
 python:
-  interpreter: python3.8
-  install:
-    - requirements: docs/requirements.txt
+    install:
+        - requirements: docs/requirements.txt
+    system_packages: true
+
+sphinx:
+    configuration: docs/source/conf.py
+    fail_on_warning: true
