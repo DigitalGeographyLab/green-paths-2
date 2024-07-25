@@ -1,13 +1,17 @@
-name: dgl_gp2
+name: green_paths_2
 channels:
   - conda-forge
 dependencies:
   - python=3.11
   - openjdk=21
-  - sqlite
+  - gdal
+  - fiona
+  - numpy
+  - pandas
   - pip
   - pip:
-    - poetry
-    - sphinx
-    - sphinx-rtd-theme
-    # Add any other pip dependencies here
+      - black==24.4.2
+      - r5py@git+https://github.com/DigitalGeographyLab/r5py_gp2.git
+      - sphinx
+      - sphinx-rtd-theme
+      - sphinx-autodoc-typehints
