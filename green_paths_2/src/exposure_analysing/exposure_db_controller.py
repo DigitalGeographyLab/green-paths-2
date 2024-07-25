@@ -1,14 +1,7 @@
-""" """
-
 from green_paths_2.src.config import (
     SEGMENT_STORE_TABLE,
-    TRAVEL_TIME_KEY,
     TRAVEL_TIMES_TABLE,
 )
-import sqlite3
-import pandas as pd
-import geopandas as gpd
-from shapely import wkt
 from green_paths_2.src.database_controller import DatabaseController
 
 
