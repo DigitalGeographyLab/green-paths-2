@@ -1,11 +1,11 @@
 Welcome to Green Paths 2's documentation!
-======================================
+=========================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   readme
+   install_gp2
    installation
    joojoojoo
 
