@@ -36,7 +36,7 @@ def handle_osm_network_process(user_config: UserConfig) -> gpd.GeoDataFrame:
         force_sampling_points_amount = None
 
     network.process_osm_network(
-        project_crs=user_config.project_crs,
+        project_crs=user_config.project.project_crs,
         original_crs=user_config.osm_network.original_crs,
         data_sources=user_config.data_sources,
         force_sampling_points_amount=force_sampling_points_amount,

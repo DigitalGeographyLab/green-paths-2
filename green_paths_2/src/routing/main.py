@@ -100,7 +100,7 @@ def routing_pipeline(
 
         # handle OD pairs
         origins, destinations = init_origin_destinations_from_files(
-            user_config.routing, user_config.project_crs
+            user_config.routing, user_config.project.project_crs
         )
 
         # use r5py to route

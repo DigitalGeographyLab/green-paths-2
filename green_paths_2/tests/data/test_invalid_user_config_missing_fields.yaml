@@ -3,7 +3,6 @@
 #  missing: project_csr, osm_pbf_file_path
 
 datas_coverage_safety_percentage: 80 # optional, recommended
-save_to_cache: False # optional
 
 osm_network:
   original_crs: 4326 # mandatory

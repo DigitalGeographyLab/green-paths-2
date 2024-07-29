@@ -164,13 +164,7 @@ class UserConfig:
 
     def _validate_project_configs(self, config: dict) -> None:
         """Validate project configurations."""
-        save_to_cache = config.get("save_to_cache")
-        if save_to_cache and not isinstance(save_to_cache, bool):
-            self.errors.append(
-                "Invalid save to cache config, should be bool, True or False."
-            )
-
-        datas_coverage_safety_percentage = config.get(
+        datas_coverage_safety_percentage = config.get("project").get(
             DataSourceModel.DatasCoverageSafetyPercentage.value
         )
 
@@ -207,12 +201,17 @@ class UserConfig:
 
         :param config: A dictionary containing configuration data.
         """
-        if not config.get("project_crs"):
+        if not config.get("project").get("project_crs"):
             self.errors.append("Invalid or missing project crs configuration.")
+
+        if not isinstance(config.get("project").get("project_crs"), (str, int)):
+            self.errors.append(
+                "Invalid project crs configuration. Should be string or int."
+            )
 
         # TODO: validate that the crs is valid crs
 
-        if not crs_uses_meters(config.get("project_crs")):
+        if not crs_uses_meters(config.get("project").get("project_crs")):
             self.errors.append(
                 "Invalid project crs. Project crs should use meters as units. Most of projected CRS's use meters as units, opposed to geographic CRS's which use degrees."
             )

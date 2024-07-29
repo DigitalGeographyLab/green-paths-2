@@ -39,10 +39,10 @@
 # project_crs: 27700
 
 # hki
-project_crs: 3879
-# project_crs: 3006
-datas_coverage_safety_percentage: 10
-save_to_cache: True
+project:
+  project_crs: 3879
+  # project_crs: 3006
+  datas_coverage_safety_percentage: 10
 
 osm_network:
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/london_osm_network.osm.pbf
@@ -71,7 +71,6 @@ osm_network:
   
   # osm_pbf_file_path: /Users/hcroope/omat/GP2/green_paths_2/green_paths_2/src/data/cache/helsinki_history_pbf_osm_network.osm.pbf
   original_crs: 4326
-  filter_columns: ["id"]
   # segment_sampling_points_amount: 5
 
 data_sources:
@@ -118,7 +117,7 @@ data_sources:
   #   save_raster_file: True # optional
   #   original_crs: 3879
 
-  - name: gvi_lines
+  - name: 'gvi_lines'
     filepath: green_paths_2/src/user/data/bike_network_with_gsv_landuse_green_index_FIXED/bikenetwork_with_gsv_landuse_green_index_FIXED.shp
     # data_type: vector
     data_column: Comb_GVI # mandatory
@@ -144,8 +143,7 @@ data_sources:
   #   save_raster_file: True # optional
   #   original_crs: 32630
 
-
-  - name: aqi
+  - name: "aqi"
     filepath: /Users/hcroope/Downloads/allPollutants_2024-05-29T16/allPollutants_2024-05-29T16.nc
     # filepath: green_paths_2/src/user/data/air_quality/allPollutants_2023-12-15T04.nc
     data_type: raster
@@ -176,7 +174,7 @@ data_sources:
 
 routing:
     transport_mode: walking
-    travel_speed: 5.5
+    travel_speed: 5
     precalculate: True
     # transport_mode: cycling
     # origins: "/Users/hcroope/omat_playground/r5py/docs/_static/data/Helsinki/population_grid_2020.gpkg"
@@ -238,9 +236,9 @@ analysing:
   #     # - [2, 2.99]
   #     - [0,1]
   #     - [20, 50]
-    # aqi:
-    #   - [0, 0.99]
-    #   - [1, 1.99]
-    #   - [2, 2.99]
-    #   - [3, 3.99]
-    #   - [4, 5]
+  #   aqi:
+  #     - [0, 0.99]
+  #     - [1, 1.99]
+  #     - [2, 2.99]
+  #     - [3, 3.99]
+  #     - [4, 5]

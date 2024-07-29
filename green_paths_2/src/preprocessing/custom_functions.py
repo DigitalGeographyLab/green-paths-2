@@ -19,15 +19,12 @@ def validate_function_in_globals(custom_function_name: str) -> bool:
     return custom_function_name in globals()
 
 
-def apply_custom_processing_function(
-    data_source: dict = None, project_crs: str | int = None
-) -> str:
+def apply_custom_processing_function(data_source: dict = None) -> str:
     """
     General function to apply custom processing to the data source.
 
     Parameters:
     - data_source: The data source dictionary.
-    - project_crs: The CRS of the project.
 
     Returns:
     - The filepath of the processed data.

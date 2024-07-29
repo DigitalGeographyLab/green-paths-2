@@ -84,7 +84,7 @@ class DataDescriptor:
                 USER_CONFIG_PATH, skip_validation=True
             ).parse_config()
 
-            project_crs = user_config.project_crs
+            project_crs = user_config.project.project_crs
 
             # create osm network from user config osm pbf path
 
@@ -259,9 +259,9 @@ class DataDescriptor:
                         f"NaN count: {nan_count}",
                     )
 
-                    if check_raster_file_crs(raster_path) != user_config.project_crs:
+                    if check_raster_file_crs(raster_path) != project_crs:
                         LOG.info(
-                            f"Raster not in project crs. Reprojecting {raster_path} to project crs: {user_config.project_crs}"
+                            f"Raster not in project crs. Reprojecting {raster_path} to project crs: {project_crs}"
                         )
                         # TODO: confeihin
                         reprojected_raster_filepath = raster_path.replace(
@@ -271,7 +271,7 @@ class DataDescriptor:
                         reproject_raster_to_crs(
                             input_raster_filepath=raster_path,
                             output_raster_filepath=reprojected_raster_filepath,
-                            target_crs=user_config.project_crs,
+                            target_crs=project_crs,
                             original_crs=data_source.get_original_crs(),
                             new_raster_resolution=data_source.get_raster_cell_resolution(),
                         )

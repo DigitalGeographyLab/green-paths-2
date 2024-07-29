@@ -82,6 +82,7 @@ def preprocessing_pipeline(
     LOG.info("\n\n\nStarting preprocessing pipeline\n\n\n")
     try:
         segment_store = SegmentValueStore()
+        project_crs = user_config.project.project_crs
 
         for data_name, data_source in data_handler.data_sources.items():
             data_conf_filepath = data_source.get_filepath()
@@ -97,7 +98,7 @@ def preprocessing_pipeline(
                 LOG.info(f"Processing vector data source")
 
                 cleaned_vector_gdf = load_and_process_vector_data(
-                    data_name, data_source, user_config.project_crs
+                    data_name, data_source, project_crs
                 )
 
                 # if buffer for data is defined in config, apply it
@@ -131,7 +132,7 @@ def preprocessing_pipeline(
                 )
 
                 # check raster crs and reproject not project crs
-                if check_raster_file_crs(raster_path) != user_config.project_crs:
+                if check_raster_file_crs(raster_path) != project_crs:
                     reprojected_raster_filepath = raster_path.replace(
                         RASTER_FILE_SUFFIX, REPROJECTED_RASTER_FILE_SUFFIX
                     )
@@ -139,7 +140,7 @@ def preprocessing_pipeline(
                     reproject_raster_to_crs(
                         input_raster_filepath=raster_path,
                         output_raster_filepath=reprojected_raster_filepath,
-                        target_crs=user_config.project_crs,
+                        target_crs=project_crs,
                         original_crs=data_source.get_original_crs(),
                         new_raster_resolution=data_source.get_raster_cell_resolution(),
                     )
@@ -169,7 +170,7 @@ def preprocessing_pipeline(
         segment_store.validate_data_coverage(
             all_data_sources,
             len(osm_network_gdf),
-            user_config.datas_coverage_safety_percentage,
+            user_config.project.datas_coverage_safety_percentage,
         )
 
         # TODO: ehkä tähän pitäis ottaa joku checki jos on tullu null arvoja teiltä?

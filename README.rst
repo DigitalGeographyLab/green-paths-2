@@ -19,98 +19,11 @@ Green Paths 2.0
 
 
 
-"In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda (gpt-4), "The Green Paths 2.0: The Return of the Greenery
 
 
-**Green Paths 2.0 (GP2) a Multi-objective exposure routing for healthier paths choices**
 
 
-GP2 uses OpenStreetMap (OSM) road network and user defined datas from flexible user_configurations.yml file to calculate the exposure values for the road network.
-The exposure values are then used to route healthier paths with the help of Conveyal's `r5 https://github.com/conveyal/r5` routing engine
-and python wrapper `r5py https://github.com/r5py/r5py`. It then calculates exposure results for the taken paths and returns the results in the final_exposure_results folder.
 
-Green Paths 2 is the next iteration, and heavily depending on the current version: `Green Paths https://www.helsinki.fi/en/researchgroups/digital-geography-lab/green-paths` and `Github https://github.com/DigitalGeographyLab/green-path-server`,
-developed by Joose Helle for his Geography masters thesis and for `Digital Geography Lab, University of Helsinki https://www.helsinki.fi/en/researchgroups/digital-geography-lab`.
-
-Green Paths is a proof-of-concept bi-objective routing tool for Helsinki Metropolitan area, supporting: Greenery, hourly air quality and noise exposures.
-
-The Green Paths 2 aims to enable more powerful masscalculations to use for flexible cities and datas. GP2 can thus be ran any where where there is OSM road network and exposure data available. The source has been written from scratch, excluding some functionalities from the original Green Paths.
-
-See also the `Green Paths Web GUI https://green-paths.web.app/?map=streets`
-
-
-        GP2 is using patched forks from r5 modified fork `R5_GP2 https://github.com/DigitalGeographyLab/r5/tree/gp2` and r5py modified fork `R5_GP2 https://github.com/DigitalGeographyLab/r5py_gp2`.
-
-
-Quickstart for Green Paths 2.0
-----------
-
-Remember to check the prerequisites:
-- All OS: Miniconda or Anaconda
-- Windows: Microsoft Visual Build Tools C++ 14.0 or greater
-See instructions from the installation section.
-
-See also the data requirements and instructions on how to fill the user configurations!
-
-1. Clone the repository from GitHub:
-
-        ``git clone https://github.com/DigitalGeographyLab/green-paths-2``
-
-2. Navigate to the Green Paths 2 root folder:
-
-        ``cd green-paths-2``
-
-3. Install Green Paths 2. Remember to run the CLI as administrator. Run the installation script from the root folder:
-        
-        Windows:
-        ``install_green_paths_2.bat``
-
-        Mac / Linux:
-        ``./install_green_paths_2.sh``
-
-        NOTE: If the installation script has errors, please check the prerequisites!
-
-        Remember to deactivate the conda environment before installing and re-activate it after installation!
-
-                and check the prerequisites for the installation from the installation section!
-
-
-4. Activate the conda environment:
-        
-        ``conda activate green_paths_2``
-
-5. Fill in the user configurations in the **user/config.yml** file.
-
-        For help use the **Descriptor**, which will help to find the possible values for the user configurations.
-
-        ``inv gp2 --args="describe"``
-
-6. Validate the user configurations before running the pipeline.
-
-        ``inv gp2 --args="validate"``
-
-7. Run the Green Paths 2.0 CLI commands:
-
-        ``inv gp2 --args="all"``
-
-8. See the results in the output folder.
-
-        green_paths_2/src/cache/final_exposure_results
-
-9. Travel safe and healthy!
-
-
-Data requirements
-----------
-
-Green Paths 2.0 supports most of the data formats of:
-- raster
-- vector
-
-The data should have numerical values for the exposure calculations.
-
-Data sources are filled in the user configurations file, and the datas need to be on the users local machine.
-See the instructions on how to fill the user configurations in the user configurations section.
 
 
 Green Paths 2 Framework
@@ -126,75 +39,10 @@ See more on Green paths 2 framework and modules in the Green Paths 2 Modules and
 
 
 
-Installation:
-----------
-
-See the OS specific instructions for the installation.
-
-Windows
-----------
-
-Prerequisites:
-- Miniconda or Anaconda
-- Microsoft Visual Build Tools C++ 14.0 or greater
-
-`Install miniconda/anaconda https://docs.conda.io/en/latest/miniconda.html`
-The installation has python included.
-Conda should manually be added to the PATH or the conda prompt should be used, if problems with conda not found occur.
-
-`Install Microsoft Visual Build Tools C++ 14.0 or greater https://visualstudio.microsoft.com/visual-cpp-build-tools/`
-From Visual Studio Installer select the tab "Individual components" and from there select at least:
-- C++ build tools (version 14.0 or greater)
-- Windows 10 SDK
-- C++ CMake tools for Windows
-
-After installing the prerequisites, install Green Paths 2 to conda environment:
-- Navigate to the Green Paths 2 root folder
-- (optional) deactivete the conda environment if active by running:
-        conda deactivate
-- Run the following command in the terminal:
-        install_green_paths_2.bat
-- After successfull installation, activate the conda environment by running:
-        conda activate green_paths_2
-- Now you can start using Green Paths 2 by running the CLI commands in the terminal.
-
-
-Mac / Linux
-----------
-
-Prerequisites:
-- Miniconda or Anaconda
-
-`Install miniconda/anaconda https://docs.conda.io/en/latest/miniconda.html`
-The installation has python included.
-
-After installing the prerequisites, install Green Paths 2 to conda environment:
-- Navigate to the Green Paths 2 root folder
-- (optional) deactivete the conda environment if active by running:
-        conda deactivate
-- Run the following command in the terminal:
-        ./install_green_paths_2.sh
-- After successfull installation, activate the conda environment by running:
-        conda activate green_paths_2
-- Now you can start using Green Paths 2 by running the CLI commands in the terminal.
-
-
-**Remember to activate the conda environment after installation!**
 
 
 
-CLI USER INTERFACE
-----------
 
-Green Paths 2 is operated via CLI. The CLI commands are run in the terminal / cmd. Here are all the supported commands:
-
-- validate
-- describe
-- clear_cache
-- preprocessing
-- routing
-- analysing
-- all
 
 
 Detailed description of the commands:

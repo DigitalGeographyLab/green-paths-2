@@ -22,7 +22,6 @@ def test_valid_config():
     config.parse_config()
 
     assert config.project_crs == 3879
-    assert not config.save_to_cache
     assert config.osm_network["osm_pbf_file_path"] == "path/to/user_network.osm.pbf"
 
 
