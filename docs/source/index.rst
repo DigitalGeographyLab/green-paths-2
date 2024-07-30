@@ -39,14 +39,8 @@ It gets its efficient path finding using `Conveyal’s R5: Rapid Realistic Routi
 
    Quickstart <quickstart>
    Installation <installation>
+   Use Cases <use_cases>
    Data Requirements <data_requirements>
    User Configurations <user_configurations>
    User Interface <cli_user_interface>
-   Use Cases <use_cases>
    Step by Step Example <step_by_step_examples>
-
-.. Indices and tables
-.. ==================
-.. * :ref:`genindex`
-.. * :ref:`modindex`
-.. * :ref:`search`

@@ -123,7 +123,7 @@ ORIGIN_DESTINATION_KEYS = [FROM_ID_KEY, TO_ID_KEY]
 
 # PATHS
 
-USER_CONFIG_PATH = "green_paths_2/src/user/config.yaml"
+USER_CONFIG_PATH = "green_paths_2/user/config.yaml"
 
 OUTPUT_RASTER_DIR_PATH = "green_paths_2/src/cache/raster"
 

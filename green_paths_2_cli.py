@@ -21,8 +21,6 @@ from green_paths_2.src.preprocessing.data_descriptor import (
 from green_paths_2.src.preprocessing.osm_segmenter import (
     segment_or_use_cache_osm_network,
 )
-from green_paths_2.src.preprocessing.user_config_parser import UserConfig
-from green_paths_2.src.routing.main import routing_pipeline
 
 LOG = setup_logger(__name__, LoggerColors.BLUE.value)
 
