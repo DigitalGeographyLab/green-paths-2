@@ -22,7 +22,7 @@ The following section will go through the main components briefly. For more deta
   <i>Green Paths 2.0 general flowchart. The modules / pipelines are not transfering OSM ID's etc. anymore, everything goes to and from sqlite3.</i>
 </p>
 
-### Post-thesis Improvements
+## Post-thesis Improvements
 
 There has been couple of main improvements after the thesis. 
 

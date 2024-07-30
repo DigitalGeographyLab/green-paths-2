@@ -1,6 +1,3 @@
-## Why use Green Paths 2.0
-
-
 # Use Cases
 
 Green Paths 2.0 is designed to provide excessive amount of flexibility, which demands expertise from the users.

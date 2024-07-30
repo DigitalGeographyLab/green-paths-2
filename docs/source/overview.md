@@ -28,7 +28,7 @@ See more from [Modules and Components](#modules_and_components)
 Green Paths 2.0 relies heavily on user configurations in order to work. All of the necessary tool configurations are filled in the [YAML](https://yaml.org/).
 
 ```{hint}
-See more from [User Configurations](#user_configuration)
+See more from [User Configurations](#user_configurations)
 ```
 
 ## Routing engine
