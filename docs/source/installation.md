@@ -38,6 +38,7 @@ After installing the prerequisites, install Green Paths 2 to conda environment:
 Remember to activate the conda environment after installation!
 ```
 
+<hr>
 
 ## Mac / Linux
 

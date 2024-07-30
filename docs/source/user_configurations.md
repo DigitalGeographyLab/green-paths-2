@@ -58,8 +58,6 @@ Project group configures the project wide settings.
 
 Groups name in YML: project
 
----
-
 ### project_crs
   - **Type**: integer
   - **Required**: mandatory
@@ -94,6 +92,7 @@ project:
   datas_coverage_safety_percentage: 75
 ```
 
+---
 
 ## OSM Network Group
 
@@ -101,7 +100,6 @@ OSM Network configures the OSM PBF settings.
 
 Name in YML: osm_network
 
----
 
 ### osm_pbf_file_path
   - **Type**: string
@@ -158,8 +156,6 @@ Data Sources configures the exposure data sources and their individual settings.
 These items are YML list items, so they start with character "-". There can be 1-n data sources. See example below.
 
 Groups name in YML: data_sources
-
----
 
 ### name
   - **Type**: string
@@ -297,7 +293,6 @@ Groups name in YML: data_sources
   - **Required**: optional, experimental
   - **Explanation**: Experimental: if a data set needs some pre-pre-processing, a function needs to be manually written to globals in custom_functions.py and this given the name. It is recommended to process the exposure data sources so that no pre-pre-processin is needed. This is mainly done for AQI .nc data for Helsinki.
 
----
 
 ## Data sources YAML Group Examples
 
@@ -367,8 +362,6 @@ data_sources:
 Routing group configures the routing settings.
 
 Name in YML: routing
-
----
 
 ### transport_mode
   - **Type**: string
@@ -449,12 +442,18 @@ Name in YML: routing
   - **Default**: allow_missing_data = True
     
   ```{hint}
-  name: needs to be the same as in data sources
-  sensitivity: this is the weight which is used in formula to weighten the exposure factor derived from exposure data. Formula: traversal time + (traversal time * sensitivity * exposure factor). All exposure factors will be normalized between 0-1 and for positive exposures, made negative.
-  allow_missing_data: Experimental feature, if set to False, will crash the route finding if any segment does not have exposure value. Most likely should not be used!!! Default is True
-  ```
+  **name**: needs to be the same as in data sources
 
----
+  **sensitivity**: this is the weight which is used in formula to weighten the exposure factor derived from exposure data. Formula: traversal time + (traversal time * sensitivity * exposure factor). All exposure factors will be normalized between 0-1 and for positive exposures, made negative.
+
+  **allow_missing_data**: Experimental feature, if set to False, will crash the route finding if any segment does not have exposure value. Most likely should not be used!!! Default is True.
+  ```
+  ```{attention}
+  Every exposure data source needs to be given name and sensitivity. If exposure results are wanted from some paths, but that data source is not wanted to include in the path optimization
+  that data sources sensitivity should then be set to 0.
+
+  e.g. user want to find air quality optimized paths, but would also like to know the amount of greenery, but only want to route based on air quality. Setting greenery (and other possible exposure datasource) sensitivity to 0.
+  ```
 
 ## Routing YAML Group Examples
 
@@ -475,7 +474,9 @@ routing:
       sensitivity: 1.25
 ```
 ```{hint}
-Using relatively small sensitivities (weights) produced the most optimal exposure routes, some even too optimal, neclecting time too much. "Best" results were gained with 1.5, 2.5 and 5 sensitivities (weights). Using too large sensitivities (weigths) e.g. 10, 20 decreased the positive exposure so much that all segments got cheap. Read more from documentation section (and thesis).
+Using relatively small sensitivities (weights) produced the most optimal exposure routes, some even too optimal, neclecting time too much.
+
+"Best" results were gained with 1.5, 2.5 and 5 sensitivities (weights). Using too large sensitivities (weigths) e.g. 10, 20 decreased the positive exposure so much that all segments got cheap. Read more from documentation section (and thesis).
 
 ```
 
@@ -506,8 +507,6 @@ routing:
 Analysing group configures the last module of analysing results settings.
 
 Name in YML: analysing
-
----
 
 ### keep_geometry
   - **Type**: boolean
@@ -547,8 +546,6 @@ Name in YML: analysing
   ```{attention}
   Exposure data source names need to be exactly the same as defined earlier.
   ```
-
----
 
 ## Analysing YAML Group Examples
 

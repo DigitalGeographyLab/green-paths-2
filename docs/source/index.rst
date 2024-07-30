@@ -29,7 +29,7 @@ It gets its efficient path finding using `Conveyal’s R5: Rapid Realistic Routi
    :hidden:
 
    Overview <overview>
-   Modules and Components <modules_and_components>
+   Modules and Components <modules_and_components> 
    Credits License and Affiliations <credits_license_and_citations>
 
 .. toctree::
@@ -43,7 +43,7 @@ It gets its efficient path finding using `Conveyal’s R5: Rapid Realistic Routi
    User Configurations <user_configurations>
    User Interface <cli_user_interface>
    Use Cases <use_cases>
-   Step by Step Examples <step_by_step_examples>
+   Step by Step Example <step_by_step_examples>
 
 .. Indices and tables
 .. ==================

@@ -1,13 +1,21 @@
 # DATA REQUIREMENTS
 
-Green Paths 2.0 supports multiple raster and vector data formats.
+Green Paths 2.0 supports different raster and vector data formats, and multiple simultaneous exposure data sources.
 
 Data sources are filled in the user configurations file, and the data need to be on the users local machine.
 See the instructions on how to fill the user configurations in the user configurations section.
 
 ```{important}
-The data should have numerical values (float) for the exposure calculations.
+The exposure data should have numerical values (float) for the exposure calculations.
 ```
+
+## OSM PBF
+
+A OSM PBF file is needed, and it can be downloaded from various online sources, see e.g.:
+
+- [Bbbike.org](https://extract.bbbike.org/)
+- [Geofabrik.de](https://download.geofabrik.de/) (street network should have as small extent as possible, so cropping might be required)
+
 
 ## Supported Exposure Data File Types
 
@@ -33,12 +41,4 @@ The data should have numerical values (float) for the exposure calculations.
 ```{warning}
 Not all filetypes are yet properly tested. Tested types: shp, tif, gpkg, nc, and gml.
 ```
-
-## OSM PBF
-
-A OSM PBF file is needed, and it can be downloaded from various online sources, see e.g.:
-
-- [Bbbike.org](https://extract.bbbike.org/)
-- [Geofabrik.de](https://download.geofabrik.de/) (street network should have as small extent as possible, so cropping might be required)
-
 

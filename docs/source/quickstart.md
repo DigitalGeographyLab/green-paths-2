@@ -28,7 +28,8 @@ For a successfull run see also [Data requirements](#data_requirements) and instr
         ./install_green_paths_2.sh
 
 ```{note}
-NOTE: If the installation script has errors, please check the prerequisites!
+NOTE: If the installation script has errors, please check the prerequisites from [Installation](#installation)!
+
 Remember to deactivate the conda environment before installing and re-activate it after installation!
 and check the prerequisites for the installation from the installation section!
 ```
@@ -37,20 +38,20 @@ and check the prerequisites for the installation from the installation section!
         
         conda activate green_paths_2
 
-5. Fill in the user configurations in the **user/config.yml** file.
+5. Fill in the user configurations in the **user/config.yml** file. See [User Configurations](#user_configurations).
 
 ```{tip}
 For help use the **Descriptor**, which will help to find the possible values for the user configurations.
-    inv gp2 --args="describe"
+    inv gp2 -a describe
 ```
 
 6. Validate the user configurations before running the pipeline.
 
-        inv gp2 --args="validate"
+        inv gp2 -a validate
 
 7. Run the Green Paths 2.0 CLI commands:
 
-        inv gp2 --args="all"
+        inv gp2 -a all
 
 8. See the results in the output folder.
 

@@ -68,3 +68,13 @@ hr {
     margin-bottom: 10px;
     opacity: .5;
 }
+
+.center_logos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.center_logos img {
+   width: 15rem;
+}
