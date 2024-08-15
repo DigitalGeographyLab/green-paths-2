@@ -126,5 +126,13 @@ green_paths_2/src/visualizations
 green_paths_2/data/*
 green_paths_2/src/user/*
 green_paths_2/user/data/*
+
+#dbs
 green_paths_2/src/database/*
+green_paths_2/tests/database/*
+
+green_paths_2/tests/data/*
+
+# user config
+green_paths_2/user/config.yaml
 

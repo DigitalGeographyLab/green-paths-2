@@ -28,6 +28,9 @@ ALLOW_MISSING_DATA_DEFAULT = True
 # SQLITE3 DB PATH
 GP2_DB_PATH = "green_paths_2/src/database/gp2.db"
 
+# SQLITE3 DB PATH FOR TESTING
+GP2_DB_TEST_PATH = "green_paths_2/tests/database/gp2_testing.db"
+
 # TABLES
 
 SEGMENT_STORE_TABLE = "segment_store"
@@ -73,6 +76,8 @@ OSM_ID_KEY = "osm_id"
 
 OSM_IDS_KEY = "osm_ids"
 
+DATA_COVERAGE_SAFETY_PERCENTAGE_KEY = "datas_coverage_safety_percentage"
+
 RASTER_CELL_RESOLUTION_KEY = "raster_cell_resolution"
 
 CUMULATIVE_RANGES_KEY = "cumulative_ranges"
@@ -86,6 +91,8 @@ TRAVEL_SPEED_KEY = "travel_speed"
 TRANSPORT_MODE_KEY = "transport_mode"
 
 EXPOSURE_PARAMETERS_KEY = "exposure_parameters"
+
+PROJECT_KEY = "project"
 
 ANALYSING_KEY = "analysing"
 
@@ -124,8 +131,6 @@ ORIGIN_DESTINATION_KEYS = [FROM_ID_KEY, TO_ID_KEY]
 # PATHS
 
 USER_CONFIG_PATH = "green_paths_2/user/config.yaml"
-
-OUTPUT_RASTER_DIR_PATH = "green_paths_2/src/cache/raster"
 
 OUTPUT_FINAL_RESULTS_DIR_PATH = "results_output"
 

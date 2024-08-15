@@ -17,13 +17,13 @@ A general version for basic users could be done by hosting a configured version 
 Anywhere there is some reasonable exposure data available, and OSM PBF street network file.
 Technically the exposure data can be anything, as long as it is georeferenced vector/raster, has numerical values and has enough coverage.
 
-## One-to-one
+## Single route: One-to-one
 For routing single paths. The input OD files should both have only 1 point each.
 
-## One-to-many
+## Many routes from single point: One-to-many
 For routing from one origin to multiple destinations or vice versa. The input OD files should one have single point and other mutliple points.
 
-## Many-to-many
+## From all origins to all destinations: Many-to-many
 For routing form all origin points to all destinations. The input OD files should both have mutliple points.
 
 ```{tip}

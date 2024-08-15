@@ -90,7 +90,7 @@ def routing_pipeline(
             data_source_names
         )
 
-        db_handler = DatabaseController(GP2_DB_PATH)
+        db_handler = DatabaseController()
 
         # get normalized exposure values from db
         normalized_exposures_dict = get_normalized_exposures_from_db(

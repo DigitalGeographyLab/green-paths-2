@@ -37,6 +37,11 @@ def main():
     parser = argparse.ArgumentParser(
         description="\033[92m Green paths 2 cli user interface \033[0m"
     )
+
+    parser.add_argument(
+        "-c", "--config", type=str, help="Path to user configuration file."
+    )
+
     # Define subparsers for different actions
     subparsers = parser.add_subparsers(dest="action", help="")
 
@@ -104,8 +109,8 @@ def main():
 
     # Subparser for descriptor module
     cache_parsers = subparsers.add_parser(
-        "clear_db_cache",
-        help="Clear db cache based on the given folder names, or all if no names given.",
+        "clear_db",
+        help="Clear db based on the given folder names, or all if no names given.",
     )
 
     cache_parsers.add_argument(
@@ -116,26 +121,26 @@ def main():
         required=False,
     )
 
-    args, unknown = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
 
     if args.action == "validate":
-        validate_user_config()
+        validate_user_config(args.config)
     elif args.action == "describe":
-        DataDescriptor().describe(args.save_to_file)
-    elif args.action == "clear_db_cache":
+        DataDescriptor().describe(args.save_to_file, args.config)
+    elif args.action == "clear_db":
         clear_db(args.table_names)
     elif args.action == "preprocessing":
         LOG.info("Running preprocessing pipeline. \n\n")
-        handle_pipelines("preprocessing")
+        handle_pipelines("preprocessing", args.config)
     elif args.action == "routing":
         LOG.info("Running routing pipeline.")
-        handle_pipelines("routing")
+        handle_pipelines("routing", args.config)
     elif args.action == "analysing":
         LOG.info("Running exposure analysing pipeline.")
-        handle_pipelines("analysing")
+        handle_pipelines("analysing", args.config)
     elif args.action == "all":
         LOG.info("Running the all pipeline.")
-        handle_pipelines("all", args.use_exposure_cache)
+        handle_pipelines("all", args.config, args.use_exposure_cache)
     elif args.action == "segment_osm_network":
         segment_or_use_cache_osm_network(args.filepath)
     else:

@@ -52,7 +52,9 @@ class DataDescriptor:
 
     # TODO: laita tähän extendien checkaaminen et overlappaa, vector sekä raster
 
-    def describe(self, save_to_file: bool = False) -> None:
+    def describe(
+        self, save_to_file: bool = False, custom_user_config: str = None
+    ) -> None:
         """
         Describe data
         Descriptor needs to be run with valid user config file.
@@ -69,7 +71,7 @@ class DataDescriptor:
             If the descriptor fails.
         """
 
-        if not validate_user_config():
+        if not validate_user_config(custom_user_config):
             LOG.error(
                 "User config file is not valid. Descriptor needs to be run with valid user_cofiguration. Add all missing attributes to data_sources etc."
             )
@@ -78,17 +80,15 @@ class DataDescriptor:
         LOG.info("Starting data descriptor.")
 
         try:
-
+            config_path = custom_user_config if custom_user_config else USER_CONFIG_PATH
             # parse and validate user configurations
-            user_config = UserConfig(
-                USER_CONFIG_PATH, skip_validation=True
-            ).parse_config()
+            user_config = UserConfig(config_path, skip_validation=True).parse_config()
 
             project_crs = user_config.project.project_crs
 
             # create osm network from user config osm pbf path
 
-            # TODO: is this needed?
+            # TODO: is this needed? only used in overlapping test, which should maybe removed for it is slow
             network = OsmNetworkHandler(
                 osm_pbf_file=user_config.osm_network.osm_pbf_file_path
             )
@@ -96,15 +96,15 @@ class DataDescriptor:
             network.convert_network_to_gdf()
             network_gdf = network.get_network_gdf()
 
-            # project network to project crs to allow overlap checks
-            network_in_project_crs = network
-            network_in_project_crs.convert_network_to_gdf()
+            # # project network to project crs to allow overlap checks
+            # network_in_project_crs = network
+            # network_in_project_crs.convert_network_to_gdf()
 
-            network_in_project_crs.handle_crs(
-                project_crs=project_crs, original_crs=network_gdf.crs
-            )
+            # network_in_project_crs.handle_crs(
+            #     project_crs=project_crs, original_crs=network_gdf.crs
+            # )
 
-            network_in_project_crs_gdf = network_in_project_crs.get_network_gdf()
+            # network_in_project_crs_gdf = network_in_project_crs.get_network_gdf()
 
             # HEADER
             self._write_new_line_to_data_description_text("\nDATA DESCRIPTION")
@@ -287,15 +287,16 @@ class DataDescriptor:
                         if os.path.exists(reprojected_raster_filepath):
                             raster_path = reprojected_raster_filepath
 
-                    data_and_network_overlap = (
-                        check_if_raster_and_network_extends_overlap(
-                            raster_path, network_in_project_crs_gdf
-                        )
-                    )
+                    # TODO: uncomment, configure or remove? This can take long time
+                    # data_and_network_overlap = (
+                    #     check_if_raster_and_network_extends_overlap(
+                    #         raster_path, network_in_project_crs_gdf
+                    #     )
+                    # )
 
-                    self._write_new_line_to_data_description_text(
-                        f"Raster data and network extends overlap: {data_and_network_overlap}",
-                    )
+                    # self._write_new_line_to_data_description_text(
+                    #     f"Raster data and network extends overlap: {data_and_network_overlap}",
+                    # )
 
             if save_to_file:
                 save_file_path = os.path.join(

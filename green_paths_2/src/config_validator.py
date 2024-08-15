@@ -10,14 +10,15 @@ LOG_SUCCESS = setup_logger(f"{__name__}_success", LoggerColors.GREEN.value)
 LOG_ERROR = setup_logger(f"{__name__}_error", LoggerColors.RED.value)
 
 
-def validate_user_config() -> bool | None:
+def validate_user_config(custom_config_path: str = None) -> bool | None:
     """
     Validate user configuration.
     Will fail on the first error found.
     """
     LOG.info("Starting validation for user configuration.")
     try:
-        UserConfig(USER_CONFIG_PATH).parse_config()
+        config_path = custom_config_path if custom_config_path else USER_CONFIG_PATH
+        UserConfig(config_path).parse_config()
         LOG.info("VALIDATING...\n\n\n")
         LOG_SUCCESS.info("CONFIGURATION VALID.")
     except ConfigError as e:

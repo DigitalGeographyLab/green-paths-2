@@ -18,7 +18,9 @@ LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 
 
 @time_logger
-def handle_pipelines(pipeline_name: str, use_exposure_cache: bool = False):
+def handle_pipelines(
+    pipeline_name: str, config_path: str = None, use_exposure_cache: bool = False
+):
     """
     Master function to handle different pipelines.
 
@@ -36,10 +38,11 @@ def handle_pipelines(pipeline_name: str, use_exposure_cache: bool = False):
         If pipeline fails.
     """
     try:
-        user_config = UserConfig(USER_CONFIG_PATH).parse_config()
+        config_path = config_path if config_path else USER_CONFIG_PATH
+        user_config = UserConfig(config_path).parse_config()
         data_handler = UserDataHandler()
         data_handler.populate_data_sources(data_sources=user_config.data_sources)
-        db_controller = DatabaseController(GP2_DB_PATH)
+        db_controller = DatabaseController()
 
         if pipeline_name == "preprocessing":
             osm_network_gdf = handle_osm_network_process(user_config)

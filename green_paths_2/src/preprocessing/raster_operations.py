@@ -1,13 +1,13 @@
 """ Raster processing module. """
 
 import os
+import time
 import geopandas as gpd
 import numpy as np
 from pyproj import CRS
 import rasterio
 from rasterio.features import rasterize
 from rasterio.transform import from_origin
-from shapely.geometry import box
 
 import rasterio
 from rasterio.enums import Resampling
@@ -15,7 +15,7 @@ from rasterio.warp import calculate_default_transform, reproject
 
 from ..config import (
     OSM_ID_KEY,
-    OUTPUT_RASTER_DIR_PATH,
+    OUTPUT_FINAL_RESULTS_DIR_PATH,
     RASTER_NO_DATA_VALUE,
     SEGMENT_POINTS_DEFAULT_SAMPLING_STRATEGY,
     SEGMENT_SAMPLING_POINTS_KEY,
@@ -152,7 +152,10 @@ def rasterize_and_calculate_segment_values(
         nodata_value=default_raster_null_value,
     )
 
-    output_raster_path = os.path.join(OUTPUT_RASTER_DIR_PATH, data_name + "-raster.tif")
+    timestr = time.strftime("%H-%M-%S")
+    output_raster_path = os.path.join(
+        OUTPUT_FINAL_RESULTS_DIR_PATH, data_name + "-" + timestr + "-raster.tif"
+    )
 
     raster_segment_values = calculate_segment_raster_values(
         network_gdf, raster, transform, default_raster_null_value

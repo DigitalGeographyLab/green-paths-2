@@ -1,14 +1,21 @@
+import os
 from collections import defaultdict
 import sqlite3
 from typing import Dict, List, Any
 
-from green_paths_2.src.config import SEGMENT_STORE_TABLE
+from green_paths_2.src.config import GP2_DB_PATH, GP2_DB_TEST_PATH, SEGMENT_STORE_TABLE
 from green_paths_2.src.timer import time_logger
 
 
 class DatabaseController:
-    def __init__(self, db_path: str):
-        self.db_path = db_path
+    def __init__(self):
+        self._set_db_path()
+
+    def _set_db_path(self):
+        if os.getenv("ENV") == "TEST":
+            self.db_path = GP2_DB_TEST_PATH
+        else:
+            self.db_path = GP2_DB_PATH
 
     def connect(self):
         return sqlite3.connect(self.db_path)

@@ -1,5 +1,7 @@
 # User Configurations
 
+The user configuration: config.yaml can be found in GP2 root under /user/ directory.
+
 The user configurations is the place where to configure Green Paths 2.0. It uses YML fileformat. For more on YML syntax see [YML Basics](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html). 
 
 User configuratinos can be thought to belong into five groups (YML dictionaries):

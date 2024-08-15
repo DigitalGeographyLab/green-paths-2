@@ -93,6 +93,7 @@ call poetry --version
 call poetry config virtualenvs.create false
 call poetry install
 
+:: CREATE GP2 DATABASE
 
 :: Create database directory if it doesn't exist
 set DB_DIR=green_paths_2\src\database
@@ -108,7 +109,33 @@ if not exist %DB_PATH% (
     sqlite3 %DB_PATH% "VACUUM;"
     echo Database created.
 ) else (
-    echo Database already exists at %DB_PATH%
+    echo Database already exists at %DB_PATH% so remove it and create a new one
+    :: Remove the existing SQLite3 database file
+    DEL %DB_PATH%
+
+    echo Creating SQLite database at %DB_PATH%
+    sqlite3 %DB_PATH% "VACUUM;"
+    echo Database created.
+
+)
+
+:: CREATE GP2 TEST DATABASE
+
+:: Create database directory if it doesn't exist
+set DB_TEST_DIR=green_paths_2\tests\database
+set DB_TEST_PATH=%DB_TEST_DIR%\gp2.db
+
+if not exist %DB_TEST_DIR% (
+    mkdir %DB_TEST_DIR%
+)
+
+:: Check if the database file exists, and create it if it doesn't
+if not exist %DB_TEST_PATH% (
+    echo Creating SQLite database at %DB_TEST_PATH%
+    sqlite3 %DB_TEST_PATH% "VACUUM;"
+    echo Database created.
+) else (
+    echo Database already exists at %DB_TEST_PATH%
 )
 
 @REM Installing these straight to the conda env, removes not found proj.db error when running preprocessing module

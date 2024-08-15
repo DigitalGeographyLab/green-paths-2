@@ -61,7 +61,7 @@ def exposure_analysing_pipeline(user_config: UserConfig):
     try:
         output_results_table_created = False
 
-        db_handler = DatabaseController(GP2_DB_PATH)
+        db_handler = DatabaseController()
         exposure_db_controller = ExposureDbController(db_handler)
         exposure_calculator = ExposuresCalculator()
         routing_results_count = db_handler.get_row_count(ROUTING_RESULTS_TABLE)
@@ -124,6 +124,13 @@ def exposure_analysing_pipeline(user_config: UserConfig):
 
             # add to db after each batch
             batch_path_results = exposure_calculator.get_batch_combined_path_results()
+
+            if not batch_path_results:
+                # TODO: should we actually just return?
+                # is it ok if no paths found?
+                raise PipeLineRuntimeError(
+                    "No paths found in the batch, check the routing results. Maybe no overlap of street network with the OD data?"
+                )
 
             # create table for final outputs if not yet created
             if not output_results_table_created:

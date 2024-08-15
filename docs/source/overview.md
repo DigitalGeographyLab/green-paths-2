@@ -27,6 +27,9 @@ See more from [Modules and Components](#modules_and_components)
 ## User configurations
 Green Paths 2.0 relies heavily on user configurations in order to work. All of the necessary tool configurations are filled in the [YAML](https://yaml.org/).
 
+The user configurations: config.yaml can befound in /user/ directory in GP2 root directory.
+In case a custom path for user configuration needs to be used, it can be passed in as argument, see [cli user interface](#cli_user_interface)
+
 ```{hint}
 See more from [User Configurations](#user_configurations)
 ```
@@ -35,6 +38,10 @@ See more from [User Configurations](#user_configurations)
 The segment exposure values are then used to route healthier paths with the by using [Conveyal's R5: Rapid Realistic Routing on Real-world and Reimagined networks](https://github.com/conveyal/r5) via python interface of [r5py: Rapid Realistic Routing with R5 in Python](https://github.com/r5py/r5py). The routing returns lists of OSM ID's taken during routing, and uses those OSM ID's to combine and calculate segment exposure values (combined with Preprocessing raw exposure values).
 
 GP2 is using patched forks from Digital Geography Lab's r5 [R5](https://github.com/DigitalGeographyLab/r5/tree/gp2) (branch GP2) and r5py modified fork [R5PY_GP2](https://github.com/DigitalGeographyLab/r5py_gp2).
+
+## Output Results
+The output results can befound in /results_output directory in GP2 root directory.
+Also the exposure rasters will be in this folder.
 
 
 ## Geography Masters Thesis (somewhat outdated)

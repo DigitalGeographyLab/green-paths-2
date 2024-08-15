@@ -30,8 +30,11 @@ from ..preprocessing.raster_operations import (
 )
 from ..logging import setup_logger, LoggerColors
 from ..config import (
+    DATA_COVERAGE_SAFETY_PERCENTAGE,
+    DATA_COVERAGE_SAFETY_PERCENTAGE_KEY,
     GP2_DB_PATH,
     OSM_ID_KEY,
+    PROJECT_KEY,
     RASTER_FILE_SUFFIX,
     REPROJECTED_RASTER_FILE_SUFFIX,
     SEGMENT_STORE_TABLE,
@@ -167,10 +170,13 @@ def preprocessing_pipeline(
                 "No data was found from the datasources for any of the segments. Check the data sources (e.g. CRS's) and try again."
             )
 
+        datas_coverage_safety_percentage = user_config.get_nested_attribute(
+            [PROJECT_KEY, DATA_COVERAGE_SAFETY_PERCENTAGE_KEY],
+            default=DATA_COVERAGE_SAFETY_PERCENTAGE,
+        )
+
         segment_store.validate_data_coverage(
-            all_data_sources,
-            len(osm_network_gdf),
-            user_config.project.datas_coverage_safety_percentage,
+            all_data_sources, len(osm_network_gdf), datas_coverage_safety_percentage
         )
 
         # TODO: ehkä tähän pitäis ottaa joku checki jos on tullu null arvoja teiltä?
@@ -186,7 +192,7 @@ def preprocessing_pipeline(
 
         segment_store_dict = segment_store.get_store()
         segment_store_wkt = convert_geometries_to_wkt(segment_store_dict)
-        db_handler = DatabaseController(GP2_DB_PATH)
+        db_handler = DatabaseController()
 
         table_structure_from_data = next(iter(segment_store_wkt.values()))
 

@@ -33,7 +33,7 @@ def empty_folder(folder_path: str) -> None:
 
 def clear_db(table_names: list[str]):
     LOG.info("Clearing db tables")
-    db_handler = DatabaseController(GP2_DB_PATH)
+    db_handler = DatabaseController()
     conn = db_handler.connect()
     cursor = conn.cursor()
     if not table_names:

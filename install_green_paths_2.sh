@@ -89,6 +89,8 @@ conda activate dgl_gp2
 # Install Poetry
 pip install poetry
 
+# CREATE GP2 DATABASE ***
+
 # Create database directory if it doesn't exist
 DB_DIR="green_paths_2/src/database"
 DB_PATH="$DB_DIR/gp2.db"
@@ -100,7 +102,26 @@ if [ ! -f "$DB_PATH" ]; then
     sqlite3 $DB_PATH "VACUUM;"
     echo "Database created."
 else
-    echo "Database already exists at $DB_PATH"
+    echo "Database already exists at $DB_PATH so remove it"
+    rm "$DB_PATH"
+
+    echo "Creating SQLite database at $DB_PATH"
+    sqlite3 $DB_PATH "VACUUM;"
+    echo "Database created."
+fi
+
+# Create TEST database directory if it doesn't exist
+DB_TEST_DIR="green_paths_2/tests/database"
+DB_TEST_PATH="$DB_TEST_DIR/gp2.db"
+mkdir -p $DB_TEST_DIR
+
+# Check if the database file exists, and create it if it doesn't
+if [ ! -f "$DB_TEST_PATH" ]; then
+    echo "Creating SQLite database at $DB_TEST_PATH"
+    sqlite3 $DB_TEST_PATH "VACUUM;"
+    echo "Database created."
+else
+    echo "Database already exists at $DB_TEST_PATH"
 fi
 
 # Installing these straight to the conda env, removes not found proj.db error when running preprocessing module

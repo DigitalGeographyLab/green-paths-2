@@ -1,22 +1,46 @@
 """ conftest.py is a file that is used to configure the pytest test runner. """
 
+# import os
+# import sys
+# import pytest
+
+# sys.path.insert(
+#     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
+# )
+
+import os
 import pytest
-
-from ..src.preprocessing.user_config_parser import UserConfig
-from ..src.logging import setup_logger, LoggerColors
-from ..src.preprocessing.osm_network_handler import OsmNetworkHandler
-from ..src.green_paths_exceptions import ConfigDataError
-
-LOG = setup_logger(__name__, LoggerColors.YELLOW.value)
+import logging
 
 
-TEST_CONFIG_PATH = "tests/data/test_valid_user_config.yaml"
-TEST_INVALID_CONFIG_PATH = "tests/data/test_invalid_user_config.yaml"
+@pytest.fixture(scope="session", autouse=True)
+def set_test_env_var():
+    os.environ["ENV"] = "TEST"
+    yield
+    del os.environ["ENV"]
 
 
-@pytest.fixture
-def user_config_path():
-    yield UserConfig()._load_config(TEST_CONFIG_PATH)
+@pytest.fixture(autouse=True)
+def configure_logging():
+    logging.basicConfig(level=logging.DEBUG)
+    LOG = logging.getLogger(__name__)
+
+
+# from ..src.preprocessing.user_config_parser import UserConfig
+# from ..src.logging import setup_logger, LoggerColors
+# from ..src.preprocessing.osm_network_handler import OsmNetworkHandler
+# from ..src.green_paths_exceptions import ConfigDataError
+
+# LOG = setup_logger(__name__, LoggerColors.YELLOW.value)
+
+
+# TEST_CONFIG_PATH = "tests/data/test_valid_user_config.yaml"
+# TEST_INVALID_CONFIG_PATH = "tests/data/test_invalid_user_config.yaml"
+
+
+# @pytest.fixture
+# def user_config_path():
+#     yield UserConfig()._load_config(TEST_CONFIG_PATH)
 
 
 # @pytest.fixture
