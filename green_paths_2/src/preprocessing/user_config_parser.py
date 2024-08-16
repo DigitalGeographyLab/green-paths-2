@@ -201,6 +201,9 @@ class UserConfig:
 
         :param config: A dictionary containing configuration data.
         """
+        if not config.get("project"):
+            self.errors.append("Missing project group in user_config.yaml.")
+
         if not config.get("project").get("project_crs"):
             self.errors.append("Invalid or missing project crs configuration.")
 
@@ -228,7 +231,7 @@ class UserConfig:
         data_sources_config = config.get("data_sources", [])
         if not data_sources_config:
             self.errors.append(
-                "Invalid or missing data sources configuration. See that atleast one data source is provided in user_config.yaml."
+                "Invalid or missing data sources group or configuration. See that atleast one data source is provided in user_config.yaml."
             )
 
         for data in data_sources_config:

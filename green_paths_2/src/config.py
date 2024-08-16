@@ -41,6 +41,16 @@ TRAVEL_TIMES_TABLE = "travel_times"
 
 OUTPUT_RESULTS_TABLE = "output_results"
 
+# PIPELINE NAMES
+
+PREPROCESSING_PIPELINE_NAME = "preprocessing"
+
+ROUTING_PIPELINE_NAME = "routing"
+
+ANALYSING_PIPELINE_NAME = "analysing"
+
+ALL_PIPELINE_NAME = "all"
+
 
 # TABLES SCHEMAS
 
@@ -133,6 +143,8 @@ ORIGIN_DESTINATION_KEYS = [FROM_ID_KEY, TO_ID_KEY]
 USER_CONFIG_PATH = "green_paths_2/user/config.yaml"
 
 OUTPUT_FINAL_RESULTS_DIR_PATH = "results_output"
+
+TEST_OUTPUT_RESULTS_DIR_PATH = "green_paths_2/tests/outputs"
 
 
 # # CACHE

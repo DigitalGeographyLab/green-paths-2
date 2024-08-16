@@ -3,7 +3,7 @@
 import os
 import geopandas as gpd
 
-from green_paths_2.src.database_controller import (
+from ...src.database_controller import (
     DatabaseController,
     split_data_by_length,
 )
@@ -17,7 +17,6 @@ from ..preprocessing.spatial_operations import (
     convert_geometries_to_wkt,
     create_buffer_for_geometries,
 )
-
 from ..preprocessing.vector_processor import (
     load_and_process_vector_data,
 )
@@ -32,7 +31,6 @@ from ..logging import setup_logger, LoggerColors
 from ..config import (
     DATA_COVERAGE_SAFETY_PERCENTAGE,
     DATA_COVERAGE_SAFETY_PERCENTAGE_KEY,
-    GP2_DB_PATH,
     OSM_ID_KEY,
     PROJECT_KEY,
     RASTER_FILE_SUFFIX,
@@ -49,8 +47,6 @@ from ..segment_value_store import SegmentValueStore
 from ..timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
-
-# TODO: -> conf Dasking/multiprocess?
 
 
 @time_logger

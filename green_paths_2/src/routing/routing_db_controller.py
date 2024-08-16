@@ -1,6 +1,6 @@
 import json
 
-from green_paths_2.src.timer import time_logger
+from ...src.timer import time_logger
 from ..config import (
     FROM_ID_KEY,
     OSM_ID_KEY,
@@ -9,7 +9,7 @@ from ..config import (
     TRAVEL_TIME_KEY,
 )
 
-from green_paths_2.src.database_controller import DatabaseController
+from ...src.database_controller import DatabaseController
 
 
 def get_normalized_exposures_from_db(

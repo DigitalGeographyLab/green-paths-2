@@ -1,9 +1,12 @@
 project:
   project_crs: 3879
-  datas_coverage_safety_percentage: 10
+  # needs to have 34% coverage
+  datas_coverage_safety_percentage: 34
+
 osm_network:
-  osm_pbf_file_path: green_paths_2/tests/data/osm/hki_medium.osm.pbf
+  osm_pbf_file_path: green_paths_2/tests/data/osm/test_hki_centra.osm.pbf
   original_crs: 4326
+
 data_sources:
   - name: gvi
     filepath: green_paths_2/tests/data/greenery/greenery_points.gpkg
@@ -17,7 +20,7 @@ data_sources:
     original_crs: 3879
 
   - name: "aqi"
-    filepath: green_paths_2/tests/data/aqi/allPollutants_2023-12-15T04.nc
+    filepath: green_paths_2/tests/data/aqi/allPollutants_2024-05-29T16.nc
     data_type: raster
     original_crs: 4326
     data_column: AQI 

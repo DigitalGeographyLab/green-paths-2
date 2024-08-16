@@ -16,7 +16,6 @@ from rasterio.warp import calculate_default_transform, reproject
 from ..config import (
     OSM_ID_KEY,
     OUTPUT_FINAL_RESULTS_DIR_PATH,
-    RASTER_NO_DATA_VALUE,
     SEGMENT_POINTS_DEFAULT_SAMPLING_STRATEGY,
     SEGMENT_SAMPLING_POINTS_KEY,
     SEGMENT_VALUES_ROUND_DECIMALS,

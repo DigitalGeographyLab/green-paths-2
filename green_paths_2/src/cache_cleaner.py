@@ -2,7 +2,7 @@
 
 import os
 
-from green_paths_2.src.database_controller import DatabaseController
+from ..src.database_controller import DatabaseController
 from .config import GP2_DB_PATH
 from .green_paths_exceptions import DataManagingError
 from .logging import setup_logger, LoggerColors

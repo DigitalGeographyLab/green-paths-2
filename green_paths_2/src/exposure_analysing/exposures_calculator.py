@@ -3,7 +3,7 @@
 import json
 from shapely.wkt import loads
 
-from green_paths_2.src.config import (
+from ...src.config import (
     CUMULATIVE_EXPOSURE_SECONDS_SUFFIX,
     FROM_ID_KEY,
     GEOMETRY_KEY,
@@ -17,7 +17,7 @@ from green_paths_2.src.config import (
     TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_AVERAGE_SUFFIX,
     TRAVERSAL_TIME_WEIGHTED_PATH_EXPOSURE_SUM_SUFFIX,
 )
-from green_paths_2.src.data_utilities import combine_multilinestrings
+from ...src.data_utilities import combine_multilinestrings
 
 
 class ExposuresCalculator:
