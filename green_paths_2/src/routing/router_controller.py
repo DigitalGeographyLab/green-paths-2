@@ -4,7 +4,7 @@ from r5py import TransportMode
 import geopandas as gpd
 import numpy as np
 
-from green_paths_2.src.config import (
+from ...src.config import (
     DEFAULT_R5_TRAVEL_SPEED_CYCLING,
     DEFAULT_R5_TRAVEL_SPEED_WALKING,
     OSM_IDS_KEY,
@@ -13,8 +13,8 @@ from green_paths_2.src.config import (
     TRAVEL_SPEED_KEY,
 )
 
-from green_paths_2.src.routing.routing_utilities import to_list_if_iterable
-from green_paths_2.src.timer import time_logger
+from ...src.routing.routing_utilities import to_list_if_iterable
+from ...src.timer import time_logger
 from ..green_paths_exceptions import R5pyError
 from ..preprocessing.data_types import (
     TravelModes,
@@ -106,6 +106,15 @@ def route_green_paths_2_paths(
     # get actual travel time seconds from the custom cost transport network
     # just get all because filtering with osm_id would take too long
     actual_travel_times = custom_cost_transport_network.get_base_travel_times()
+
+    # we did not find any routes (no osm_ids in the routing results)
+    if OSM_IDS_KEY not in routing_results.columns:
+        LOG.error(
+            "Routing results do not have osm_ids so no routes found. Check street network and ODS CRS's"
+        )
+        raise ValueError(
+            "Routing results do not have osm_ids so no routes found. Check street network and ODS CRS's"
+        )
 
     osm_ids_np = routing_results[OSM_IDS_KEY].values
     vectorized_conversion = np.vectorize(to_list_if_iterable, otypes=[object])

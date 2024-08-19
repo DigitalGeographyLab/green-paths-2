@@ -24,7 +24,7 @@ def validate_user_config(custom_config_path: str = None) -> bool | None:
     except ConfigError as e:
         LOG.info("VALIDATING...\n\n\n")
         LOG_ERROR.error(f"USER CONFIGURATION INVALID")
-        LOG_ERROR.error(f"FOUND ERROR: {str(e)}")
+        LOG_ERROR.error(f"{str(e)}")
         return False
     LOG.info("Validation finished.")
     return True

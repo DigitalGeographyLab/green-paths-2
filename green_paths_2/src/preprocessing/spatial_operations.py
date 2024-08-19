@@ -3,18 +3,17 @@
 import geopandas as gpd
 import rasterio
 import shapely
+import geopandas as gpd
 
-from green_paths_2.src.config import GEOMETRY_KEY, RASTER_CELL_RESOLUTION_KEY
-
-from ..logging import setup_logger, LoggerColors
-from ..timer import time_logger
 from shapely.geometry import MultiLineString
 from shapely.wkt import dumps
 from pyproj import CRS
-
-import geopandas as gpd
 from shapely.geometry import box
 
+from ...src.config import GEOMETRY_KEY, RASTER_CELL_RESOLUTION_KEY
+
+from ..logging import setup_logger, LoggerColors
+from ..timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.ORANGE.value)
 

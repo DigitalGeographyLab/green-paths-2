@@ -3,8 +3,8 @@ from collections import defaultdict
 import sqlite3
 from typing import Dict, List, Any
 
-from green_paths_2.src.config import GP2_DB_PATH, GP2_DB_TEST_PATH, SEGMENT_STORE_TABLE
-from green_paths_2.src.timer import time_logger
+from ..src.config import GP2_DB_PATH, GP2_DB_TEST_PATH, SEGMENT_STORE_TABLE
+from ..src.timer import time_logger
 
 
 class DatabaseController:
@@ -271,6 +271,30 @@ class DatabaseController:
         cursor.execute(f"CREATE INDEX {column} ON {table}({column});")
         conn.commit()
         conn.close()
+
+    def add_column_to_table(self, table_name, column_name, column_type="TEXT"):
+        """
+        Add a new column to an existing table in the database.
+
+        Parameters:
+        table_name (str): The name of the table to alter.
+        column_name (str): The name of the new column to add.
+        column_type (str): The type of the new column (default is TEXT).
+        """
+        conn = self.connect()
+        cursor = conn.cursor()
+
+        alter_table_sql = (
+            f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type};"
+        )
+
+        try:
+            cursor.execute(alter_table_sql)
+            conn.commit()
+        except sqlite3.OperationalError as e:
+            print(f"Failed to add column '{column_name}' to table '{table_name}': {e}")
+        finally:
+            cursor.close()
 
 
 # todo -> maybe move elsewhere:

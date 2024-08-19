@@ -112,7 +112,7 @@ fi
 
 # Create TEST database directory if it doesn't exist
 DB_TEST_DIR="green_paths_2/tests/database"
-DB_TEST_PATH="$DB_TEST_DIR/gp2.db"
+DB_TEST_PATH="$DB_TEST_DIR/gp2_testing.db"
 mkdir -p $DB_TEST_DIR
 
 # Check if the database file exists, and create it if it doesn't
@@ -121,7 +121,12 @@ if [ ! -f "$DB_TEST_PATH" ]; then
     sqlite3 $DB_TEST_PATH "VACUUM;"
     echo "Database created."
 else
-    echo "Database already exists at $DB_TEST_PATH"
+    echo "Test Database already exists at $DB_TEST_PATH so remove it"
+    rm "$DB_TEST_PATH"
+
+    echo "Creating Test SQLite database at $DB_TEST_PATH"
+    sqlite3 $DB_TEST_PATH "VACUUM;"
+    echo "Test Database created."
 fi
 
 # Installing these straight to the conda env, removes not found proj.db error when running preprocessing module

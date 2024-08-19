@@ -4,11 +4,11 @@ import json
 import os
 import pandas as pd
 
-from green_paths_2.src.database_controller import DatabaseController
-from green_paths_2.src.exposure_analysing.exposure_db_controller import (
+from ...src.database_controller import DatabaseController
+from ...src.exposure_analysing.exposure_db_controller import (
     ExposureDbController,
 )
-from green_paths_2.src.exposure_analysing.exposures_calculator import (
+from ...src.exposure_analysing.exposures_calculator import (
     ExposuresCalculator,
 )
 
@@ -16,7 +16,6 @@ from ..config import (
     ANALYSING_KEY,
     CSV_FILE_NAME,
     CUMULATIVE_RANGES_KEY,
-    GP2_DB_PATH,
     GPKG_FILE_NAME,
     KEEP_GEOMETRY_KEY,
     NAME_KEY,
@@ -26,6 +25,7 @@ from ..config import (
     OUTPUT_RESULTS_TABLE,
     ROUTING_RESULTS_TABLE,
     SAVE_OUTPUT_NAME_KEY,
+    TEST_OUTPUT_RESULTS_DIR_PATH,
     TRAVEL_TIME_KEY,
 )
 from ..exposure_analysing.exposure_data_handlers import (
@@ -60,6 +60,7 @@ def exposure_analysing_pipeline(user_config: UserConfig):
 
     try:
         output_results_table_created = False
+        all_possible_columns = set()
 
         db_handler = DatabaseController()
         exposure_db_controller = ExposureDbController(db_handler)
@@ -68,6 +69,10 @@ def exposure_analysing_pipeline(user_config: UserConfig):
         batch_limit = get_batch_limit(routing_results_count=routing_results_count)
         # get data names as list so that we can loop each different data source
         data_names = [data.get(NAME_KEY) for data in user_config.data_sources]
+
+        keep_geometries = user_config.get_nested_attribute(
+            [ANALYSING_KEY, KEEP_GEOMETRY_KEY], default=False
+        )
         # process the routing results in batches
         for offset in range(0, routing_results_count, batch_limit):
             # clear cache for not to overflow memory
@@ -111,9 +116,6 @@ def exposure_analysing_pipeline(user_config: UserConfig):
                 cumulative_ranges = user_config.get_nested_attribute(
                     [ANALYSING_KEY, CUMULATIVE_RANGES_KEY]
                 )
-                keep_geometries = user_config.get_nested_attribute(
-                    [ANALYSING_KEY, KEEP_GEOMETRY_KEY]
-                )
 
                 # calculate and save path exposures
                 exposure_calculator.calculate_and_save_combined_path_exposures(
@@ -132,9 +134,25 @@ def exposure_analysing_pipeline(user_config: UserConfig):
                     "No paths found in the batch, check the routing results. Maybe no overlap of street network with the OD data?"
                 )
 
+            # this is needed if the current batch has some new columns that the previous batches did not have
+            # this might happen if the first batch has no data for some columns
+            # so we need to add the columns to the results table
+            # Collect all possible columns across all batches
+            for result in batch_path_results:
+                current_columns = set(result.keys())
+                new_columns = current_columns - all_possible_columns
+
+                if new_columns and output_results_table_created:
+                    # Alter the table to add new columns
+                    for column in new_columns:
+                        db_handler.add_column_to_table(OUTPUT_RESULTS_TABLE, column)
+
+                all_possible_columns.update(current_columns)
+
             # create table for final outputs if not yet created
+            # not this is inside of loop so we want to create the table only once
             if not output_results_table_created:
-                table_structure_from_data = next(iter(batch_path_results))
+                table_structure_from_data = {col: None for col in all_possible_columns}
 
                 db_handler.create_table_from_dict_data(
                     OUTPUT_RESULTS_TABLE, table_structure_from_data
@@ -165,8 +183,16 @@ def exposure_analysing_pipeline(user_config: UserConfig):
         output_file_type = GPKG_FILE_NAME if keep_geometries else CSV_FILE_NAME
 
         time_now = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+        # set output dir path based on environment
+        output_dir_path = (
+            TEST_OUTPUT_RESULTS_DIR_PATH
+            if os.getenv("ENV") == "TEST"
+            else OUTPUT_FINAL_RESULTS_DIR_PATH
+        )
+
         results_output_path = os.path.join(
-            OUTPUT_FINAL_RESULTS_DIR_PATH,
+            output_dir_path,
             f"{time_now}_{output_file_name}.{output_file_type}",
         )
         save_to_gpkg_or_csv(final_output_df, results_output_path)

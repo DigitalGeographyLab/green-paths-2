@@ -5,8 +5,8 @@
 # LIKE THIS BEFORE OTHER IMPORTS DUE TO NEED FOR --r5-classpath ARGUMENT BEFORE R5PY IMPORTS
 # IT IS DIRTY, AND THERE MIGHT BE A BETTER WAY TO DO THIS
 
-from green_paths_2.src.database_controller import DatabaseController
-from green_paths_2.src.routing.routing_db_controller import (
+from ...src.database_controller import DatabaseController
+from ...src.routing.routing_db_controller import (
     format_routing_results,
     format_travel_times,
     get_normalized_exposures_from_db,
@@ -14,7 +14,6 @@ from green_paths_2.src.routing.routing_db_controller import (
 from ..config import (
     DB_ROUTING_RESULTS_COLUMNS,
     DB_TRAVEL_TIMES_COLUMNS,
-    GP2_DB_PATH,
     ROUTING_RESULTS_TABLE,
     TRAVEL_TIMES_TABLE,
 )

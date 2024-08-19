@@ -1,8 +1,8 @@
-from green_paths_2.src.config import (
+from ...src.config import (
     SEGMENT_STORE_TABLE,
     TRAVEL_TIMES_TABLE,
 )
-from green_paths_2.src.database_controller import DatabaseController
+from ...src.database_controller import DatabaseController
 
 
 class ExposureDbController:

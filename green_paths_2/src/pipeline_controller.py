@@ -1,7 +1,14 @@
-""" TODO """
+""" Handle execution of different pipelines. """
 
-from green_paths_2.src.database_controller import DatabaseController
-from .config import GP2_DB_PATH, SEGMENT_STORE_TABLE, USER_CONFIG_PATH
+from ..src.database_controller import DatabaseController
+from .config import (
+    ALL_PIPELINE_NAME,
+    ANALYSING_PIPELINE_NAME,
+    PREPROCESSING_PIPELINE_NAME,
+    ROUTING_PIPELINE_NAME,
+    SEGMENT_STORE_TABLE,
+    USER_CONFIG_PATH,
+)
 from .exposure_analysing.main import exposure_analysing_pipeline
 from .green_paths_exceptions import PipeLineRuntimeError
 from .osm_network_controller import handle_osm_network_process
@@ -15,6 +22,27 @@ from .logging import setup_logger, LoggerColors
 from .timer import time_logger
 
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
+
+
+def init_config_data_handler_and_db_controller(config_path: str = None):
+    """
+    Initialize UserConfig, UserDataHandler and DatabaseController.
+
+    Parameters
+    ----------
+    config_path : str
+        Path to the user configuration file.
+
+    Returns
+    -------
+    UserConfig, UserDataHandler, DatabaseController
+    """
+    config_path = config_path if config_path else USER_CONFIG_PATH
+    user_config = UserConfig(config_path).parse_config()
+    data_handler = UserDataHandler()
+    data_handler.populate_data_sources(data_sources=user_config.data_sources)
+    db_controller = DatabaseController()
+    return user_config, data_handler, db_controller
 
 
 @time_logger
@@ -38,20 +66,18 @@ def handle_pipelines(
         If pipeline fails.
     """
     try:
-        config_path = config_path if config_path else USER_CONFIG_PATH
-        user_config = UserConfig(config_path).parse_config()
-        data_handler = UserDataHandler()
-        data_handler.populate_data_sources(data_sources=user_config.data_sources)
-        db_controller = DatabaseController()
+        user_config, data_handler, db_controller = (
+            init_config_data_handler_and_db_controller(config_path)
+        )
 
-        if pipeline_name == "preprocessing":
+        if pipeline_name == PREPROCESSING_PIPELINE_NAME:
             osm_network_gdf = handle_osm_network_process(user_config)
             preprocessing_pipeline(osm_network_gdf, data_handler, user_config)
-        elif pipeline_name == "routing":
+        elif pipeline_name == ROUTING_PIPELINE_NAME:
             routing_pipeline(data_handler, user_config)
-        elif pipeline_name == "analysing":
+        elif pipeline_name == ANALYSING_PIPELINE_NAME:
             exposure_analysing_pipeline(user_config)
-        elif pipeline_name == "all":
+        elif pipeline_name == ALL_PIPELINE_NAME:
 
             skip_preprocessing = False
             if use_exposure_cache:

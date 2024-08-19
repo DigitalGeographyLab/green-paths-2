@@ -24,9 +24,17 @@ def gp2(c, args=""):
     # Check if the operating system is Windows
     if os.name == "nt":  # 'nt' means Windows
         c.run(
-            command, echo=True, out_stream=sys.stdout, err_stream=sys.stderr, pty=False
+            command,
+            echo=True,
+            out_stream=sys.stdout,
+            err_stream=sys.stderr,
+            pty=False,
         )
     else:
         c.run(
-            command, echo=True, out_stream=sys.stdout, err_stream=sys.stderr, pty=True
+            command,
+            echo=True,
+            out_stream=sys.stdout,
+            err_stream=sys.stderr,
+            pty=True,
         )
