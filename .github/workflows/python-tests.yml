@@ -29,7 +29,7 @@ jobs:
     - name: Set up Conda environment and install dependencies
       run: |
         source $HOME/miniconda/etc/profile.d/conda.sh  # Ensure conda is available
-        conda create -n dgl_gp2 python=3.11 -y
+        conda create -n dgl_gp2 python=3.11 sqlite=3.40.1 -y  # Install the latest compatible SQLite version
         conda activate dgl_gp2
         conda install -c conda-forge gdal=3.9.1 -y  # Ensure GDAL and its Python bindings are the same version
         pip install poetry
