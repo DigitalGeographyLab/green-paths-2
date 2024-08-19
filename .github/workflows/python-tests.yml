@@ -28,8 +28,9 @@ jobs:
 
     - name: Set up Conda environment
       run: |
+        source $HOME/miniconda/etc/profile.d/conda.sh  # Ensure conda is available
         conda create -n dgl_gp2 python=3.11 -y
-        source activate dgl_gp2
+        conda activate dgl_gp2
         conda install -c conda-forge openjdk=21 -y
         pip install poetry
         poetry install
@@ -37,6 +38,7 @@ jobs:
 
     - name: Run tests
       run: |
-        source activate dgl_gp2
+        source $HOME/miniconda/etc/profile.d/conda.sh  # Ensure conda is available
+        conda activate dgl_gp2
         poetry run pytest
       shell: bash
