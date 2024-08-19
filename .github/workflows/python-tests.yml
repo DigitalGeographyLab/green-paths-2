@@ -2,36 +2,44 @@ name: Python Tests
 
 on:
   push:
+    branches:
+      - main
+      - develop
   pull_request:
     branches:
       - main
-  workflow_dispatch:  
+  workflow_dispatch:  # Allow manual triggering of this workflow
 
 jobs:
   test:
-    runs-on: ubuntu-latest  # Use the latest version of Ubuntu
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2  # Checkout the code from the repository
+      uses: actions/checkout@v3
 
-    - name: Set up Miniconda
-      uses: conda-incubator/setup-miniconda@v2
-      with:
-        auto-update-conda: true
-        python-version: 3.11  # Match the Python version in your Conda environment
-        environment-file: environment.yml  # Optional if you use an environment.yml file
-        activate-environment: dgl_gp2
-
-    - name: Install dependencies with Poetry
+    - name: Install Miniconda
       run: |
+        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+        bash miniconda.sh -b -p $HOME/miniconda
+        export PATH="$HOME/miniconda/bin:$PATH"
+        conda init bash
+        source ~/.bashrc
+        conda config --set always_yes yes --set changeps1 no
+        conda update -q conda
+
+    - name: Set up Conda environment
+      run: |
+        conda create -n dgl_gp2 python=3.11
         conda activate dgl_gp2
+        conda install -c conda-forge openjdk=21
         pip install poetry
-        poetry install  # This will install all dependencies listed in pyproject.toml
+        poetry install
       shell: bash
 
     - name: Run tests
       run: |
+        source ~/.bashrc
         conda activate dgl_gp2
-        poetry run pytest  # Run pytest through Poetry
+        poetry run pytest
       shell: bash
