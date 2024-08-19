@@ -36,9 +36,10 @@ jobs:
         poetry install
       shell: bash
 
-    - name: Run tests
+    - name: Verify pytest installation and run tests
       run: |
         source $HOME/miniconda/etc/profile.d/conda.sh  # Ensure conda is available
         conda activate dgl_gp2
+        pytest --version  # Verify pytest is installed
         poetry run pytest
       shell: bash
