@@ -16,7 +16,7 @@ from .data_types import (
 )
 
 
-LOG = setup_logger(__name__, LoggerColors.PURPLE.value)
+LOG = setup_logger(__name__, LoggerColors.RED.value)
 
 # TODO: add checks for raster resolution...
 
@@ -125,9 +125,11 @@ class UserConfig:
         self._validate_routing_config(config)
         self._validate_analysing_config(config)
         if self.errors:
+            print("nää on errorirt")
+            print(self.errors)
             error_message = "\n\n".join(self.errors)
-            LOG.error(f"Errors in user configuration: \n{error_message}")
-            raise ConfigError(f"ERRORS IN USER CONFIGURATION: \n{error_message}")
+            LOG.error(f"Errors in user configuration: \n\n{error_message}")
+            raise ConfigError(f"ERRORS IN USER CONFIGURATION: \n\n{error_message}")
 
     def set_attributes(self, config: dict) -> None:
         """
@@ -164,6 +166,11 @@ class UserConfig:
 
     def _validate_project_configs(self, config: dict) -> None:
         """Validate project configurations."""
+
+        if not config.get("project"):
+            self.errors.append("Missing project group in user_config.yaml.")
+            return
+
         datas_coverage_safety_percentage = config.get("project").get(
             DataSourceModel.DatasCoverageSafetyPercentage.value
         )
@@ -181,12 +188,18 @@ class UserConfig:
 
         :param osm_pdb_path: Path to the osm_pdb file.
         """
+        if not config.get("osm_network"):
+            self.errors.append("Missing osm network group in user_config.yaml.")
+            return
+
         osm_pbf_path = config.get("osm_network").get("osm_pbf_file_path")
 
         if not osm_pbf_path or not os.path.exists(osm_pbf_path):
             self.errors.append(
                 f"Didn't find osm network pbf file with provided user confs. Path was {osm_pbf_path}"
             )
+            return
+
         # TODO: lisää tähän joku checki mikä lataa ja kattoo onhan siel kamaa jne... et on osmid't ja kaikkee
         _, file_extension = os.path.splitext(osm_pbf_path)
         if file_extension.lower() != ".pbf":
@@ -203,6 +216,7 @@ class UserConfig:
         """
         if not config.get("project"):
             self.errors.append("Missing project group in user_config.yaml.")
+            return
 
         if not config.get("project").get("project_crs"):
             self.errors.append("Invalid or missing project crs configuration.")
@@ -211,8 +225,6 @@ class UserConfig:
             self.errors.append(
                 "Invalid project crs configuration. Should be string or int."
             )
-
-        # TODO: validate that the crs is valid crs
 
         if not crs_uses_meters(config.get("project").get("project_crs")):
             self.errors.append(
@@ -231,8 +243,9 @@ class UserConfig:
         data_sources_config = config.get("data_sources", [])
         if not data_sources_config:
             self.errors.append(
-                "Invalid or missing data sources group or configuration. See that atleast one data source is provided in user_config.yaml."
+                "Invalid or missing data sources group. See that group and atleast one data source is provided in user_config.yaml."
             )
+            return
 
         for data in data_sources_config:
             # init all the values using enum names
@@ -287,16 +300,8 @@ class UserConfig:
             if data_type not in [dt.value for dt in DataTypes]:
                 self.errors.append(f"Invalid or not supported datatype configuration.")
 
-            # data column for vector data, mandatory
-            if data_type == DataTypes.Vector.value and not data_column:
-                self.errors.append(
-                    "Invalid or missing data column configuration for vector data."
-                )
-
-            # data column for raster data, optional
-            if data_column == DataTypes.Raster.value and (
-                data_column and not isinstance(data_column, str)
-            ):
+            # data column for mandatory
+            if not isinstance(data_column, str):
                 self.errors.append(
                     "Invalid data column configuration. Should be string. This optional attribute can be left empty. If provided, it should be string."
                 )
@@ -501,6 +506,7 @@ class UserConfig:
         analysing_config = config.get("analysing", {})
 
         if not analysing_config:
+            self.errors.append("Invalid or missing analysing configuration section.")
             return
 
         cumulative_ranges = analysing_config.get(DataSourceModel.CumulativeRanges.value)

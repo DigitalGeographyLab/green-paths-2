@@ -1,10 +1,4 @@
-# NOTE - THIS TEST NEEDS TO HAVE THE PRECALCULATE AND ROUTING TEST RUN BEFORE IT
-# it adds to the segment store table which is used to generate the custom cost weight factor dictionaries that routing needs!
-# NOTE - all test should be made better!!! excuse: time
-
-
 import os
-
 from ..src.config import (
     ANALYSING_PIPELINE_NAME,
     OUTPUT_RESULTS_TABLE,

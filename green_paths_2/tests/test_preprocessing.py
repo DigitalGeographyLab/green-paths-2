@@ -1,9 +1,4 @@
-# NOTE - all test should be made better!!! excuse: time
-# NOTE - main goal for this test is to run preprocessing pipeline and check that the correct values are passed to db table segment_store
-
 import os
-
-import pytest
 
 from ..tests.db_checker_helper import (
     check_data_types,
@@ -18,8 +13,6 @@ from ..src.pipeline_controller import (
 )
 
 
-# skip test
-# @pytest.mark.skip(reason="testing  so skipping")
 def test_preprocessing(conn, config_dir, valid_user_config):
 
     config_path = os.path.join(config_dir, valid_user_config)

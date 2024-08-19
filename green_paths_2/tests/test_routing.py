@@ -1,13 +1,5 @@
-# NOTE - THIS TEST NEEDS TO HAVE THE PRECALCULATE TEST RUN BEFORE IT
-# it adds to the segment store table which is used to generate the custom cost weight factor dictionaries that routing needs!
-
-# NOTE - all test should be made better!!! excuse: time
-
-# main goal for this test is to run routing pipeline and check that the correct values are passed to db tables routing_results and travel_times
-
 import os
 
-import pytest
 from ..src.config import (
     ROUTING_PIPELINE_NAME,
     ROUTING_RESULTS_TABLE,
@@ -22,8 +14,6 @@ from ..tests.db_checker_helper import (
 )
 
 
-# skip test
-# @pytest.mark.skip(reason="testing  so skipping")
 def test_routing(conn, config_dir, valid_user_config):
     config_path = os.path.join(config_dir, valid_user_config)
 

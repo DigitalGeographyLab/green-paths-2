@@ -11,27 +11,6 @@ osm_network:
 
 data_sources:
 
-  - name: shade # mandatory
-    filepath: path/to/shadows.tif # mandatory
-    data_type: raster # optional, recommended
-    original_crs: 3007 # mandatory
-    min_data_value: 0 # mandatory
-    max_data_value: 0.3333333432674408 # mandatory
-    good_exposure: True # mandatory
-
-  - name: gvi # mandatory
-    filepath: path/to/greenery_points.gpkg
-    data_type: vector # optional, recommended
-    original_crs: 3879 # mandatory
-    layer_name: Helsinki_4326 # optional, recommended
-    data_column: Gvi_Mean # mandatory
-    min_data_value: 0.0096875 # mandatory
-    max_data_value: 86.28875 # mandatory
-    good_exposure: True # mandatory
-    data_buffer: 10 # optional, only for vector datas, in meters
-    raster_cell_resolution: 20 # mandatory
-    save_raster_file: True # optional
-
   - name: aqi # mandatory
     filepath: path/to/allPollutants_2023-12-15T04.nc # mandatory
     data_type: raster # optional, recommended
@@ -44,8 +23,6 @@ data_sources:
     save_raster_file: True # optional
     custom_processing_function: convert_aq_nc_to_tif_and_scale_offset # optional
 
-
-
 routing:
     transport_mode: walking
     origins: path/to/origins_points.gpkg
@@ -54,25 +31,16 @@ routing:
     destinations: path/to/destinations_points.shp
     od_crs: 4326 # mandatory
     exposure_parameters:
-      - name: shade # mandatory
-        sensitivity: 1.5 # mandatory
-        allow_missing_data: True # optional, experimental
-
-      - name: aqi # mandatory
+      - name: aqiii # mandatory
         sensitivity: 2 # mandatory
         allow_missing_data: True # optional, experimental
-
-      - name: gvi # mandatory
-        sensitivity: 5 # mandatory
-        allow_missing_data: True # optional, experimental
-
 
 analysing:
   keep_geometry: True # optional
   cumulative_ranges: # optional
     aqi: # mandatory, if given, should be the same as in the data_sources
-      - [0, 0.99] # mandatory
-      - [1, 1.99] # ...
-      - [2, 2.99] # ...
+      - ["0, 0.99"] # mandatory
+      - [1] # ...
+      - 2, 2.99 # ...
       - [3, 3.99] # ...
       - [4, 5] # mandatory
