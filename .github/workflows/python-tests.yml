@@ -8,7 +8,7 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:  # Allow manual triggering of this workflow
+  workflow_dispatch:
 
 jobs:
   test:
@@ -24,19 +24,21 @@ jobs:
         bash miniconda.sh -b -p $HOME/miniconda
         export PATH="$HOME/miniconda/bin:$PATH"
         conda init bash
-        source ~/.bashrc  # Reload the shell to apply conda initialization
+        source $HOME/miniconda/etc/profile.d/conda.sh  # Ensure conda is available
 
-    - name: Set up Conda environment and install GDAL
+    - name: Set up Conda environment and reinstall Python with SQLite
       run: |
         source $HOME/miniconda/etc/profile.d/conda.sh  # Ensure conda is available
         conda create -n dgl_gp2 python=3.11 -y
         conda activate dgl_gp2
-        conda install -c conda-forge gdal  # Install GDAL and its dependencies
+        conda install -c conda-forge sqlite=3.39.4  # Install a specific, compatible version of SQLite
+        conda install -c conda-forge python=3.11 -y  # Reinstall Python to ensure compatibility
+        conda install -c conda-forge gdal -y  # Install GDAL and its dependencies
         pip install poetry
         poetry install
       shell: bash
 
-    - name: Verify pytest installation and run tests
+    - name: Run tests
       run: |
         source $HOME/miniconda/etc/profile.d/conda.sh  # Ensure conda is available
         conda activate dgl_gp2
