@@ -26,12 +26,12 @@ jobs:
         conda init bash
         source ~/.bashrc  # Reload the shell to apply conda initialization
 
-    - name: Set up Conda environment
+    - name: Set up Conda environment and install GDAL
       run: |
         source $HOME/miniconda/etc/profile.d/conda.sh  # Ensure conda is available
         conda create -n dgl_gp2 python=3.11 -y
         conda activate dgl_gp2
-        conda install -c conda-forge openjdk=21 -y
+        conda install -c conda-forge gdal  # Install GDAL and its dependencies
         pip install poetry
         poetry install
       shell: bash
