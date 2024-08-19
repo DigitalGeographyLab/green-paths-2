@@ -29,9 +29,9 @@ jobs:
     - name: Set up Conda environment and install dependencies
       run: |
         source $HOME/miniconda/etc/profile.d/conda.sh  # Ensure conda is available
-        conda create -n dgl_gp2 python=3.11 sqlite=3.41.1 -c conda-forge -y  # Use a potentially more compatible version of SQLite
+        conda create -n dgl_gp2 python=3.11 sqlite=3.41.1 -c conda-forge -y
         conda activate dgl_gp2
-        conda install -c conda-forge gdal=3.9.1 libuuid=2.38.1 openssl=3.0.7 -y  # Install dependencies with specific versions
+        conda install -c conda-forge gdal=3.6.4 openssl=3.0.9 -y  # Use a potentially more compatible GDAL and OpenSSL version
         pip install poetry
         poetry config virtualenvs.create false  # Ensure Poetry installs into the Conda environment
         poetry install --no-root  # Install dependencies but do not install the package itself
