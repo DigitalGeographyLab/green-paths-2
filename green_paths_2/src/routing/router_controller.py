@@ -116,8 +116,8 @@ def route_green_paths_2_paths(
             "Routing results do not have osm_ids so no routes found. Check street network and ODS CRS's"
         )
 
-    osm_ids_np = routing_results[OSM_IDS_KEY].values
-    vectorized_conversion = np.vectorize(to_list_if_iterable, otypes=[object])
-    routing_results[OSM_IDS_KEY] = vectorized_conversion(osm_ids_np)
+    routing_results[OSM_IDS_KEY] = routing_results[OSM_IDS_KEY].apply(
+        to_list_if_iterable
+    )
 
     return routing_results, actual_travel_times

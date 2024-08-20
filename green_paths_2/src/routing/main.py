@@ -5,6 +5,8 @@
 # LIKE THIS BEFORE OTHER IMPORTS DUE TO NEED FOR --r5-classpath ARGUMENT BEFORE R5PY IMPORTS
 # IT IS DIRTY, AND THERE MIGHT BE A BETTER WAY TO DO THIS
 
+
+import numpy as np
 from ...src.database_controller import DatabaseController
 from ...src.routing.routing_db_controller import (
     format_routing_results,
@@ -12,8 +14,10 @@ from ...src.routing.routing_db_controller import (
     get_normalized_exposures_from_db,
 )
 from ..config import (
+    CHUNK_SIZE_FOR_ROUTING_RESULTS,
     DB_ROUTING_RESULTS_COLUMNS,
     DB_TRAVEL_TIMES_COLUMNS,
+    ROUTING_CHUNKING_THRESHOLD,
     ROUTING_RESULTS_TABLE,
     TRAVEL_TIMES_TABLE,
 )
@@ -46,6 +50,24 @@ from ..routing.routing_utilities import (
     get_normalized_data_source_names,
     validate_segmented_osm_network_path,
 )
+
+
+def chunk_data(data, chunk_size):
+    num_chunks = len(data) // chunk_size + (1 if len(data) % chunk_size > 0 else 0)
+    chunks = np.array_split(data, num_chunks)
+    print(f"Created {len(chunks)} chunks.")
+    return chunks
+
+
+def process_and_store_results(db_handler, route_data=None, travel_times=None):
+    """Convert, format, and store routing results and travel times in the database."""
+    if route_data is not None:
+        route_data_dict = convert_gdf_to_dict(route_data, orient="records")
+        formatted_routing_results = format_routing_results(route_data_dict)
+        db_handler.add_many_dict(ROUTING_RESULTS_TABLE, formatted_routing_results)
+    if travel_times is not None:
+        formatted_travel_times = format_travel_times(travel_times)
+        db_handler.add_many_dict(TRAVEL_TIMES_TABLE, formatted_travel_times)
 
 
 @time_logger
@@ -112,24 +134,27 @@ def routing_pipeline(
             user_config,
         )
 
-        # convert route results to dict
-        green_paths_route_results = convert_gdf_to_dict(
-            green_paths_route_results, orient="records"
-        )
-
-        # create tables for routing results and travel times
         db_handler.create_table_from_params(
             ROUTING_RESULTS_TABLE, DB_ROUTING_RESULTS_COLUMNS
         )
         db_handler.create_table_from_params(TRAVEL_TIMES_TABLE, DB_TRAVEL_TIMES_COLUMNS)
 
-        # format routing results and travel times for db
-        formatted_routing_results = format_routing_results(green_paths_route_results)
-        formatted_travel_times = format_travel_times(actual_travel_times)
+        # get route rows count from routing results
+        route_rows_count = green_paths_route_results.shape[0]
 
-        # add routing results and travel times to db
-        db_handler.add_many_dict(ROUTING_RESULTS_TABLE, formatted_routing_results)
-        db_handler.add_many_dict(TRAVEL_TIMES_TABLE, formatted_travel_times)
+        # chunk routing data if route_rows_count is greater than threshold
+        if route_rows_count > ROUTING_CHUNKING_THRESHOLD:
+            route_result_chunks = chunk_data(
+                green_paths_route_results, CHUNK_SIZE_FOR_ROUTING_RESULTS
+            )
+            for route_chunk in route_result_chunks:
+                process_and_store_results(db_handler, route_chunk, None)
+
+            process_and_store_results(db_handler, None, actual_travel_times)
+        else:
+            process_and_store_results(
+                db_handler, green_paths_route_results, actual_travel_times
+            )
 
         LOG.info("Green Paths 2 routing pipeline completed.")
     except PipeLineRuntimeError as e:

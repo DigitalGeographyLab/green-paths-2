@@ -1,7 +1,6 @@
 # Use name "z" for ordering to last test
 
 import os
-import pytest
 from .db_checker_helper import check_row_count, empty_table
 
 from ..src.config import (
