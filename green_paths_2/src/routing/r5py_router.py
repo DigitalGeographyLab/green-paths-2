@@ -77,7 +77,6 @@ def route_travel_time_matrix_computer(travel_time_matrix_computer):
         travel_time_matrix_computer.compute_travel_times()
     )
     LOG.info("Finished routing with TravelTimeMatrixComputer")
-
     return travel_time_matrix_computer_results
 
 

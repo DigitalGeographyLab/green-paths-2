@@ -96,6 +96,8 @@ OTHER_KEY = "other"
 
 ROUTING_KEY = "routing"
 
+CHUNKING_TRESHOLD_KEY = "chunking_treshold"
+
 TRAVEL_SPEED_KEY = "travel_speed"
 
 TRANSPORT_MODE_KEY = "transport_mode"
@@ -180,6 +182,8 @@ AQI_DATA_CACHE_DIR_PATH = os.path.join(DATA_CACHE_DIR_PATH, RASTER_CACHE_DIR_NAM
 
 
 # DEFAULT VALUES
+
+# not the best approach, but it is a quick fix for now (for tests)
 ROUTING_CHUNKING_THRESHOLD = 100_000
 
 CHUNK_SIZE_FOR_ROUTING_RESULTS = 25_000

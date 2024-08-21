@@ -1,4 +1,5 @@
 import os
+import pytest
 
 from ..src.config import (
     ROUTING_PIPELINE_NAME,
@@ -14,8 +15,19 @@ from ..tests.db_checker_helper import (
 )
 
 
-def test_routing(conn, config_dir, valid_user_config):
-    config_path = os.path.join(config_dir, valid_user_config)
+# the one with chunking treshold will trigger chunking & threading
+# and the other one will not
+# so test both
+@pytest.mark.parametrize(
+    "user_config",
+    [
+        "aqi_green_mtm_precalc_nogeom_test_config_with_chunking.yml",
+        "aqi_green_mtm_precalc_nogeom_test_config.yml",
+    ],
+)
+def test_routing(conn, config_dir, user_config):
+
+    config_path = os.path.join(config_dir, user_config)
 
     # run the preprocessing pipeline
     handle_pipelines(

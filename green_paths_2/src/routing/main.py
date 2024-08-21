@@ -15,9 +15,11 @@ from ...src.routing.routing_db_controller import (
 )
 from ..config import (
     CHUNK_SIZE_FOR_ROUTING_RESULTS,
+    CHUNKING_TRESHOLD_KEY,
     DB_ROUTING_RESULTS_COLUMNS,
     DB_TRAVEL_TIMES_COLUMNS,
     ROUTING_CHUNKING_THRESHOLD,
+    ROUTING_KEY,
     ROUTING_RESULTS_TABLE,
     TRAVEL_TIMES_TABLE,
 )
@@ -142,8 +144,12 @@ def routing_pipeline(
         # get route rows count from routing results
         route_rows_count = green_paths_route_results.shape[0]
 
+        chunking_treshold = user_config.get_nested_attribute(
+            [ROUTING_KEY, CHUNKING_TRESHOLD_KEY], default=ROUTING_CHUNKING_THRESHOLD
+        )
+
         # chunk routing data if route_rows_count is greater than threshold
-        if route_rows_count > ROUTING_CHUNKING_THRESHOLD:
+        if route_rows_count > chunking_treshold:
             route_result_chunks = chunk_data(
                 green_paths_route_results, CHUNK_SIZE_FOR_ROUTING_RESULTS
             )
