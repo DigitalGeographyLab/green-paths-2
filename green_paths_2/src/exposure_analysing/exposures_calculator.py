@@ -3,6 +3,9 @@
 import json
 from shapely.wkt import loads
 
+from ..database_controller import DatabaseController
+from ..exposure_analysing.exposure_db_controller import ExposureDbController
+
 from ...src.config import (
     CUMULATIVE_EXPOSURE_SECONDS_SUFFIX,
     FROM_ID_KEY,
@@ -78,7 +81,7 @@ class ExposuresCalculator:
         """
         self.batch_combined_path_results.append(path_results)
 
-    def _get_new_osmids(self, path_osm_ids: list[str]) -> list[str]:
+    def _get_new_osmids(self, path_osm_ids: list[str] | float) -> list[str]:
         """
         Get the new OSM IDs that are not in the cache.
 
@@ -92,9 +95,15 @@ class ExposuresCalculator:
         list[str]
             List of new OSM IDs.
         """
-        return [
-            osm_id for osm_id in path_osm_ids if osm_id not in self.segment_cache.keys()
-        ]
+        # Check if path_osm_ids is a list and not NaN
+        if isinstance(path_osm_ids, list):
+            return [
+                osm_id
+                for osm_id in path_osm_ids
+                if osm_id not in self.segment_cache.keys()
+            ]
+        # Handle cases where path_osm_ids is NaN or another non-iterable
+        return []
 
     def update_segments_cache(self, path_segments: list[dict]) -> None:
         """
@@ -418,3 +427,28 @@ class ExposuresCalculator:
         # get and add current path results to the combined path results
         path_combined = self._get_single_path_results()
         self._add_to_path_batch_results(path_combined)
+
+    def update_segment_cache_if_new_segments(
+        self,
+        db_handler: DatabaseController,
+        exposure_db_controller: ExposureDbController,
+        path_osm_ids: list[str],
+    ):
+        """Update the segment cache if new segments are found."""
+        new_osm_ids = self._get_new_osmids(path_osm_ids)
+        # fetch unvisited segments to cache
+        new_path_segments = exposure_db_controller.fetch_unvisited_segments(
+            db_handler, new_osm_ids
+        )
+        # update new segments to cache and fetch travel times
+        if new_path_segments:
+            # update the exposure calculator osmids cache
+            self.update_segments_cache(new_path_segments)
+            # fetch travel times for the new segments
+            segments_travel_time = (
+                exposure_db_controller.fetch_travel_times_for_segments(
+                    db_handler, new_osm_ids
+                )
+            )
+            # updata travel times to the exposure calculator osmids cache
+            self.update_segments_cache_value(segments_travel_time, TRAVEL_TIME_KEY)

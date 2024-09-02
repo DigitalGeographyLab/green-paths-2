@@ -5,7 +5,7 @@ from ..src.config import (
     TEST_OUTPUT_RESULTS_DIR_PATH,
 )
 from ..src.pipeline_controller import handle_pipelines
-from ..tests.db_checker_helper import check_data_types, execute_query
+from .db_checker_helper import check_data_types, execute_query
 
 
 CONFIG_FILE = "aqi_green_mtm_precalc_nogeom_test_config.yml"
@@ -21,17 +21,17 @@ def test_routing(conn, config_dir):
     )
 
     columns_to_check = [
-        ("from_id", str),
-        ("gvi_lines_time_weighted_path_exposure_avg", str),
+        ("from_id", int),
+        ("gvi_time_weighted_path_exposure_avg", str),
         ("length", str),
         ("aqi_time_weighted_path_exposure_avg", str),
         ("aqi_time_weighted_path_exposure_sum", str),
-        ("to_id", str),
-        ("gvi_lines_min_exposure", str),
+        ("to_id", int),
+        ("gvi_min_exposure", str),
         ("aqi_max_exposure", str),
-        ("gvi_lines_time_weighted_path_exposure_sum", str),
+        ("gvi_time_weighted_path_exposure_sum", str),
         ("aqi_min_exposure", str),
-        ("gvi_lines_max_exposure", str),
+        ("gvi_max_exposure", str),
         ("travel_time", str),
     ]
 

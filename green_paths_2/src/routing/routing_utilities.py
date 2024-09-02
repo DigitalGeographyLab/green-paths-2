@@ -1,20 +1,14 @@
 """Module for routing utilities."""
 
 import os
-
-from jpype import JInt
 import jpype
-
 import numpy as np
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Point
-import concurrent.futures
 
 from ..config import (
-    CHUNK_SIZE_FOR_ROUTING_RESULTS,
     NORMALIZED_DATA_SUFFIX,
-    OSM_IDS_KEY,
     R5_JAR_FILE_PATH,
 )
 from ..data_utilities import construct_osm_segmented_network_name
@@ -208,8 +202,10 @@ def build_routing_ods_from_file(
     if file_extension == ".csv":
         df = pd.read_csv(file_path)
         # Assuming columns for origin and destination latitudes and longitudes
-        points_from_csv = [Point(xy) for xy in zip(df[lat_col_name], df[lon_col_name])]
+        points_from_csv = [Point(xy) for xy in zip(df[lon_col_name], df[lat_col_name])]
         gdf_from_file = gpd.GeoDataFrame(df, geometry=points_from_csv, crs=original_crs)
+        # drop lat lon columns
+        gdf_from_file = gdf_from_file.drop(columns=[lon_col_name, lat_col_name])
     elif file_extension in [".gpkg", ".shp"]:
         gdf_from_file = gpd.read_file(file_path)
     else:
@@ -248,78 +244,3 @@ def chunk_data(gdf, chunk_size) -> list:
     """
     num_chunks = len(gdf) // chunk_size + (1 if len(gdf) % chunk_size > 0 else 0)
     return np.array_split(gdf, num_chunks)
-
-
-import pandas as pd
-import multiprocessing as mp
-
-
-def to_list_if_iterable(val: any) -> list:
-    """
-    Convert val to list if it is iterable.
-
-    Parameters
-    ----------
-    val : any
-        Value to convert.
-
-    Returns
-    -------
-    list
-        List of values.
-    """
-    if isinstance(val, (JavaArrayListClass, list, tuple)):
-        return list(val)
-    elif isinstance(val, (str, int, float, JInt)):
-        return [val]
-    else:
-        return val
-
-
-def process_chunk(chunk: pd.DataFrame) -> pd.DataFrame:
-    """
-    Process a chunk of data.
-
-    Parameters
-    ----------
-    chunk : pd.DataFrame
-        Data chunk.
-
-    Returns
-    -------
-    pd.DataFrame
-        Processed data
-    """
-    chunk[OSM_IDS_KEY] = chunk[OSM_IDS_KEY].apply(to_list_if_iterable)
-    return chunk
-
-
-def apply_parallel_threading(
-    df: pd.DataFrame,
-    func: any,
-    chunk_size: int = CHUNK_SIZE_FOR_ROUTING_RESULTS / 2,
-) -> pd.DataFrame:
-    """
-    Apply threading for large dataframes.
-
-    Parameters
-    ----------
-    gdf : gpd.GeoDataFrame
-        GeoDataFrame.
-    func : any (function)
-        Function to apply.
-    chunk_size : int, optional
-        Chunk size, by default CHUNK_SIZE_FOR_ROUTING_RESULTS / 2
-
-    Returns
-    -------
-    pd.DataFrame
-        Formatted routing results.
-    """
-    chunks = chunk_data(df, chunk_size)
-    results = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-        future_to_chunk = {executor.submit(func, chunk): chunk for chunk in chunks}
-        for future in concurrent.futures.as_completed(future_to_chunk):
-            results.append(future.result())
-    return pd.concat(results)

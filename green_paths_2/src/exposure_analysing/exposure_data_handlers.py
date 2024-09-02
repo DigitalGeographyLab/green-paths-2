@@ -1,15 +1,24 @@
 """ Module for handling exposure data in the exposure analysing pipeline. Has also some general utilities """
 
-# TODO: need to clean this file for all obsolete code!
-
+import os
 
 import geopandas as gpd
 import pandas as pd
 from shapely import wkt
+from ..database_controller import DatabaseController
+from ..preprocessing.user_config_parser import UserConfig
 
 from ..config import (
     DEFAULT_BATCH_PROCENTAGE,
     GEOMETRY_KEY,
+    ANALYSING_KEY,
+    CSV_FILE_NAME,
+    GPKG_FILE_NAME,
+    OUTPUT_FINAL_RESULTS_DIR_PATH,
+    OUTPUT_RESULTS_FILE_NAME,
+    OUTPUT_RESULTS_TABLE,
+    SAVE_OUTPUT_NAME_KEY,
+    TEST_OUTPUT_RESULTS_DIR_PATH,
 )
 
 from ..logging import setup_logger, LoggerColors
@@ -36,7 +45,7 @@ def save_to_gpkg_or_csv(df: pd.DataFrame, output_path: str) -> None:
         gdf.to_file(output_path, driver="GPKG")
         LOG.info(f"Final output saved to GeoPackage: {output_path}")
     else:
-        df.to_csv(output_path, index=False)
+        df.to_csv(output_path, index=False, encoding="utf-8")
         LOG.info(f"Final output saved to CSV: {output_path}")
 
 
@@ -49,9 +58,58 @@ def get_batch_limit(routing_results_count: int):
     routing_results_count : int
         The count of routing results.
     """
+    # TODO: put to config
+    if routing_results_count < 1000:
+        return routing_results_count
 
     # get the routing results count to enable batch processing
     LOG.info(f"the routing results count is {routing_results_count}. Splitting ")
     # Calculate batch limit
     limit = max(1, int(routing_results_count * DEFAULT_BATCH_PROCENTAGE))
     return limit
+
+
+def save_exposure_results_to_file(
+    db_handler: DatabaseController,
+    user_config: UserConfig,
+    keep_geometries: bool,
+):
+    """Save exposure results to file."""
+    # after all chunks are processed, get all and save to csv of gpkg
+    output_all_final_results, output_column_names = db_handler.get_all(
+        OUTPUT_RESULTS_TABLE, column_names=True
+    )
+
+    final_output_df = pd.DataFrame(
+        output_all_final_results, columns=output_column_names
+    )
+
+    # see if user configurations have output file name, if not use defaults
+    output_file_name = user_config.get_nested_attribute(
+        [ANALYSING_KEY, SAVE_OUTPUT_NAME_KEY]
+    )
+
+    if not output_file_name:
+        output_file_name = OUTPUT_RESULTS_FILE_NAME
+
+    output_file_type = GPKG_FILE_NAME if keep_geometries else CSV_FILE_NAME
+
+    if not keep_geometries and GEOMETRY_KEY in final_output_df.columns:
+        final_output_df.drop(columns=[GEOMETRY_KEY], inplace=True)
+
+    time_now = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    # set output dir path based on environment
+    output_dir_path = (
+        TEST_OUTPUT_RESULTS_DIR_PATH
+        if os.getenv("ENV") == "TEST"
+        else OUTPUT_FINAL_RESULTS_DIR_PATH
+    )
+
+    results_output_path = os.path.join(
+        output_dir_path,
+        f"{time_now}_{output_file_name}.{output_file_type}",
+    )
+
+    # TODO: only save if there is name given...???
+    save_to_gpkg_or_csv(final_output_df, results_output_path)

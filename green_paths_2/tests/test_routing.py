@@ -52,7 +52,7 @@ def test_routing(conn, config_dir, user_config):
     # get all with non empty osm_ids
     routing_results_with_osmids = execute_query(
         conn,
-        query="select count(*) from routing_results where osm_ids IS NOT NULL AND osm_ids != '[NaN]' AND osm_ids != '[]';",
+        query="select count(*) from routing_results where osm_ids IS NOT NULL AND osm_ids != '[NaN]' AND osm_ids != '[]' AND osm_ids != 'NaN';",
     )
     # result is a list of tuples so first element of the first tuple is the count
     assert routing_results_with_osmids[0][0] == 6905
@@ -64,16 +64,19 @@ def test_routing(conn, config_dir, user_config):
         query="select * from routing_results where from_id == 247.0 and to_id == 287.0;",
     )
 
-    osm_ids_from_specific_row = specific_routing_result_row[0][2]
+    osm_ids_from_specific_row = specific_routing_result_row[0][3]
 
     osm_ids_from_specific_row_list = osm_ids_from_specific_row.split(",")
 
+    white_spaces_removed_list = [
+        element.replace(" ", "") for element in osm_ids_from_specific_row_list
+    ]
+
     assert len(osm_ids_from_specific_row_list) == 28
 
-    assert "-1000000091414" in osm_ids_from_specific_row
-    assert "-1000000103298" in osm_ids_from_specific_row
-    assert "-1000000160963" in osm_ids_from_specific_row
-    assert "-1000000165357" not in osm_ids_from_specific_row
+    assert "-91414" in white_spaces_removed_list
+    assert "-2389" in white_spaces_removed_list
+    assert "-14704" in white_spaces_removed_list
 
     # TRAVEL_TIMES_TABLE
 
@@ -83,15 +86,15 @@ def test_routing(conn, config_dir, user_config):
         assert check_data_types(conn, TRAVEL_TIMES_TABLE, column, expected_type)
 
     # check random osm_id 1 travel time is correct type and value
-    random_osm_id_1 = -1000000166683
+    random_osm_id_1 = "-160964"
     travel_time_random_1 = get_column_value_by_osm_id(
         conn, TRAVEL_TIMES_TABLE, random_osm_id_1, "travel_time"
     )
-    assert isinstance(travel_time_random_1, float) and travel_time_random_1 == 5.0
+    assert isinstance(travel_time_random_1, float) and travel_time_random_1 == 14.0
 
     # check random osm_id 2 travel time is correct type and value
-    random_osm_id_2 = -1000000166675
+    random_osm_id_2 = "-2389"
     travel_time_random_2 = get_column_value_by_osm_id(
         conn, TRAVEL_TIMES_TABLE, random_osm_id_2, "travel_time"
     )
-    assert isinstance(travel_time_random_2, float) and travel_time_random_2 == 59.0
+    assert isinstance(travel_time_random_2, float) and travel_time_random_2 == 20.0

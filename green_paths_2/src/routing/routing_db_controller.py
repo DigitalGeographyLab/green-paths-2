@@ -1,7 +1,12 @@
 import json
 
+from jpype import JInt
+
+from .routing_utilities import JavaArrayListClass
+
 from ...src.timer import time_logger
 from ..config import (
+    CONFIG_NAME_KEY,
     FROM_ID_KEY,
     OSM_ID_KEY,
     OSM_IDS_KEY,
@@ -35,8 +40,32 @@ def get_normalized_exposures_from_db(
     return normalized_exposures_dict
 
 
+def ensure_python_list(val):
+    """
+    Ensure that the value is a Python list.
+
+    Parameters
+    ----------
+    val : any
+        Value to check and convert if necessary.
+
+    Returns
+    -------
+    list
+        Python list.
+    """
+    non_iterables = (str, int, float, JInt)
+    if isinstance(val, non_iterables):
+        return [val]
+    if isinstance(val, JavaArrayListClass):
+        return list(val)
+    return val
+
+
 @time_logger
-def format_routing_results(green_paths_route_results: list[dict]) -> dict:
+def convert_results_to_dicts(
+    config_name: str, green_paths_route_results: list[dict]
+) -> dict:
     """
     Format routing results to be stored in the database.
 
@@ -54,8 +83,10 @@ def format_routing_results(green_paths_route_results: list[dict]) -> dict:
         f"{entry[FROM_ID_KEY]}_{entry[TO_ID_KEY]}": {
             FROM_ID_KEY: entry[FROM_ID_KEY],
             TO_ID_KEY: entry[TO_ID_KEY],
-            # Convert list to JSON string
-            OSM_IDS_KEY: json.dumps(entry[OSM_IDS_KEY]),
+            CONFIG_NAME_KEY: config_name,
+            # first convert from java list to python list
+            # then convert list to JSON string
+            OSM_IDS_KEY: json.dumps(ensure_python_list(entry[OSM_IDS_KEY])),
         }
         for entry in green_paths_route_results
     }

@@ -11,6 +11,7 @@ from .config import (
     OSM_CACHE_DIR_NAME,
     OSM_CACHE_SEGMENTED_DIR_NAME,
     OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION,
+    TEST_DATA_CACHE_DIR_PATH,
 )
 from .green_paths_exceptions import DataManagingError
 from .logging import setup_logger, LoggerColors
@@ -130,7 +131,16 @@ def construct_osm_segmented_network_name(osm_source_path: str) -> str:
         network_name_no_extension + OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION
     )
 
-    data_cache_dir_path = DATA_CACHE_DIR_PATH.replace("\\", os.sep).replace("/", os.sep)
+    # check if is dev env or test env from os.environ
+    if os.getenv("ENV") == "TEST":
+        data_cache_dir_path = TEST_DATA_CACHE_DIR_PATH.replace("\\", os.sep).replace(
+            "/", os.sep
+        )
+
+    else:
+        data_cache_dir_path = DATA_CACHE_DIR_PATH.replace("\\", os.sep).replace(
+            "/", os.sep
+        )
 
     return os.path.join(
         data_cache_dir_path,

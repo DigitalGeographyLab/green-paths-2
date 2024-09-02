@@ -1,7 +1,6 @@
 """ Module for routing with R5py. """
 
 import datetime
-from functools import wraps
 from ..config import (
     ALLOW_MISSING_DATA_DEFAULT,
     EXPOSURE_PARAMETERS_KEY,
@@ -16,7 +15,7 @@ import geopandas as gpd
 from ..preprocessing.data_types import DataSourceModel, TravelModes
 from ..preprocessing.user_config_parser import UserConfig
 from ..routing.routing_utilities import set_environment_and_import_r5py
-from ..timer import time_logger, with_funny_process_reporter
+from ..timer import time_logger
 
 from ..logging import setup_logger, LoggerColors
 
@@ -69,7 +68,6 @@ def init_travel_time_matrix_computer(
     return travel_time_matrix_computer_custom_cost
 
 
-@with_funny_process_reporter
 @time_logger
 def route_travel_time_matrix_computer(travel_time_matrix_computer):
     LOG.info("Computing traveltimes with TravelTimeMatrixComputer")

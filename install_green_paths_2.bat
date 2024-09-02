@@ -66,7 +66,7 @@ if not errorlevel 1 (
 call conda env list | findstr "dgl_gp2" >nul
 if not errorlevel 1 (
     echo The Conda environment 'dgl_gp2' already exists. Removing...
-    call conda env remove -n dgl_gp2
+    call conda env remove -n dgl_gp2 -y
     echo 'dgl_gp2' removed.
 )
 
@@ -87,6 +87,12 @@ echo Setting JAVA_HOME to %JAVA_HOME%
 
 :: Install Poetry for the current Conda environment
 call pip install poetry
+
+call poetry config virtualenvs.create false
+
+call poetry env use $(which python)
+
+call pip install invoke
 
 :: Use Poetry for setup and installation
 call poetry --version
@@ -146,6 +152,7 @@ if not exist %DB_TEST_PATH% (
 
 @REM Installing these straight to the conda env, removes not found proj.db error when running preprocessing module
 call conda install -c conda-forge gdal libpq -y
+
 
 echo:
 echo Installation and setup are complete.
