@@ -3,7 +3,7 @@ Welcome to Green Paths 2's documentation!
 
 *"In a galaxy of routes, the green path you must choose. Join the Greenside" - Yoda gpt-4, "The Green Paths 2.0: The Return of the Greenery.*
 
-Modern route planning platforms do not really give us information on exposures during active travel, nor the possibility to choose healthier paths. They should!
+Modern route planning platforms do not really give us information on environmental exposures such as noise, air pollution or greenery, during active travel, nor the possibility to choose healthier paths. They should!
 
 Green Paths 2.0 (GP2) is a transferable multi-objective environmental exposure optimization path finding tool written in Python.
 
@@ -21,7 +21,7 @@ It gets its efficient path finding using `Conveyal’s R5: Rapid Realistic Routi
    :align: center
    :scale: 75
 
-*A health index map created with environmental exposures of gvi, aqi and noise using Green Paths 2.0*
+*A health index map created with environmental exposures to greenery, air pollution and noise using Green Paths 2.0*
 
 .. toctree::
    :maxdepth: 3
