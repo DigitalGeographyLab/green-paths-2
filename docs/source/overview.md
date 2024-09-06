@@ -46,7 +46,7 @@ Also the resulting exposure rasters will be located in this folder.
 ## Geography Masters Thesis (completed June 2024)
 Green Paths 2.0 was part of the Master's thesis by Roope Heinonen made for the [Digital Geography Lab](https://www.helsinki.fi/en/researchgroups/digital-geography-lab) in the University of Helsinki.
 
-See the detailed documentation for the sofrware [R. Heinonen's Geography Masters Thesis](https://helda.helsinki.fi/items/5b77f6c3-2d2c-455f-bb8c-528b0ac136d8) 
+See the detailed documentation for the sofrware:
 
 Heinonen, R., 2024. Green Paths 2.0: Developing a Transferable Multi-Objective Environmental Exposure Optimizing Route Planning tool for Active Travel (MSc thesis). University of Helsinki, Helsinki. (https://helda.helsinki.fi/items/5b77f6c3-2d2c-455f-bb8c-528b0ac136d8) 
 
