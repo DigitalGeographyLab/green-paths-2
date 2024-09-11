@@ -21,6 +21,8 @@ from ..API.models import (
 # from geojson import MultiLineString, LineString
 
 from ..config import (
+    API_EXPOSURES,
+    API_EXPOSURES_NAME_MAPPING,
     CONFIGS_DIR,
     GEOMETRY_KEY,
     ODS_TEMP_CSV_PATH,
@@ -49,15 +51,19 @@ logger = logging.getLogger(__name__)
 
 
 def save_csv(lat: float, long: float, filename: str, id: int) -> str:
-    filepath = os.path.join(ODS_TEMP_CSV_PATH, filename)
-    with open(filepath, mode="w", newline="") as csv_file:
-        writer = csv.writer(csv_file)
-        # delete all existing data
-        writer.writerow([])
-        writer.writerow(["lat", "lon", "id"])  # Column headers
-        # TODO: Add the correct CRS, AND MAYHBE THE ID
-        writer.writerow([lat, long, id])  # Data row
-    return True
+    try:
+        filepath = os.path.join(ODS_TEMP_CSV_PATH, filename)
+        with open(filepath, mode="w", newline="") as csv_file:
+            writer = csv.writer(csv_file)
+            # delete all existing data
+            writer.writerow([])
+            writer.writerow(["lat", "lon", "id"])  # Column headers
+            # TODO: Add the correct CRS, AND MAYHBE THE ID
+            writer.writerow([lat, long, id])  # Data row
+        return True
+    except Exception as e:
+        logger.error(f"Failed to save CSV file: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process OD's.")
 
 
 def build_custom_cost_networks(city_name: str) -> Tuple[dict, dict]:
@@ -71,48 +77,69 @@ def build_custom_cost_networks(city_name: str) -> Tuple[dict, dict]:
     """
     # TODO ROOPE TODO: tää jotenki paremmmi, ehkä looppaamalla noi dirs?
     CITY_CONFIGS_PATH = os.path.join(CONFIGS_DIR, city_name)
-    # list of names of all user configurations under certain directory
-    user_configuration_names = os.listdir(CITY_CONFIGS_PATH)
 
-    # doe not really matter which one is used
-    first_config_path = os.path.join(CITY_CONFIGS_PATH, user_configuration_names[0])
-
-    user_config, data_handler = init_config_and_data_handler(first_config_path)
     db_controller = DatabaseController()
 
-    logger.info("Checking for preprocessed data from db, skipping if found.")
-
-    if db_controller.get_row_count(SEGMENT_STORE_TABLE) < 0:
-        logger.info("Starting preprocessing...")
-        osm_network_gdf = handle_osm_network_process(user_config)
-        preprocessing_pipeline(osm_network_gdf, data_handler, user_config)
-        logger.info("Preprocessing completed.")
-
-    osm_segmented_network_path = validate_segmented_osm_network_path(
-        user_config.osm_network.osm_pbf_file_path
-    )
-
-    normalized_exposures_dict = get_exposures_from_db(db_controller, data_handler)
+    # empty segment store table to get a fresh start
+    # TODO: only run this in PROD!!!
+    # db_controller.empty_table(SEGMENT_STORE_TABLE)
+    # TODO: run that code only in prod...
 
     custom_cost_networks = {}
     configs = {}
 
-    for config_name in user_configuration_names:
-        config_path = os.path.join(CITY_CONFIGS_PATH, config_name)
-        user_config, data_handler = init_config_and_data_handler(config_path)
+    # TODO: loop all exposures
+    for exposure in API_EXPOSURES:  # ["greenery"]:
+        # Directory path for current exposure type under the city
+        exposure_config_path = os.path.join(CITY_CONFIGS_PATH, exposure)
 
-        custom_cost_transport_network = build_custom_cost_network(
-            osm_segmented_network_path, normalized_exposures_dict, user_config
-        )
+        # List of all user configuration names under the current exposure directory
+        # loop all of these sensitivities
+        user_configuration_sensitivity_names = os.listdir(exposure_config_path)
 
-        custom_cost_networks[config_name] = custom_cost_transport_network
-        configs[config_name] = user_config
+        for config_name in user_configuration_sensitivity_names:
+            config_path = os.path.join(exposure_config_path, config_name)
+            user_config, data_handler = init_config_and_data_handler(config_path)
 
+            # for first config, execute preprocessing pipeline if not done before
+
+            segment_store_exists = db_controller.check_table_exists(SEGMENT_STORE_TABLE)
+            if (
+                not segment_store_exists
+                or db_controller.get_row_count(SEGMENT_STORE_TABLE) == 0
+            ):
+                logger.info("Starting preprocessing...")
+                osm_network_gdf = handle_osm_network_process(user_config=user_config)
+                preprocessing_pipeline(
+                    osm_network_gdf=osm_network_gdf,
+                    data_handler=data_handler,
+                    user_config=user_config,
+                )
+                logger.info("Preprocessing completed.")
+
+            osm_segmented_network_path = validate_segmented_osm_network_path(
+                osm_segmented_network_path=user_config.osm_network.osm_pbf_file_path
+            )
+
+            normalized_exposures_dict = get_exposures_from_db(
+                db_handler=db_controller, data_handler=data_handler
+            )
+
+            custom_cost_transport_network = build_custom_cost_network(
+                osm_segmented_network_path, normalized_exposures_dict, user_config
+            )
+
+            # Key format: 'exposure/config_name'
+            exposure_config_id_key = f"{city_name}/{exposure}/{config_name}"
+            custom_cost_networks[exposure_config_id_key] = custom_cost_transport_network
+            configs[exposure_config_id_key] = user_config
+
+    logger.info(f"Created {len(custom_cost_networks)} custom cost networks")
     return custom_cost_networks, configs
 
 
 def get_individual_segments_using_routing_results(
-    db_handler: DatabaseController, data_names: list[str]
+    db_handler: DatabaseController, data_name: str
 ) -> list[dict]:
     """
     Get single segments from the database to return a edge_FC to API.
@@ -142,73 +169,18 @@ def get_individual_segments_using_routing_results(
     # convert osm_ids list elements to int
     osm_ids_int_list = [int(i) for i in osm_ids_list]
 
-    data_names_with_geometry = data_names.append(GEOMETRY_KEY)
+    columns_to_fetch = [data_name, GEOMETRY_KEY]
 
     # TODO: should we get the normalized values instead, for visualization purposes?
     return db_handler.select_rows_by_osm_ids(
         table=SEGMENT_STORE_TABLE,
         osm_ids=osm_ids_int_list,
-        columns=data_names_with_geometry,
+        columns=columns_to_fetch,
     )
 
 
-def _parse_coordinates_from_string_geom(geom: str):
-    """
-    Get the geometry from a row and parse the coordinates into a MultiLineString or LineString format.
-
-    Parameters
-    ----------
-    geom : str
-        A string representation of the geometry
-
-    Returns
-    -------
-    coordinates: list of tuple or list of list of tuple
-        A list of coordinates suitable for Shapely LineString or MultiLineString
-    """
-    try:
-        if "MULTILINESTRING" in geom:
-            geom_type = "MULTILINESTRING"
-            chars_to_replace_and_split = ("((", "))", "),(")
-        elif "LINESTRING" in geom:
-            geom_type = "LINESTRING"
-            chars_to_replace_and_split = ("(", ")", ",")
-        else:
-            raise ValueError("Unexpected geometry type")
-
-        if not geom or geom.lower() == GEOMETRY_KEY:
-            raise ValueError(f"Unexpected geometry: {geom}")
-
-        # Parse coordinates
-        parsed_geom = geom.replace(
-            f"{geom_type} {chars_to_replace_and_split[0]}", ""
-        ).replace(chars_to_replace_and_split[1], "")
-        lines = parsed_geom.split(chars_to_replace_and_split[2])
-
-        # Convert to Shapely-suitable format
-        if geom_type == "MULTILINESTRING":
-            coordinates = []
-            for line in lines:
-                # Trim spaces and any remaining parentheses
-                coords = [coord.strip(" ()") for coord in line.split(", ")]
-                # Convert to tuples of floats
-                line_coords = [tuple(map(float, coord.split())) for coord in coords]
-                coordinates.append(line_coords)
-            return coordinates  # Wrap in list for MultiLineString
-        elif geom_type == "LINESTRING":
-            coords = [coord.strip(" ()") for coord in lines[0].split(", ")]
-            coordinates = [tuple(map(float, coord.split())) for coord in coords]
-            return coordinates  # Directly use for LineString
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"GP2 SERVER FAILED TO PARSE GEOMETRIES FROM RESULTS. GEOMETRY {geom}. Error: {e}",
-        )
-
-
 def convert_segments_to_features(
-    segments_data: list[dict], data_names: list[str], path_id: str, source_crs: int
+    segments_data: list[dict], data_name: str, path_id: str, source_crs: int
 ) -> list[EdgeFeature]:
     """
     Convert a list of segment dictionaries into a list of Features.
@@ -232,9 +204,6 @@ def convert_segments_to_features(
         edge_features = []
 
         for segment in segments_data:
-            # geometry = MultiLineString(
-            #     _parse_coordinates_from_string_geom(geom=segment[GEOMETRY_KEY])
-            # )
 
             # the geometry is stored as string in sqlite db
             # convert to shapely geom
@@ -248,11 +217,7 @@ def convert_segments_to_features(
 
             # TODO: test exposure normalized value...
             # Dynamically create properties dictionary using data_names
-            properties = {
-                "exposure_norm_value": segment[name]
-                for name in data_names
-                if name in segment and name != GEOMETRY_KEY
-            }
+            properties = {"exposure_value": segment[data_name]}
 
             properties[PATH_ID_KEY] = path_id
 
@@ -270,8 +235,68 @@ def convert_segments_to_features(
         )
 
 
+def _filter_and_format_path_output_results_by_exposures(
+    path_output_result: dict, exposure: str, path_id: str
+) -> dict:
+    """Filter path output results by exposures and return a dictionary with the filtered properties."""
+    # seconds
+    travel_time = path_output_result.get("travel_time", False)
+    if not travel_time:
+        travel_time = "not found"
+    else:
+        # Transform to minutes
+        travel_time = int(float(travel_time))
+        travel_time = int(round(travel_time / 60, 0))
+
+    travel_length = path_output_result.get("length", False)
+    if not travel_length:
+        travel_length = "not found"
+    else:
+        travel_length = float(travel_length)
+        if travel_length < 1000:
+            travel_length = f"{round(travel_length, 1)} m"
+        else:
+            travel_length = f"{round(travel_length / 1000, 1)} km"
+
+    # Prepare filtered properties with only the needed field
+    filtered_properties = {
+        PATH_ID_KEY: path_id,
+        "Time": travel_time,
+        "Length": travel_length,
+    }
+
+    for api_exposure, api_exposure_short in API_EXPOSURES_NAME_MAPPING.items():
+        avg_exposure_field = f"{api_exposure_short}_time_weighted_path_exposure_avg"
+
+        # Add average exposure to the filtered properties
+        filtered_properties[f"{api_exposure}_average"] = path_output_result.get(
+            avg_exposure_field, "not found"
+        )
+
+    # Handle cumulative exposure
+    cumulative_exposure_field = (
+        f"{API_EXPOSURES_NAME_MAPPING[exposure]}_cumulative_exposure_seconds"
+    )
+    cumulative_exposure_data = path_output_result.get(cumulative_exposure_field)
+
+    # Check if cumulative_exposure_data is a string (possible JSON) and convert it to a dictionary
+    if isinstance(cumulative_exposure_data, str):
+        try:
+            cumulative_exposure_data = json.loads(cumulative_exposure_data)
+        except json.JSONDecodeError:
+            cumulative_exposure_data = "invalid data"
+
+    filtered_properties["cumulative_exposure"] = (
+        cumulative_exposure_data
+        if isinstance(cumulative_exposure_data, dict)
+        else "not found"
+    )
+
+    return filtered_properties
+
+
 def create_path_feature(
-    path_output_result: dict, path_id: str, source_crs: int
+    path_output_result: dict, path_id: str, exposure: str, source_crs: int
 ) -> PathFeature:
     """
     Create a GeoJSON FeatureCollection for path data from the output_results table.
@@ -299,27 +324,19 @@ def create_path_feature(
         # convert to shapely geom
         geometry = wkt.loads(path_output_result[GEOMETRY_KEY])
 
-        # Check if coordinates are valid for LineString (need at least 2 points)
-        # if len(coordinates) < 2:
-        #     logger.error(
-        #         f"Insufficient points to create a LineStringm, path id {path_id}"
-        #     )
-        #     return None
-
-        # geometry = LineString(coordinates)
-
         # convert back to 4326, which the front end uses
         geometry = convert_to_epsg4326(geometry, source_crs)
 
         # Convert Shapely geometry to GeoJSON-like dictionary
         geometry = mapping(geometry)
 
-        properties = {k: v for k, v in path_output_result.items() if k != GEOMETRY_KEY}
-        properties[PATH_ID_KEY] = path_id
+        filtered_properties = _filter_and_format_path_output_results_by_exposures(
+            path_output_result, exposure, path_id
+        )
 
         return PathFeature(
             geometry=geometry,
-            properties=PathProperties(**properties),
+            properties=PathProperties(**filtered_properties),
         )
     except:
         raise HTTPException(

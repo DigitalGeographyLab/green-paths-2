@@ -9,18 +9,20 @@ import numpy as np
 # GREEN PATSH 2 PATCHED R5 JAR FILE PATH
 # new release (precalculations)
 
+
+# OSM IDS TO INT V5 R5 (allow empty CCnetworks)
+R5_JAR_FILE_PATH = "https://github.com/DigitalGeographyLab/r5/releases/download/v7.1-gp2-5/r5-v7.1-gp2-5-all.jar"
+
+
 # OSM IDS TO INT V4 R5
-R5_JAR_FILE_PATH = "https://github.com/DigitalGeographyLab/r5/releases/download/v7.1-gp2-4/r5-v7.1-gp2-4-all.jar"
+# R5_JAR_FILE_PATH = "https://github.com/DigitalGeographyLab/r5/releases/download/v7.1-gp2-4/r5-v7.1-gp2-4-all.jar"
 
 # PRECALCULATIONS V3 R5
 # R5_JAR_FILE_PATH = "https://github.com/DigitalGeographyLab/r5/releases/download/v7.1-gp2-3/r5-v7.1-gp2-3-1-gbcaa62a-all.jar"
-
-
 # DEV lOCAL R5
 # R5_JAR_FILE_PATH = (
 #     "/Users/hcroope/omat/r5_dgl/r5/build/libs/r5-v7.1-gp2-3-1-gbcaa62a.dirty-all.jar"
 # )
-
 
 # TODO: LOCAL FOR TESTING
 # R5_JAR_FILE_PATH = (
@@ -99,6 +101,10 @@ ROUTING_KEY = "routing"
 CHUNKING_TRESHOLD_KEY = "chunking_treshold"
 
 TRAVEL_SPEED_KEY = "travel_speed"
+
+TRAVEL_SPEED_WALKING_KEY = "travel_speed_walking"
+
+TRAVEL_SPEED_CYCLING_KEY = "travel_speed_cycling"
 
 TRANSPORT_MODE_KEY = "transport_mode"
 
@@ -192,7 +198,7 @@ CHUNK_SIZE_FOR_ROUTING_RESULTS = 100_000
 
 FIX_INVALID_GEOMETRIES: bool = True
 
-RASTER_NO_DATA_VALUE = np.nan
+RASTER_NO_DATA_VALUE = 0
 
 SEGMENT_POINTS_DEFAULT_SAMPLING_STRATEGY = "mean"
 
@@ -202,9 +208,9 @@ SEGMENT_SAMPLING_POINTS_KEY = "sampling_points"
 
 DATA_COVERAGE_SAFETY_PERCENTAGE = 33
 
-DEFAULT_R5_TRAVEL_SPEED_WALKING = 3.6
+DEFAULT_R5_TRAVEL_SPEED_WALKING = 5
 
-DEFAULT_R5_TRAVEL_SPEED_CYCLING = 12.0
+DEFAULT_R5_TRAVEL_SPEED_CYCLING = 15
 
 DEFAULT_BATCH_PROCENTAGE = 0.1
 
@@ -236,6 +242,13 @@ DB_OUTPUT_RESULST_BASE_COLUMNS = {TO_ID_KEY: -1, FROM_ID_KEY: -1}
 
 # API
 
+# mapping for API exposures names to the names used in the database
+API_EXPOSURES_NAME_MAPPING = {
+    "airquality": "aqi",
+    "greenery": "gvi",
+    "noise": "noise",
+}
+
 ODS_TEMP_CSV_PATH = "green_paths_2/src/API/temp_ods"
 
 CONFIGS_DIR = "green_paths_2/src/API/configs"
@@ -243,3 +256,10 @@ CONFIGS_DIR = "green_paths_2/src/API/configs"
 # Define filenames for origin and destination
 ORIGIN_CSV_NAME = "api_origin.csv"
 DESTINATION_CSV_NAME = "api_destination.csv"
+
+# API EXPOSURES (DIR NAMES)
+GREENERY_EXPOSURE_KEY = "greenery"
+AIRQUALITY_EXPOSURE_KEY = "airquality"
+NOISE_EXPOSURE_KEY = "noise"
+
+API_EXPOSURES = [GREENERY_EXPOSURE_KEY, AIRQUALITY_EXPOSURE_KEY, NOISE_EXPOSURE_KEY]

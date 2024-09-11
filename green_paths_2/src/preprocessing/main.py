@@ -34,6 +34,7 @@ from ..config import (
     OSM_ID_KEY,
     PROJECT_KEY,
     RASTER_FILE_SUFFIX,
+    RASTER_NO_DATA_VALUE,
     REPROJECTED_RASTER_FILE_SUFFIX,
     SEGMENT_STORE_TABLE,
 )
@@ -89,7 +90,7 @@ def preprocessing_pipeline(
                 data_conf_filepath
             )
 
-            no_data_value = data_source.get_no_data_value()
+            no_data_value = data_source.get_no_data_value() or RASTER_NO_DATA_VALUE
 
             LOG.info(f"Processing datasource: {data_name} ({data_type})")
 
@@ -193,7 +194,7 @@ def preprocessing_pipeline(
         table_structure_from_data = next(iter(segment_store_wkt.values()))
 
         db_handler.create_table_from_dict_data(
-            SEGMENT_STORE_TABLE, table_structure_from_data
+            SEGMENT_STORE_TABLE, table_structure_from_data, force=True
         )
 
         # Split data by length

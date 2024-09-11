@@ -80,6 +80,8 @@ def process_exposure_results_as_batches(
             if not path_osm_ids:
                 continue
 
+            # fetch segments that have not been visited yet and add to cache
+            # will add the whole segment from segment store to cache
             exposure_calculator.update_segment_cache_if_new_segments(
                 db_handler=db_handler,
                 exposure_db_controller=exposure_db_controller,
@@ -91,9 +93,13 @@ def process_exposure_results_as_batches(
             )
 
             # calculate and save path exposures
-            exposure_calculator.calculate_and_save_combined_path_exposures(
-                path_osm_ids, data_names, path, cumulative_ranges, keep_geometries
+            single_path_results = (
+                exposure_calculator.calculate_and_save_combined_path_exposures(
+                    path_osm_ids, data_names, path, cumulative_ranges, keep_geometries
+                )
             )
+
+            exposure_calculator._add_to_path_batch_results(single_path_results)
             # clear single path cache after each path
             exposure_calculator.clear_single_path_results()
 

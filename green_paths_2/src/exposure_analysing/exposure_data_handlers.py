@@ -111,5 +111,7 @@ def save_exposure_results_to_file(
         f"{time_now}_{output_file_name}.{output_file_type}",
     )
 
-    # TODO: only save if there is name given...???
+    # normalize path for windows
+    results_output_path = os.path.normpath(results_output_path)
+
     save_to_gpkg_or_csv(final_output_df, results_output_path)

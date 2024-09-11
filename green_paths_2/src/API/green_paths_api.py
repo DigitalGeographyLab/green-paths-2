@@ -19,6 +19,7 @@ from .models import (
 )
 from ..config import (
     ANALYSING_KEY,
+    API_EXPOSURES_NAME_MAPPING,
     DESTINATION_CSV_NAME,
     KEEP_GEOMETRY_KEY,
     ORIGIN_CSV_NAME,
@@ -26,6 +27,7 @@ from ..config import (
     PROJECT_CRS_KEY,
     PROJECT_KEY,
     ROUTING_RESULTS_TABLE,
+    TRAVEL_TIMES_TABLE,
 )
 from ..database_controller import DatabaseController
 from ..routing.main import (
@@ -43,9 +45,9 @@ from .api_utility_engine import (
 
 import logging
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from ..logging import setup_logger, LoggerColors
 
+logger = setup_logger(__name__, LoggerColors.GREEN.value)
 
 # Configure CORS settings
 allowed_cors_origins = [
@@ -54,25 +56,26 @@ allowed_cors_origins = [
 
 custom_cost_networks = {}
 configs = {}
+build_networks_initialized = False
 
 
 # Using lifespan to handle startup and shutdown events
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global custom_cost_networks, configs, build_networks_initialized
     try:
-        # TODO: replace the preprocessing_data with street network data build...
-        global config_path
-        global custom_cost_networks
-        global configs
+        if not build_networks_initialized:
+            # TODO: tee paremiin, ehkä support muita kaupunkeja...
+            # täsä pitäs loopata ihan kaikki läpi mitä on...
+            city = "helsinki"
 
-        # TODO: tee paremiin, ehkä support muita kaupunkeja...
-        # täsä pitäs loopata ihan kaikki läpi mitä on...
-        city = "hki"
-
-        custom_cost_networks, configs = build_custom_cost_networks(city_name=city)
-        logger.info(f"Created {len(custom_cost_networks)} custom cost networks")
-        logger.info(f"Custom cost networks: {custom_cost_networks.keys()}")
-        logger.info("Success in lifespan")
+            custom_cost_networks, configs = build_custom_cost_networks(city_name=city)
+            logger.info(f"Created {len(custom_cost_networks)} custom cost networks")
+            logger.info(f"Custom cost networks: {custom_cost_networks.keys()}")
+            logger.info("Success in lifespan")
+            build_networks_initialized = True
+        else:
+            logger.info("Custom cost networks already initialized")
     except Exception as e:
         logger.info(f"Error during lifespan startup: {e}")
 
@@ -123,6 +126,13 @@ async def build_networks(request: BuildNetworksRequest):
 @app.post("/route/")
 async def calculate_routes(request: RouteRequest):
     try:
+        if not build_networks_initialized:
+            logger.error("Custom cost networks not initialized.")
+            raise HTTPException(
+                status_code=500,
+                detail="Custom cost networks not initialized. Try again in a minute!",
+            )
+
         logger.info(f"Received request: {request}, routing starting...")
         # Save CSV files in the static directory
         logger.info("Init OD's from the request")
@@ -132,6 +142,7 @@ async def calculate_routes(request: RouteRequest):
         destination_csv_success = save_csv(
             request.destination[0], request.destination[1], DESTINATION_CSV_NAME, 1
         )
+        logger.info("Inited OD's successfully")
 
         if not origin_csv_success or not destination_csv_success:
             return HTTPException(
@@ -144,28 +155,63 @@ async def calculate_routes(request: RouteRequest):
 
         db_handler = DatabaseController()
 
+        # TODO: maybe figure some better way
+        # ALSO -> figure how this will work with multiple users...
         logger.info("Empty tables: routing_results and output_results")
-        db_handler.empty_table(ROUTING_RESULTS_TABLE)
-        db_handler.empty_table(OUTPUT_RESULTS_TABLE)
+        if db_handler.check_table_exists(ROUTING_RESULTS_TABLE):
+            db_handler.empty_table(ROUTING_RESULTS_TABLE)
+
+        if db_handler.check_table_exists(OUTPUT_RESULTS_TABLE):
+            db_handler.empty_table(OUTPUT_RESULTS_TABLE)
+
+        if db_handler.check_table_exists(TRAVEL_TIMES_TABLE):
+            db_handler.empty_table(TRAVEL_TIMES_TABLE)
 
         _, exposure_db_controller, exposure_calculator = init_exposure_handlers(
             db_handler
         )
 
-        for config_key, config_object in configs.items():
+        logger.info("Inited exposure handlers successfully")
+
+        # TODO: this should maybe be a class?
+        # Filter the configs and custom cost networks for the requested city and exposure
+        city_exposure_filtered_configs = {
+            key: value
+            for key, value in configs.items()
+            if key.lower().startswith(
+                f"{request.city.lower()}/{request.exposure.lower()}/"
+            )
+        }
+
+        # Flag for only getting the travel times once
+        no_travel_times = False
+
+        logger.info("Looping through the API configs for given exposure")
+        logger.info(f"all configs keys: {city_exposure_filtered_configs.keys()}")
+
+        custom_cost_networks_instance = custom_cost_networks.copy()
+
+        # loop all configs and their custom cost networks
+        for config_key, config_object in city_exposure_filtered_configs.items():
             logger.info(f"Routing for config: {config_key}")
-            # loop all configs and their custom cost networks
+            current_network = custom_cost_networks_instance[config_key]
+            # empty the travel times for the network
+            current_network.reset_base_travel_times()
 
             try:
                 handle_routing_and_saving_processes(
                     db_handler=db_handler,
                     user_config=config_object,
-                    custom_cost_transport_network=custom_cost_networks[config_key],
+                    custom_cost_transport_network=current_network,
+                    no_travel_times=no_travel_times,
+                    transportMode=request.transportMode,
                 )
             except:
                 raise HTTPException(
                     status_code=500, detail="GP2 SERVER ROUTING FAILED."
                 )
+
+            no_travel_times = True
 
             # get data names as list so that we can loop each different data source
             data_names = get_data_names(user_config=config_object)
@@ -179,7 +225,8 @@ async def calculate_routes(request: RouteRequest):
             )
 
             # emptying the table after each loop to only have a single output results in table
-            db_handler.empty_table(OUTPUT_RESULTS_TABLE)
+            if db_handler.check_table_exists(OUTPUT_RESULTS_TABLE):
+                db_handler.empty_table(OUTPUT_RESULTS_TABLE)
 
             try:
                 new_columns_added_db = process_exposure_results_as_batches(
@@ -202,16 +249,15 @@ async def calculate_routes(request: RouteRequest):
 
             # EDGES
 
-            # get the normalized values for the segments, for visualization purposes in GUI
-            normalized_data_names = [name + "_normalized" for name in data_names]
+            edge_exposure_data_name = API_EXPOSURES_NAME_MAPPING[request.exposure]
 
             edge_rows = get_individual_segments_using_routing_results(
-                db_handler=db_handler, data_names=normalized_data_names
+                db_handler=db_handler, data_name=edge_exposure_data_name
             )
 
             current_path_edge_FC = convert_segments_to_features(
                 segments_data=edge_rows,
-                data_names=normalized_data_names,
+                data_name=edge_exposure_data_name,
                 path_id=config_key,
                 source_crs=project_crs,
             )
@@ -227,14 +273,22 @@ async def calculate_routes(request: RouteRequest):
             current_path_FC = create_path_feature(
                 path_output_result=path_output_results[0],
                 path_id=config_key,
+                exposure=request.exposure,
                 source_crs=project_crs,
             )
 
             if current_path_FC:
                 all_path_FC.append(current_path_FC)
 
+            # sort the path features by time, fastest first
+            all_path_FC = sorted(
+                all_path_FC, key=lambda x: getattr(x.properties, "Time", float("inf"))
+            )
+
         return RouteResponse(
             city=request.city,
+            transportMode=request.transportMode,
+            exposure=request.exposure,
             edge_FC=EdgeFeatureCollection(features=all_edge_FC),
             path_FC=PathFeatureCollection(features=all_path_FC),
         )

@@ -115,7 +115,11 @@ def get_exposures_from_db(
 
 
 def handle_routing_and_saving_processes(
-    db_handler, user_config, custom_cost_transport_network
+    db_handler,
+    user_config,
+    custom_cost_transport_network,
+    no_travel_times=False,
+    transportMode=None,
 ) -> None:
     """
     Handle routing and saving processes.
@@ -145,12 +149,15 @@ def handle_routing_and_saving_processes(
         origins,
         destinations,
         user_config,
+        no_travel_times=no_travel_times,
+        transport_mode_param=transportMode,
     )
 
     db_handler.create_table_from_params(
         ROUTING_RESULTS_TABLE, DB_ROUTING_RESULTS_COLUMNS
     )
-    db_handler.create_table_from_params(TRAVEL_TIMES_TABLE, DB_TRAVEL_TIMES_COLUMNS)
+    if not no_travel_times:
+        db_handler.create_table_from_params(TRAVEL_TIMES_TABLE, DB_TRAVEL_TIMES_COLUMNS)
 
     # get route rows count from routing results
     route_rows_count = green_paths_route_results.shape[0]
@@ -170,9 +177,10 @@ def handle_routing_and_saving_processes(
             )
         # add travel times to db outside of loop
         # because they are not chunked and are all the same for each chunk
-        process_and_store_results(
-            db_handler, user_config.config_name, None, actual_travel_times
-        )
+        if not no_travel_times:
+            process_and_store_results(
+                db_handler, user_config.config_name, None, actual_travel_times
+            )
     # if smaller results than threshold, store all at once
     else:
         process_and_store_results(

@@ -68,11 +68,15 @@ class BuildNetworksRequest(BaseModel):
 
 class RouteRequest(BaseModel):
     city: str
+    exposure: str
+    transportMode: str
     origin: Tuple[float, float]
     destination: Tuple[float, float]
 
 
 class RouteResponse(BaseModel):
     city: str
+    transportMode: str
+    exposure: str
     edge_FC: EdgeFeatureCollection
     path_FC: PathFeatureCollection

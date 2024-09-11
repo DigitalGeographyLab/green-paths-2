@@ -139,3 +139,7 @@ green_paths_2/tests/data/*
 # user config
 green_paths_2/user/config.yaml
 
+# API related data & configs
+green_paths_2/src/API/configs/*
+green_paths_2/src/API/temp_ods/*
+green_paths_2/src/API/data/*

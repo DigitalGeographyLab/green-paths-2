@@ -59,7 +59,7 @@ def rasterize_vector_data(
     height: int,
     transform,
     data_column: str,
-    nodata_value: float | int,  # TODO: ?
+    nodata_value: float | int,
 ) -> rasterio.io.DatasetWriter:
     """Rasterize vector data by using the maximum value for each pixel."""
     vector_data_gdf = vector_data_gdf.sort_values(by=data_column, ascending=True)
@@ -121,7 +121,7 @@ def rasterize_and_calculate_segment_values(
     data_column: str,
     raster_cell_resolution: int,
     save_raster_file: bool = False,
-    default_raster_null_value: float = None,
+    default_raster_null_value: float = 0.0,
 ) -> dict[int, float]:
     """
     Rasterize vector data and save it to a raster file.
