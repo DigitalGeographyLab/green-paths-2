@@ -36,14 +36,14 @@ def test_preprocessing(conn, config_dir, valid_user_config):
         assert check_data_types(conn, SEGMENT_STORE_TABLE, column, expected_type)
 
     # osm_id of the first row of select *
-    first_row_osm_id = -1000000166683
+    first_row_osm_id = -166684
     aqi = get_column_value_by_osm_id(conn, SEGMENT_STORE_TABLE, first_row_osm_id, "aqi")
     aqi_normalized = get_column_value_by_osm_id(
         conn, SEGMENT_STORE_TABLE, first_row_osm_id, "aqi_normalized"
     )
 
     # osm_id from second row
-    second_row_osm_id = -1000000166679
+    second_row_osm_id = -166680
 
     gvi = get_column_value_by_osm_id(
         conn, SEGMENT_STORE_TABLE, second_row_osm_id, "gvi"

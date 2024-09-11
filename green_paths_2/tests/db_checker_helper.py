@@ -60,8 +60,6 @@ def check_data_types(conn, table_name, column_name, expected_type):
 
     for value in results:
         if value[0] and not isinstance(value[0], expected_type):
-            print(value[0])
-            print(type(value[0]))
             return False
     return True
 

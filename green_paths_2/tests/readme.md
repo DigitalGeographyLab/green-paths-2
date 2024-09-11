@@ -1,5 +1,8 @@
 Readme for the Tests
 
+To run tests type to terminal: poetry run pytest
+(conda environment needs to be active!)
+
 0. Test print out some random Java stuff in the end, ignore those, scroll up abit to see the short test results
 1. The tests are really simple and swiftly written
 2. Test should be made more comprehensive and excessive!

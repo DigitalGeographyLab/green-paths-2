@@ -24,25 +24,27 @@ from .timer import time_logger
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 
 
-def init_config_data_handler_and_db_controller(config_path: str = None):
+def init_config_and_data_handler(config_path: str = None) -> tuple:
     """
-    Initialize UserConfig, UserDataHandler and DatabaseController.
+    Initialize user config and data handler.
 
     Parameters
     ----------
     config_path : str
-        Path to the user configuration file.
+        Path to the user config file.
 
     Returns
     -------
-    UserConfig, UserDataHandler, DatabaseController
+    UserConfig
+        User config object.
+    UserDataHandler
+        User data handler object.
     """
     config_path = config_path if config_path else USER_CONFIG_PATH
     user_config = UserConfig(config_path).parse_config()
     data_handler = UserDataHandler()
     data_handler.populate_data_sources(data_sources=user_config.data_sources)
-    db_controller = DatabaseController()
-    return user_config, data_handler, db_controller
+    return user_config, data_handler
 
 
 @time_logger
@@ -66,9 +68,9 @@ def handle_pipelines(
         If pipeline fails.
     """
     try:
-        user_config, data_handler, db_controller = (
-            init_config_data_handler_and_db_controller(config_path)
-        )
+        user_config, data_handler = init_config_and_data_handler(config_path)
+
+        db_controller = DatabaseController()
 
         if pipeline_name == PREPROCESSING_PIPELINE_NAME:
             osm_network_gdf = handle_osm_network_process(user_config)

@@ -56,7 +56,7 @@ fi
 # Check if the dgl_gp2 environment already exists
 if conda info --envs | grep 'dgl_gp2' > /dev/null; then
     echo "The Conda environment 'dgl_gp2' already exists. Removing..."
-    conda env remove -n dgl_gp2
+    conda env remove -n dgl_gp2 -y
     echo "'dgl_gp2' removed."
 fi
 
@@ -88,6 +88,13 @@ conda activate dgl_gp2
 
 # Install Poetry
 pip install poetry
+
+# Configure Poetry to not create virtual environments
+poetry config virtualenvs.create false
+
+poetry env use $(which python)
+
+pip install invoke
 
 # CREATE GP2 DATABASE ***
 
@@ -132,6 +139,7 @@ fi
 # Installing these straight to the conda env, removes not found proj.db error when running preprocessing module
 # conda install -c conda-forge proj geos fiona
 conda install -c conda-forge gdal libpq -y
+
 
 echo ''
 echo "Installation and setup are complete."

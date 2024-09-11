@@ -1,14 +1,15 @@
 """ Module for routing with R5py. """
 
 import datetime
-from functools import wraps
 from ..config import (
     ALLOW_MISSING_DATA_DEFAULT,
     EXPOSURE_PARAMETERS_KEY,
     NORMALIZED_DATA_SUFFIX,
     PRECALCULATE_KEY,
     ROUTING_KEY,
+    TRAVEL_SPEED_CYCLING_KEY,
     TRAVEL_SPEED_KEY,
+    TRAVEL_SPEED_WALKING_KEY,
 )
 
 import geopandas as gpd
@@ -16,7 +17,7 @@ import geopandas as gpd
 from ..preprocessing.data_types import DataSourceModel, TravelModes
 from ..preprocessing.user_config_parser import UserConfig
 from ..routing.routing_utilities import set_environment_and_import_r5py
-from ..timer import time_logger, with_funny_process_reporter
+from ..timer import time_logger
 
 from ..logging import setup_logger, LoggerColors
 
@@ -69,7 +70,6 @@ def init_travel_time_matrix_computer(
     return travel_time_matrix_computer_custom_cost
 
 
-@with_funny_process_reporter
 @time_logger
 def route_travel_time_matrix_computer(travel_time_matrix_computer):
     LOG.info("Computing traveltimes with TravelTimeMatrixComputer")
@@ -162,9 +162,24 @@ def build_custom_cost_network(
         [ROUTING_KEY, PRECALCULATE_KEY], default=True
     )
 
+    # use the travel speed from the user config as default
     travel_speed = user_config.get_nested_attribute(
         [ROUTING_KEY, TRAVEL_SPEED_KEY], default=0
     )
+
+    # override travel speed if walking or cycling speeds are given
+    speed_walking = user_config.get_nested_attribute(
+        [ROUTING_KEY, TRAVEL_SPEED_WALKING_KEY]
+    )
+
+    speed_cycling = user_config.get_nested_attribute(
+        [ROUTING_KEY, TRAVEL_SPEED_CYCLING_KEY]
+    )
+
+    if not speed_walking:
+        speed_walking = travel_speed
+    if not speed_cycling:
+        speed_cycling = travel_speed
 
     custom_cost_transport_network = CustomCostTransportNetwork(
         osm_pbf=osm_segmented_network_path,
@@ -173,8 +188,8 @@ def build_custom_cost_network(
         custom_cost_segment_weight_factors=custom_cost_segment_weight_factors,
         allow_missing_osmids=allow_missing_data,
         precalculate=precalculate,
-        speed_walking=travel_speed,
-        speed_cycling=travel_speed,
+        speed_walking=speed_walking,
+        speed_cycling=speed_cycling,
     )
     LOG.info("Finished building network")
 

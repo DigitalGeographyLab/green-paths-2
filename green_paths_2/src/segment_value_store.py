@@ -296,25 +296,27 @@ class SegmentValueStore:
             for osm_id, value in data_segment_values.items():
                 if osm_id not in master_store:
                     master_store[osm_id] = {}
-                master_store[osm_id][data_name] = value
+                # If value exists, save it; otherwise, set it to 0
+                if value is not None:
+                    master_store[osm_id][data_name] = value
+                else:
+                    LOG.warning(
+                        f"Missing value for {data_name} at osm_id {osm_id}, adding default value of 0."
+                    )
+                    master_store[osm_id][
+                        data_name
+                    ] = 0  # Adding 0 if the value is missing
+
+            # After all osm_ids are processed, ensure all data sources are present
+            # all_data_names = self.get_all_data_names()  # Add a method to fetch all possible data names
+            for osm_id in master_store:
+                if data_name not in master_store[osm_id]:
+                    LOG.info(
+                        f"Data {data_name} missing for osm_id {osm_id}, adding default value of 0."
+                    )
+                    master_store[osm_id][data_name] = 0  # Add 0 for missing data_name
+
             self.set_store(master_store)
+
         except SegmentValueStoreError as e:
-            # TODO: throw error?
             LOG.error(f"Error saving segment values: {e}")
-
-    # TODO: tarvitaanko? -> arvojen lisääminen gdf -> pitäisikö kaikki lisätä dictinä?
-    # def merge_segment_values(
-    #     master_segment_values: gpd.GeoDataFrame,
-    #     segment_values_current_data: dict,
-    #     data_name: str,
-    # ) -> gpd.GeoDataFrame:
-
-    #     for (
-    #         data_name,
-    #         data_values,
-    #     ) in segment_values_current_data:  # loop_data yields data name and values
-    #         # Convert data_values dict to DataFrame for merge
-    #         temp_df = pd.DataFrame(
-    #             list(data_values.items()), columns=["osm_id", data_name]
-    #         )
-    #         gdf = gdf.merge(temp_df, on="osm_id", how="left")

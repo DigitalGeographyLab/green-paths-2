@@ -33,6 +33,7 @@ class UserConfig:
             Skip validation of the configuration file. Default is False.
             Should be used only for testing purposes and in Describer.
         """
+        self.config_name = os.path.basename(config_path)
         self.config_path = config_path
         self.skip_validation = skip_validation
         self.data_source_names = []
@@ -125,8 +126,6 @@ class UserConfig:
         self._validate_routing_config(config)
         self._validate_analysing_config(config)
         if self.errors:
-            print("nää on errorirt")
-            print(self.errors)
             error_message = "\n\n".join(self.errors)
             LOG.error(f"Errors in user configuration: \n\n{error_message}")
             raise ConfigError(f"ERRORS IN USER CONFIGURATION: \n\n{error_message}")

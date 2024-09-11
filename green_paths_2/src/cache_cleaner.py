@@ -41,7 +41,6 @@ def clear_db(table_names: list[str]):
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         table_names = cursor.fetchall()
         table_names = [db_item[0] for db_item in table_names]
-        print(table_names)
 
     for table_name in table_names:
         clear_table(conn, cursor, table_name)

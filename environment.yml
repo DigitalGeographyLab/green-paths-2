@@ -11,7 +11,7 @@ dependencies:
   - pip
   - pip:
       - black==24.4.2
-      - r5py@git+https://github.com/DigitalGeographyLab/r5py_gp2.git@main
+      - r5py@git+https://github.com/DigitalGeographyLab/r5py_gp2.git@gp2-no-list-conversion
       - sphinx
       - sphinx-rtd-theme
       - sphinx-autodoc-typehints

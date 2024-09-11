@@ -34,8 +34,15 @@ def is_cutting_point(node, intersection_nodes):
 # Create a new unique ID for the segment
 # minus sign is used to avoid conflicts with existing IDs
 # and to indicate that these are not real OSM IDs from the OSM database
-def generate_new_id(counter):
-    return -1_000_000_000_000 - counter
+# Initialize the base OSM ID
+base_osm_id = -1
+
+
+def generate_new_id():
+    global base_osm_id
+    new_id = base_osm_id
+    base_osm_id -= 1
+    return new_id
 
 
 class SegmentCreator(osmium.SimpleHandler):
@@ -134,8 +141,8 @@ def segment_or_use_cache_osm_network(osm_source_path: str) -> str:
         creator = SegmentCreator(intersection_nodes)
         creator.apply_file(osm_source_path)
 
-        for i, segment in enumerate(creator.segments):
-            unique_new_id = generate_new_id(i)
+        for _, segment in enumerate(creator.segments):
+            unique_new_id = generate_new_id()
 
             segment["tags"]["gp2_osm_id"] = str(unique_new_id)
 

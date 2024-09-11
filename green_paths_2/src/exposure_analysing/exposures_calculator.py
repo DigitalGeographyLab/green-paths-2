@@ -3,6 +3,9 @@
 import json
 from shapely.wkt import loads
 
+from ..database_controller import DatabaseController
+from ..exposure_analysing.exposure_db_controller import ExposureDbController
+
 from ...src.config import (
     CUMULATIVE_EXPOSURE_SECONDS_SUFFIX,
     FROM_ID_KEY,
@@ -78,7 +81,7 @@ class ExposuresCalculator:
         """
         self.batch_combined_path_results.append(path_results)
 
-    def _get_new_osmids(self, path_osm_ids: list[str]) -> list[str]:
+    def _get_new_osmids(self, path_osm_ids: list[str] | float) -> list[str]:
         """
         Get the new OSM IDs that are not in the cache.
 
@@ -92,9 +95,15 @@ class ExposuresCalculator:
         list[str]
             List of new OSM IDs.
         """
-        return [
-            osm_id for osm_id in path_osm_ids if osm_id not in self.segment_cache.keys()
-        ]
+        # Check if path_osm_ids is a list and not NaN
+        if isinstance(path_osm_ids, list):
+            return [
+                osm_id
+                for osm_id in path_osm_ids
+                if osm_id not in self.segment_cache.keys()
+            ]
+        # Handle cases where path_osm_ids is NaN or another non-iterable
+        return []
 
     def update_segments_cache(self, path_segments: list[dict]) -> None:
         """
@@ -155,36 +164,39 @@ class ExposuresCalculator:
         exposure: float,
         time: float,
         cumulative_values: dict,
-        ranges: list[tuple[int, int]],
+        ranges_for_data: list[tuple[int, int]],
     ) -> dict:
         """
-        Find out which range the exposure belongs to and accumulate the time.
+        Classify the exposure into the correct range and accumulate the time value.
 
         Parameters
         ----------
         exposure : float
-            Exposure value.
+            The exposure value to classify.
         time : float
-            Time value.
+            The time associated with the exposure.
         cumulative_values : dict
-            Cumulative values.
-        ranges : list[tuple[int, int]]
-            List of ranges.
+            Dictionary holding cumulative exposure values for each range.
+        ranges_for_data : list[tuple[int, int]]
+            List of exposure ranges (as tuples).
 
         Returns
         -------
         dict
-            Cumulative values.
+            Updated cumulative values.
         """
-        added_to_range = False
-        for r in ranges:
-            min_range, max_range = r
-            if min_range <= exposure < max_range:
-                cumulative_values[f"{min_range}-{max_range}"] += time
-                added_to_range = True
+        # Loop through each range and classify the exposure
+        classified = False
+        for lower_bound, upper_bound in ranges_for_data:
+            if lower_bound <= exposure <= upper_bound:
+                cumulative_values[f"{lower_bound}-{upper_bound}"] += time
+                classified = True
                 break
-        if not added_to_range:
-            cumulative_values[OTHER_KEY] += time
+
+        # If the exposure doesn't fit in any range, add to "other"
+        if not classified:
+            cumulative_values["other"] += time
+
         return cumulative_values
 
     def _calculate_cumulative_exposures(
@@ -209,7 +221,7 @@ class ExposuresCalculator:
         """
         # Initialize cumulative values for each range
         cumulative_values = {f"{r[0]}-{r[1]}": 0 for r in ranges_for_data}
-        cumulative_values[OTHER_KEY] = 0
+        cumulative_values["other"] = 0  # Handle out-of-range exposures
 
         # Accumulate values based on ranges
         for exposure, time in exposure_data_and_time_values:
@@ -218,8 +230,8 @@ class ExposuresCalculator:
             )
 
         # Remove the "other" key if its value is zero
-        if cumulative_values[OTHER_KEY] == 0:
-            del cumulative_values[OTHER_KEY]
+        if cumulative_values["other"] == 0:
+            del cumulative_values["other"]
 
         return cumulative_values
 
@@ -243,7 +255,8 @@ class ExposuresCalculator:
             Data name.
         """
         # all travel times and lengths from path segments
-        times_sum = sum([item[TRAVEL_TIME_KEY] for item in path_segments])
+        total_times_sum = sum([item[TRAVEL_TIME_KEY] for item in path_segments])
+
         lengths_sum = sum([item[LENGTH_KEY] for item in path_segments])
 
         # save the metadata to the path result dict
@@ -251,17 +264,31 @@ class ExposuresCalculator:
             route=route,
             path_segments=path_segments,
             keep_geometries=keep_geometries,
-            times_sum=times_sum,
+            times_sum=total_times_sum,
             lengths_sum=lengths_sum,
         )
         # loop through all the data sources, calculate exposures and save them to the path result dict
         for data_name in data_names:
+            path_segments_copy = path_segments.copy()
+
+            # filter out segments where the specific data is not found
+            # so that the time-weighted results are correct and not skewed
+            valid_segments = [
+                item
+                for item in path_segments_copy
+                if item[data_name] is not None and item[data_name] != 0
+            ]
+
+            # Sum travel times and exposures only for valid segments
+            # so drop all the times where there is no exposure data from the calculations as they skew average results
+            valid_segments_times_sum = sum(
+                [item[TRAVEL_TIME_KEY] for item in valid_segments]
+            )
+
             # get exposure data and time values for the current data source being looped
             # only get the values where data is found
             exposure_data_and_time_values = [
-                (item[data_name], item[TRAVEL_TIME_KEY])
-                for item in path_segments
-                if item[data_name] is not None
+                (item[data_name], item[TRAVEL_TIME_KEY]) for item in valid_segments
             ]
 
             # Extract exposures and lengths for the data source
@@ -280,7 +307,25 @@ class ExposuresCalculator:
             # Calculate the time-weighted average exposure
             # use the total time sum to calculate the average exposure
             # this includes segments where data is not found, but gives more realistic average
-            average_exposure = weighted_sum / times_sum if times_sum != 0 else 0
+            average_exposure = (
+                weighted_sum / valid_segments_times_sum
+                if valid_segments_times_sum != 0
+                else -1
+            )
+
+            # print(f"length of valid segments: {len(valid_segments)}")
+            # print(f"lengtt of all segments: {len(path_segments)}")
+
+            # print(exposures)
+
+            # # print(f"weighted_sum: {weighted_sum}")
+            # print(f"times_sum: {total_times_sum}")
+            # print(f"valid_segments_times_sum: {valid_segments_times_sum}")
+
+            # print(
+            #     f"data_name: {data_name} and the average exposure: {average_exposure}"
+            # )
+
             # get cumulative ranges for the current data source being looped
             if cumulative_ranges and hasattr(cumulative_ranges, data_name):
                 ranges_for_data = getattr(cumulative_ranges, data_name)
@@ -416,5 +461,29 @@ class ExposuresCalculator:
             keep_geometries=keep_geometries,
         )
         # get and add current path results to the combined path results
-        path_combined = self._get_single_path_results()
-        self._add_to_path_batch_results(path_combined)
+        return self._get_single_path_results()
+
+    def update_segment_cache_if_new_segments(
+        self,
+        db_handler: DatabaseController,
+        exposure_db_controller: ExposureDbController,
+        path_osm_ids: list[str],
+    ):
+        """Update the segment cache if new segments are found."""
+        new_osm_ids = self._get_new_osmids(path_osm_ids)
+        # fetch unvisited segments to cache
+        new_path_segments = exposure_db_controller.fetch_unvisited_segments(
+            db_handler, new_osm_ids
+        )
+        # update new segments to cache and fetch travel times
+        if new_path_segments:
+            # update the exposure calculator osmids cache
+            self.update_segments_cache(new_path_segments)
+            # fetch travel times for the new segments
+            segments_travel_time = (
+                exposure_db_controller.fetch_travel_times_for_segments(
+                    db_handler, new_osm_ids
+                )
+            )
+            # updata travel times to the exposure calculator osmids cache
+            self.update_segments_cache_value(segments_travel_time, TRAVEL_TIME_KEY)
