@@ -3000,13 +3000,13 @@ files = [
 
 [[package]]
 name = "pytz"
-version = "2024.1"
+version = "2024.2"
 description = "World timezone definitions, modern and historical"
 optional = false
 python-versions = "*"
 files = [
-    {file = "pytz-2024.1-py2.py3-none-any.whl", hash = "sha256:328171f4e3623139da4983451950b28e95ac706e13f3f2630a879749e7a8b319"},
-    {file = "pytz-2024.1.tar.gz", hash = "sha256:2a29735ea9c18baf14b448846bde5a48030ed267578472d8955cd0e7443a9812"},
+    {file = "pytz-2024.2-py2.py3-none-any.whl", hash = "sha256:31c7c1817eb7fae7ca4b8c7ee50c72f93aa2dd863de768e1ef4245d426aa0725"},
+    {file = "pytz-2024.2.tar.gz", hash = "sha256:2aa355083c50a0f93fa581709deac0c9ad65cca8a9e9beac660adcbd493c798a"},
 ]
 
 [[package]]
@@ -3259,8 +3259,10 @@ docs = ["GitPython", "contextily", "folium", "h3 (>=4.0.0b2)", "jupyterlab_myst"
 tests = ["pyarrow", "pytest", "pytest-asyncio", "pytest-cov", "pytest-lazy-fixtures", "r5py.sampledata.helsinki (>=0.1.1)", "r5py.sampledata.sao_paulo (>=0.1.1)"]
 
 [package.source]
-type = "directory"
-url = "../../r5py_gp2"
+type = "git"
+url = "https://github.com/DigitalGeographyLab/r5py_gp2.git"
+reference = "HEAD"
+resolved_reference = "3482cc02d5298ad7ebf1ef52e38eb80677c004d6"
 
 [[package]]
 name = "rasterio"
@@ -4466,4 +4468,4 @@ viz = ["matplotlib", "nc-time-axis", "seaborn"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "85274095ecca2ec6d65bdf0139d3ceca47f468a1004997a1cb220b5360ffb822"
+content-hash = "48fa7a8bd841fe6161b5791e1c95632f7373c56da5e0f194df08623d3c63fe4c"
