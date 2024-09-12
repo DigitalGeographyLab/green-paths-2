@@ -48,6 +48,7 @@ def save_to_gpkg_or_csv(df: pd.DataFrame, output_path: str, crs: int | str) -> N
         gdf.to_file(output_path, driver="GPKG")
         LOG.info(f"Final output saved to GeoPackage: {output_path}")
     else:
+        df["crs"] = f"EPSG:{crs}" if isinstance(crs, int) else crs
         df.to_csv(output_path, index=False, encoding="utf-8")
         LOG.info(f"Final output saved to CSV: {output_path}")
 
