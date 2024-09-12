@@ -17,6 +17,8 @@ from ..config import (
     OUTPUT_FINAL_RESULTS_DIR_PATH,
     OUTPUT_RESULTS_FILE_NAME,
     OUTPUT_RESULTS_TABLE,
+    PROJECT_CRS_KEY,
+    PROJECT_KEY,
     SAVE_OUTPUT_NAME_KEY,
     TEST_OUTPUT_RESULTS_DIR_PATH,
 )
@@ -27,7 +29,7 @@ from ..preprocessing.user_config_parser import UserConfig
 LOG = setup_logger(__name__, LoggerColors.GREEN.value)
 
 
-def save_to_gpkg_or_csv(df: pd.DataFrame, output_path: str) -> None:
+def save_to_gpkg_or_csv(df: pd.DataFrame, output_path: str, crs: int | str) -> None:
     """
     Save the final output to GeoPackage or CSV depending if geometry column is present.
 
@@ -42,6 +44,7 @@ def save_to_gpkg_or_csv(df: pd.DataFrame, output_path: str) -> None:
         # Convert WKT geometries to GeoDataFrame
         df[GEOMETRY_KEY] = df[GEOMETRY_KEY].apply(wkt.loads)
         gdf = gpd.GeoDataFrame(df, geometry=GEOMETRY_KEY)
+        gdf.set_crs(crs, inplace=True)
         gdf.to_file(output_path, driver="GPKG")
         LOG.info(f"Final output saved to GeoPackage: {output_path}")
     else:
@@ -114,4 +117,10 @@ def save_exposure_results_to_file(
     # normalize path for windows
     results_output_path = os.path.normpath(results_output_path)
 
-    save_to_gpkg_or_csv(final_output_df, results_output_path)
+    target_project_crs = output_file_name = user_config.get_nested_attribute(
+        [PROJECT_KEY, PROJECT_CRS_KEY]
+    )
+
+    save_to_gpkg_or_csv(
+        df=final_output_df, output_path=results_output_path, crs=target_project_crs
+    )
