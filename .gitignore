@@ -120,7 +120,10 @@ sqlite-autoconf-3430200/
 green_paths_2/src/user/config.yaml
 
 green_paths_2/src/database/*
-results_output/*
+results_output/*.csv
+results_output/*.gpkg
+results_output/*.tif
+results_output/*.tiff
 green_paths_2/src/database/*
 green_paths_2/src/visualizations
 green_paths_2/data/*
