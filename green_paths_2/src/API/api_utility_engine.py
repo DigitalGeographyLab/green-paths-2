@@ -5,10 +5,12 @@ from fastapi import HTTPException
 import json
 import os
 from typing import Tuple
-from pyproj import Transformer
 
 from shapely import wkt
 from shapely.geometry import shape, MultiLineString, LineString, mapping
+from shapely.ops import unary_union
+from pyproj import Transformer
+from shapely.ops import transform
 import geojson
 
 from ..API.models import (
@@ -89,7 +91,7 @@ def build_custom_cost_networks(city_name: str) -> Tuple[dict, dict]:
     configs = {}
 
     # TODO: loop all exposures
-    for exposure in API_EXPOSURES:  # ["greenery"]:
+    for exposure in API_EXPOSURES:  # ["greenery"]
         # Directory path for current exposure type under the city
         exposure_config_path = os.path.join(CITY_CONFIGS_PATH, exposure)
 
@@ -315,11 +317,6 @@ def create_path_feature(
 
     """
     try:
-
-        # coordinates = _parse_coordinates_from_string_geom(
-        #     geom=path_output_result[GEOMETRY_KEY]
-        # )
-
         # the geometry is stored as string in sqlite db
         # convert to shapely geom
         geometry = wkt.loads(path_output_result[GEOMETRY_KEY])
@@ -381,3 +378,63 @@ def convert_to_epsg4326(geometry, source_crs):
     else:
         # Add more geometry types as needed
         raise ValueError(f"Unsupported geometry type: {geometry.geom_type}")
+
+
+# so that we are able to use buffers (meters)
+def reproject_to_meters(geometry, source_crs="EPSG:4326", target_crs="EPSG:3857"):
+    transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
+    return transform(transformer.transform, geometry)
+
+
+def filter_too_similar_paths(all_path_FC):
+    logger.info("Filtering too similar paths")
+
+    # Convert your PathFeature geometry to Shapely objects and reproject to meters
+    path_geometries = [
+        reproject_to_meters(shape(feature.geometry)) for feature in all_path_FC
+    ]
+
+    filtered_path_FC = []
+    seen_geometries = []
+
+    BUFFER_DISTANCE = 2.5  # meters
+
+    for i, path_geom in enumerate(path_geometries):
+        # Apply buffer to only the current LineString or MultiLineString
+        buffered_geom = path_geom.buffer(BUFFER_DISTANCE)
+
+        if not buffered_geom.is_valid or buffered_geom.is_empty:
+            continue
+
+        is_similar = False
+        for seen_geom in seen_geometries:
+            seen_geom = seen_geom.buffer(BUFFER_DISTANCE)
+            # Do not buffer the seen geometries
+            intersection_length = buffered_geom.intersection(seen_geom).length
+            overlap_ratio = intersection_length / buffered_geom.length
+
+            # 85% overlap is considered similar
+            if overlap_ratio > 0.75:
+                is_similar = True
+                break
+
+        if not is_similar:
+            filtered_path_FC.append(all_path_FC[i])
+            seen_geometries.append(path_geom)  # Store original, non-buffered geometry
+
+    return filtered_path_FC
+
+
+def filter_edges_based_on_pathid(all_path_FC, all_edge_FC):
+    logger.info("Filtering edges based on path_id")
+    # Collect path_ids from filtered PathFeatures
+    filtered_path_ids = {feature.properties.path_id for feature in all_path_FC}
+
+    # Filter edgeFeatures based on matching path_id
+    filtered_edge_FC = [
+        edge_feature
+        for edge_feature in all_edge_FC
+        if edge_feature.properties.path_id in filtered_path_ids
+    ]
+
+    return filtered_edge_FC

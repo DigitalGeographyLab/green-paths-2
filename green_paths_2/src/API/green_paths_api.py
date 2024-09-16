@@ -38,6 +38,8 @@ from .api_utility_engine import (
     build_custom_cost_networks,
     convert_segments_to_features,
     create_path_feature,
+    filter_edges_based_on_pathid,
+    filter_too_similar_paths,
     get_individual_segments_using_routing_results,
     save_csv,
 )
@@ -285,20 +287,35 @@ async def calculate_routes(request: RouteRequest):
                 all_path_FC, key=lambda x: getattr(x.properties, "Time", float("inf"))
             )
 
+        # filter out path feature that have too similar geometry
+        logger.info(f"total number of paths before filtering: {len(all_path_FC)}")
+        filtered_path_fc = filter_too_similar_paths(all_path_FC=all_path_FC)
+        logger.info(f"total number of paths after filtering: {len(filtered_path_fc)}")
+
+        # filter edges base on kept paths
+        filtered_edge_FC = filter_edges_based_on_pathid(
+            all_path_FC=filtered_path_fc, all_edge_FC=all_edge_FC
+        )
+
         return RouteResponse(
             city=request.city,
             transportMode=request.transportMode,
             exposure=request.exposure,
-            edge_FC=EdgeFeatureCollection(features=all_edge_FC),
-            path_FC=PathFeatureCollection(features=all_path_FC),
+            edge_FC=EdgeFeatureCollection(features=filtered_edge_FC),
+            path_FC=PathFeatureCollection(features=filtered_path_fc),
         )
 
-    except HTTPException as e:
-        logger.error(f"HTTP Exception: {e.detail}")
-        raise e(f"HTTP Exception: {e.detail}")
+    except HTTPException as http_exc:
+        # If the error is already an HTTPException, re-raise it to preserve the original message and status code
+        logger.error(f"HTTPException occurred: {http_exc.detail}")
+        raise http_exc
     except Exception as e:
+        # For all other exceptions, log and raise a generic 500 error with the exception message
         logger.error(f"Unhandled exception in calculate_routes: {e}")
-        raise HTTPException(status_code=500, detail="GREEN PAHTS SERVER UNKNOWN ERROR.")
+        raise HTTPException(
+            status_code=500,
+            detail=e.args[0] if e.args else "Unhandled exception in calculate_routes",
+        )
 
 
 # ROOPE TODO: should this be done in frontend? i guess!

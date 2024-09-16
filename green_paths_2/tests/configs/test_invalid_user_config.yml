@@ -5,23 +5,22 @@
 datas_coverage_safety_percentage: 80 # optional, recommended
 
 osm_network:
-  original_crs: 4326 # mandatory
-  filter_columns: ["id"] # optional
-  segment_sampling_points_amount: 5 # optional, recommended
+    original_crs: 4326 # mandatory
+    filter_columns: ["id"] # optional
+    segment_sampling_points_amount: 5 # optional, recommended
 
 data_sources:
-
-  - name: aqi # mandatory
-    filepath: path/to/allPollutants_2023-12-15T04.nc # mandatory
-    data_type: raster # optional, recommended
-    original_crs: 4326 # mandatory
-    data_column: AQI  # mandatory
-    min_data_value: 0 # mandatory
-    max_data_value: 5 # mandatory
-    good_exposure: False # mandatory
-    raster_cell_resolution: 10 # optional
-    save_raster_file: True # optional
-    custom_processing_function: convert_aq_nc_to_tif_and_scale_offset # optional
+    - name: aqi # mandatory
+      filepath: path/to/allPollutants_2023-12-15T04.nc # mandatory
+      data_type: raster # optional, recommended
+      original_crs: 4326 # mandatory
+      data_column: AQI # mandatory
+      min_data_value: 0 # mandatory
+      max_data_value: 5 # mandatory
+      good_exposure: False # mandatory
+      raster_cell_resolution: 10 # optional
+      save_raster_file: True # optional
+      custom_processing_function: convert_aq_nc_to_tif_and_scale_offset # optional
 
 routing:
     transport_mode: walking
@@ -31,16 +30,16 @@ routing:
     destinations: path/to/destinations_points.shp
     od_crs: 4326 # mandatory
     exposure_parameters:
-      - name: aqiii # mandatory
-        sensitivity: 2 # mandatory
-        allow_missing_data: True # optional, experimental
+        - name: aqiii # mandatory
+          sensitivity: 2 # mandatory
+          allow_missing_data: True # optional, experimental
 
 analysing:
-  keep_geometry: True # optional
-  cumulative_ranges: # optional
-    aqi: # mandatory, if given, should be the same as in the data_sources
-      - ["0, 0.99"] # mandatory
-      - [1] # ...
-      - 2, 2.99 # ...
-      - [3, 3.99] # ...
-      - [4, 5] # mandatory
+    keep_geometry: True # optional
+    cumulative_ranges: # optional
+        aqi: # mandatory, if given, should be the same as in the data_sources
+            - ["0, 0.99"] # mandatory
+            - [1] # ...
+            - 2, 2.99 # ...
+            - [3, 3.99] # ...
+            - [4, 5] # mandatory
