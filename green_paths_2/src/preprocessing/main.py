@@ -114,7 +114,7 @@ def preprocessing_pipeline(
                     data_column=data_source.get_data_column(),
                     raster_cell_resolution=data_source.get_raster_cell_resolution(),
                     save_raster_file=data_source.get_save_raster_file(),
-                    default_raster_null_value=no_data_value,
+                    raster_null_value=no_data_value,
                 )
 
                 segment_store.save_segment_values(segment_values, data_name)
@@ -152,8 +152,12 @@ def preprocessing_pipeline(
                 segment_values = calculate_segment_raster_values_from_raster_file(
                     network_gdf=osm_network_gdf,
                     raster_file_path=raster_path,
-                    default_raster_null_value=no_data_value,
+                    raster_null_value=no_data_value,
                 )
+
+                # remove reprojected raster file if it was created so it does not stay in the system
+                if os.path.exists(reprojected_raster_filepath):
+                    os.remove(reprojected_raster_filepath)
 
                 segment_store.save_segment_values(segment_values, data_name)
 

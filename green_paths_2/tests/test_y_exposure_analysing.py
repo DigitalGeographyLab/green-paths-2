@@ -43,7 +43,7 @@ def test_routing(conn, config_dir):
         query="select count(*) from output_results where gvi_max_exposure is not null;",
     )
 
-    assert results_with_gvi_max_exposure[0][0] == 6651
+    assert results_with_gvi_max_exposure[0][0] == 6659
 
     results_with_aqi_avg_exposure = execute_query(
         conn,

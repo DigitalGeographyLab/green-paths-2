@@ -256,7 +256,6 @@ class ExposuresCalculator:
         """
         # all travel times and lengths from path segments
         total_times_sum = sum([item[TRAVEL_TIME_KEY] for item in path_segments])
-
         lengths_sum = sum([item[LENGTH_KEY] for item in path_segments])
 
         # save the metadata to the path result dict
@@ -312,20 +311,6 @@ class ExposuresCalculator:
                 if valid_segments_times_sum != 0
                 else -1
             )
-
-            # print(f"length of valid segments: {len(valid_segments)}")
-            # print(f"lengtt of all segments: {len(path_segments)}")
-
-            # print(exposures)
-
-            # # print(f"weighted_sum: {weighted_sum}")
-            # print(f"times_sum: {total_times_sum}")
-            # print(f"valid_segments_times_sum: {valid_segments_times_sum}")
-
-            # print(
-            #     f"data_name: {data_name} and the average exposure: {average_exposure}"
-            # )
-
             # get cumulative ranges for the current data source being looped
             if cumulative_ranges and hasattr(cumulative_ranges, data_name):
                 ranges_for_data = getattr(cumulative_ranges, data_name)
@@ -370,7 +355,6 @@ class ExposuresCalculator:
         if keep_geometries:
             # get geometries and convert to shapely objects from WKT
             segment_geometries = [loads(item[GEOMETRY_KEY]) for item in path_segments]
-            # save geometry to the result dict
             combined_geoms = combine_multilinestrings(segment_geometries)
             # convert geoms to WKT, for storing to sqlitesdb
             self.single_path_results[GEOMETRY_KEY] = combined_geoms.wkt

@@ -8,6 +8,7 @@ from .config import (
     LENGTH_KEY,
     NORMALIZED_DATA_SUFFIX,
     OSM_ID_KEY,
+    RASTER_NO_DATA_VALUE,
     SEGMENT_VALUES_ROUND_DECIMALS,
 )
 
@@ -118,7 +119,6 @@ class SegmentValueStore:
             LOG.error(f"Error combining exposures to geometries: {e}")
             return False
 
-    # TODO: Do we want to crash?
     def validate_data_coverage(
         self,
         data_sources: list[DataSource],
@@ -162,21 +162,34 @@ class SegmentValueStore:
                 )
 
     def validate_user_min_max_values(self, data_sources: list[DataSource]) -> None:
-        """Validate user defined min and max values. If some values not in range, print warning."""
+        """Validate user-defined min and max values. If some values are not in range, print a warning."""
         values_not_in_range = []
         data_values_not_in_range = []
+
         for data_key, data_source in data_sources.items():
             for osm_id, data in self.master_segment_store.items():
                 if data_key in data:
+                    # Check if the value is None, and skip it if so
+                    if (
+                        data[data_key] is None
+                        or data[data_key] == RASTER_NO_DATA_VALUE
+                        or data[data_key] == float(RASTER_NO_DATA_VALUE)
+                    ):
+                        continue
+
+                    # Now compare the value with the min and max range
                     if (
                         data[data_key] < data_source.min_data_value
                         or data[data_key] > data_source.max_data_value
                     ):
                         values_not_in_range.append(f"{osm_id}: {data[data_key]}")
                         data_values_not_in_range.append(data[data_key])
+
         if values_not_in_range:
             LOG.warning(
-                f"WARNING: {len(values_not_in_range)} values are not within the user defined min and max values, for data {data_key}. Values not in range max: {max(data_values_not_in_range)}, min : {min(data_values_not_in_range)}. They will be fitted to the user defined min and max values."
+                f"WARNING: {len(values_not_in_range)} values are not within the user-defined min and max values for data {data_key}. "
+                f"Values not in range: max = {max(data_values_not_in_range)}, min = {min(data_values_not_in_range)}. "
+                f"They will be fitted to the user-defined min and max values."
             )
 
     def save_normalized_values_to_store(self, data_sources) -> list[str]:
@@ -230,6 +243,11 @@ class SegmentValueStore:
         # Iterate through each segment in the master segment store
         for osm_id, data in self.master_segment_store.items():
             if data_key in data:
+
+                # testing setting none
+                if data[data_key] is None:
+                    normalized_values[osm_id] = 0
+                    continue
 
                 # make sure that the data is within the min and max values
                 if data[data_key] < min_data_value:
@@ -291,6 +309,7 @@ class SegmentValueStore:
         Returns:
         - The updated master segment values dictionary.
         """
+        default_values_set_count = 0
         try:
             master_store = self.master_segment_store.copy()
             for osm_id, value in data_segment_values.items():
@@ -300,23 +319,20 @@ class SegmentValueStore:
                 if value is not None:
                     master_store[osm_id][data_name] = value
                 else:
-                    LOG.warning(
-                        f"Missing value for {data_name} at osm_id {osm_id}, adding default value of 0."
-                    )
-                    master_store[osm_id][
-                        data_name
-                    ] = 0  # Adding 0 if the value is missing
+                    default_values_set_count += 1
+                    master_store[osm_id][data_name] = None
 
             # After all osm_ids are processed, ensure all data sources are present
             # all_data_names = self.get_all_data_names()  # Add a method to fetch all possible data names
             for osm_id in master_store:
                 if data_name not in master_store[osm_id]:
-                    LOG.info(
-                        f"Data {data_name} missing for osm_id {osm_id}, adding default value of 0."
-                    )
-                    master_store[osm_id][data_name] = 0  # Add 0 for missing data_name
+                    default_values_set_count += 1
+                    master_store[osm_id][data_name] = None
 
             self.set_store(master_store)
+            LOG.info(
+                f"Replaced {default_values_set_count} missing values with None for {data_name}."
+            )
 
         except SegmentValueStoreError as e:
             LOG.error(f"Error saving segment values: {e}")

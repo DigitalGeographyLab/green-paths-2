@@ -16,6 +16,7 @@ from rasterio.warp import calculate_default_transform, reproject
 from ..config import (
     OSM_ID_KEY,
     OUTPUT_FINAL_RESULTS_DIR_PATH,
+    RASTER_NO_DATA_VALUE,
     SEGMENT_POINTS_DEFAULT_SAMPLING_STRATEGY,
     SEGMENT_SAMPLING_POINTS_KEY,
     SEGMENT_VALUES_ROUND_DECIMALS,
@@ -121,7 +122,7 @@ def rasterize_and_calculate_segment_values(
     data_column: str,
     raster_cell_resolution: int,
     save_raster_file: bool = False,
-    default_raster_null_value: float = 0.0,
+    raster_null_value: float = None,
 ) -> dict[int, float]:
     """
     Rasterize vector data and save it to a raster file.
@@ -148,7 +149,7 @@ def rasterize_and_calculate_segment_values(
         height=height,
         transform=transform,
         data_column=data_column,
-        nodata_value=default_raster_null_value,
+        nodata_value=raster_null_value,
     )
 
     timestr = time.strftime("%H-%M-%S")
@@ -157,7 +158,7 @@ def rasterize_and_calculate_segment_values(
     )
 
     raster_segment_values = calculate_segment_raster_values(
-        network_gdf, raster, transform, default_raster_null_value
+        network_gdf, raster, transform, raster_null_value
     )
 
     # Save the raster to a new file if so configured
@@ -170,7 +171,7 @@ def rasterize_and_calculate_segment_values(
             width,
             height,
             vector_data_gdf.crs,
-            nodata=default_raster_null_value,
+            nodata=raster_null_value,
         )
 
     return raster_segment_values
@@ -192,42 +193,58 @@ def get_raster_value_at_point(point, raster_data, transform):
 
 
 def aggregate_values(
-    values: list[float | None], method="mean", default_raster_null_value: float = None
+    values: list[float | None],
+    raster_null_value: float | int,
+    method="mean",
 ) -> float:
     """
     Aggregate values based on the given method.
-    If all values are np.nan, the function returns np.nan.
+    If all values are np.nan, the function returns None.
     Uses np.nan[mean | max | min] to ignore np.nan values in calculations.
 
     Parameters:
     - values: A list of values to aggregate.
     - method: The aggregation method to use. Options are 'mean', 'max', and 'min'.
-    - default_raster_null_value: The default raster null value.
+    - raster_null_value: The null value used in the raster data.
 
     Returns:
-    - The aggregated value.
+    - The aggregated value or None if no valid values exist.
     """
-    values = np.array(values, dtype=float)
-    if (
-        len(values) == 0
-        or np.all(np.isnan(values))
-        or all(v is None for v in values)
-        or all(v == default_raster_null_value for v in values)
-    ):
+    # Drop values that are None, equal to the raster null value, or RASTER_NO_DATA_VALUE
+    values = [
+        v
+        for v in values
+        if v is not None
+        and v != raster_null_value
+        and v != RASTER_NO_DATA_VALUE
+        and v != float(RASTER_NO_DATA_VALUE)
+    ]
+
+    if not values:  # If all values were filtered out, return None
         return None
+
+    values = np.array(values, dtype=float)
+
+    # If all remaining values are np.nan, return None
+    if np.all(np.isnan(values)):
+        return None
+
+    # Aggregation based on the method
     if method == "mean":
         return np.nanmean(values)
     elif method == "max":
         return np.nanmax(values)
     elif method == "min":
         return np.nanmin(values)
+    else:
+        raise ValueError(f"Unsupported aggregation method: {method}")
 
 
 def calculate_segment_raster_values(
     network_gdf: gpd.GeoDataFrame,
     raster_data,
     transform,
-    default_raster_null_value: float = None,
+    raster_null_value: float = None,
 ) -> dict:
     """
     Calculate raster values for each road segment.
@@ -255,13 +272,14 @@ def calculate_segment_raster_values(
         value_for_segment = aggregate_values(
             values,
             method=SEGMENT_POINTS_DEFAULT_SAMPLING_STRATEGY,
-            default_raster_null_value=default_raster_null_value,
+            raster_null_value=raster_null_value,
         )
 
-        # do not store nan values
+        # do not store None values
         # this most likely means that the segment is outside of the raster
-        # or no raster data was found for any of the segment sample points
-        if not value_for_segment or value_for_segment is np.nan:
+        # or no data value
+        if not value_for_segment or value_for_segment is None:
+            segment_raster_values[osm_id] = None
             continue
 
         osm_id = row[OSM_ID_KEY]
@@ -349,7 +367,7 @@ def reproject_raster_to_crs(
 def calculate_segment_raster_values_from_raster_file(
     network_gdf: gpd.GeoDataFrame,
     raster_file_path: str,
-    default_raster_null_value: float = None,
+    raster_null_value: float = None,
 ) -> dict:
     """
     Calculate raster values for each road segment from a raster file.
@@ -366,7 +384,7 @@ def calculate_segment_raster_values_from_raster_file(
             network_gdf,
             raster_src.read(1),
             raster_src.transform,
-            default_raster_null_value,
+            raster_null_value=raster_null_value,
         )
 
 

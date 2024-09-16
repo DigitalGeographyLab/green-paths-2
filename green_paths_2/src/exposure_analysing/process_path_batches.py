@@ -76,6 +76,7 @@ def process_exposure_results_as_batches(
         for path in routing_results_batch:
             # Convert row osmids to list from JSON string
             path_osm_ids = json.loads(path[OSM_IDS_KEY])
+
             # skip if no osmids in path...
             if not path_osm_ids:
                 continue

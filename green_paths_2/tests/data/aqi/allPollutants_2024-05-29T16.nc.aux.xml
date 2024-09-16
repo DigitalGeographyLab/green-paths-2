@@ -1,0 +1,14 @@
+<PAMDataset>
+  <Subdataset name="AQI">
+    <PAMDataset>
+      <PAMRasterBand band="1">
+        <Metadata>
+          <MDI key="STATISTICS_MAXIMUM">124</MDI>
+          <MDI key="STATISTICS_MEAN">-26.685002152389</MDI>
+          <MDI key="STATISTICS_MINIMUM">-124</MDI>
+          <MDI key="STATISTICS_STDDEV">29.93780152533</MDI>
+        </Metadata>
+      </PAMRasterBand>
+    </PAMDataset>
+  </Subdataset>
+</PAMDataset>

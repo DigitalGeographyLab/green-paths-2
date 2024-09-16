@@ -4,7 +4,7 @@ import os
 import geopandas as gpd
 import pandas as pd
 
-from shapely.geometry import LineString
+from shapely.geometry import LineString, MultiLineString
 
 from .config import (
     DATA_CACHE_DIR_PATH,
@@ -179,21 +179,97 @@ def string_to_list(string: str) -> list[str]:
     return [elem for elem in list_from_string]
 
 
-def combine_multilinestrings(multi_lines) -> LineString:
+from shapely.geometry import LineString, MultiLineString, Point
+from shapely.ops import linemerge
+
+
+def combine_multilinestrings(multi_lines) -> LineString | MultiLineString:
     """
-    Combine MultiLineStrings to LineString.
+    Combine MultiLineStrings and LineStrings into a single LineString or MultiLineString,
+    ensuring that the segments are ordered by proximity.
 
     Parameters:
     ----------------
-    - multi_lines: List of MultiLineStrings.
+    - multi_lines: List of MultiLineStrings or LineStrings.
 
     Returns:
     ----------------
-    - LineString.
-
+    - A combined LineString or MultiLineString.
     """
     combined_coords = []
-    for multi_line in multi_lines:
-        for line in multi_line.geoms:
-            combined_coords.extend(line.coords)
-    return LineString(combined_coords)
+
+    # Flatten MultiLineStrings and LineStrings into a single list of LineStrings
+    all_lines = []
+    for geom in multi_lines:
+        if isinstance(geom, MultiLineString):
+            all_lines.extend(list(geom.geoms))  # Add individual LineStrings
+        elif isinstance(geom, LineString):
+            all_lines.append(geom)
+
+    # Ensure lines are ordered by proximity
+    ordered_lines = order_lines_by_proximity(all_lines)
+
+    # Combine the coordinates
+    for line in ordered_lines:
+        combined_coords.extend(line.coords)
+
+    # If the coordinates form a continuous path, return a LineString
+    if combined_coords:
+        return LineString(combined_coords)
+
+    # If not, return a MultiLineString
+    return MultiLineString(ordered_lines)
+
+
+def order_lines_by_proximity(lines: list[LineString]) -> list[LineString]:
+    """
+    Order a list of LineStrings based on the proximity of their endpoints.
+
+    Parameters:
+    ----------------
+    - lines: List of LineString geometries.
+
+    Returns:
+    ----------------
+    - List of ordered LineString geometries.
+    """
+    if not lines:
+        return []
+
+    ordered_lines = [lines.pop(0)]  # Start with the first LineString
+
+    while lines:
+        current_line = ordered_lines[-1]
+        current_end = Point(current_line.coords[-1])  # Convert tuple to Point
+
+        closest_index = None
+        closest_distance = float("inf")
+        reversed_needed = False
+
+        for i, line in enumerate(lines):
+            dist_start = current_end.distance(
+                Point(line.coords[0])
+            )  # Compare with start of line
+            dist_end = current_end.distance(
+                Point(line.coords[-1])
+            )  # Compare with end of line
+
+            # Check if we need to reverse the line
+            if dist_start < closest_distance:
+                closest_index = i
+                closest_distance = dist_start
+                reversed_needed = False
+            if dist_end < closest_distance:
+                closest_index = i
+                closest_distance = dist_end
+                reversed_needed = True
+
+        # Get the closest line and reverse it if necessary
+        closest_line = lines.pop(closest_index)
+        if reversed_needed:
+            closest_line = LineString(list(closest_line.coords)[::-1])
+
+        # Add the closest line to the ordered list
+        ordered_lines.append(closest_line)
+
+    return ordered_lines

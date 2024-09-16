@@ -4,6 +4,7 @@ from ..tests.db_checker_helper import (
     check_data_types,
     check_geospatial_data,
     check_row_count,
+    execute_query,
     get_column_value_by_osm_id,
 )
 from ..src.config import GEOMETRY_KEY, PREPROCESSING_PIPELINE_NAME, SEGMENT_STORE_TABLE
@@ -36,20 +37,11 @@ def test_preprocessing(conn, config_dir, valid_user_config):
         assert check_data_types(conn, SEGMENT_STORE_TABLE, column, expected_type)
 
     # osm_id of the first row of select *
-    first_row_osm_id = -166684
-    aqi = get_column_value_by_osm_id(conn, SEGMENT_STORE_TABLE, first_row_osm_id, "aqi")
+    aqi_row_osm_id = -166684
+
+    aqi = get_column_value_by_osm_id(conn, SEGMENT_STORE_TABLE, aqi_row_osm_id, "aqi")
     aqi_normalized = get_column_value_by_osm_id(
-        conn, SEGMENT_STORE_TABLE, first_row_osm_id, "aqi_normalized"
-    )
-
-    # osm_id from second row
-    second_row_osm_id = -166680
-
-    gvi = get_column_value_by_osm_id(
-        conn, SEGMENT_STORE_TABLE, second_row_osm_id, "gvi"
-    )
-    gvi_normalized = get_column_value_by_osm_id(
-        conn, SEGMENT_STORE_TABLE, second_row_osm_id, "gvi_normalized"
+        conn, SEGMENT_STORE_TABLE, aqi_row_osm_id, "aqi_normalized"
     )
 
     # check aqi from first row
@@ -58,19 +50,34 @@ def test_preprocessing(conn, config_dir, valid_user_config):
     assert aqi > 1
     assert aqi == 2.094
     assert aqi_normalized == 0.273
+
     # no gvi in first row, check that
     no_gvi_in_first_row = get_column_value_by_osm_id(
-        conn, SEGMENT_STORE_TABLE, first_row_osm_id, "gvi"
+        conn, SEGMENT_STORE_TABLE, aqi_row_osm_id, "gvi"
     )
+
+    no_gvi_normalized_in_first_row = get_column_value_by_osm_id(
+        conn, SEGMENT_STORE_TABLE, aqi_row_osm_id, "gvi_normalized"
+    )
+
     assert no_gvi_in_first_row == None
+    assert no_gvi_normalized_in_first_row == None
+
+    # osm_id from second row
+    gvi_row_osm_id = -166609
+
+    gvi = get_column_value_by_osm_id(conn, SEGMENT_STORE_TABLE, gvi_row_osm_id, "gvi")
+    gvi_normalized = get_column_value_by_osm_id(
+        conn, SEGMENT_STORE_TABLE, gvi_row_osm_id, "gvi_normalized"
+    )
 
     # check gvi from second row
     assert gvi > gvi_normalized
     assert gvi_normalized > -1 and gvi_normalized < 0
-    assert gvi == 0.453
+    assert gvi == 21.707
     # good exposure so should be negative normalized value
     assert gvi_normalized < 0
-    assert gvi_normalized == -0.005
+    assert gvi_normalized == -0.251
 
     assert check_geospatial_data(conn, SEGMENT_STORE_TABLE, GEOMETRY_KEY)
 

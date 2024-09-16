@@ -300,9 +300,9 @@ class UserConfig:
                 self.errors.append(f"Invalid or not supported datatype configuration.")
 
             # data column for mandatory
-            if not isinstance(data_column, str):
+            if data_type == DataTypes.Vector.value and not isinstance(data_column, str):
                 self.errors.append(
-                    "Invalid data column configuration. Should be string. This optional attribute can be left empty. If provided, it should be string."
+                    "Invalid data column configuration. Should be string. This is optional for raster but mandatory for vector or if the data has different columns (e.g. some .nc 'rasters' might have). Data_column should be string."
                 )
 
             # data buffer, optional

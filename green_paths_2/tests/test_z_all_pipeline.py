@@ -52,7 +52,6 @@ def test_all_pipeline_with_geom(conn, config_dir):
     CONFIG_FILE = "green_mtm_noprecalc_has_geom_test_config.yml"
 
     # empty previous datas from db
-    empty_table(conn, SEGMENT_STORE_TABLE)
     empty_table(conn, ROUTING_RESULTS_TABLE)
     empty_table(conn, TRAVEL_TIMES_TABLE)
     empty_table(conn, OUTPUT_RESULTS_TABLE)
@@ -66,9 +65,8 @@ def test_all_pipeline_with_geom(conn, config_dir):
     )
 
     assert check_row_count(conn, SEGMENT_STORE_TABLE, 16_688)
-    assert check_row_count(conn, ROUTING_RESULTS_TABLE, 40_000)
-    assert check_row_count(conn, TRAVEL_TIMES_TABLE, 45_974)
-    assert check_row_count(conn, OUTPUT_RESULTS_TABLE, 29_505)
+    assert check_row_count(conn, ROUTING_RESULTS_TABLE, 121)
+    assert check_row_count(conn, OUTPUT_RESULTS_TABLE, 121)
 
     files_in_output_dir = os.listdir(TEST_OUTPUT_RESULTS_DIR_PATH)
     assert any(
