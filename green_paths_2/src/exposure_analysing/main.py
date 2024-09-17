@@ -68,9 +68,6 @@ def exposure_analysing_pipeline(user_config: UserConfig):
             init_exposure_handlers()
         )
 
-        # empty the output table
-        db_handler.empty_table(OUTPUT_RESULTS_TABLE)
-
         # get data names as list so that we can loop each different data source
         data_names = get_data_names(user_config=user_config)
 

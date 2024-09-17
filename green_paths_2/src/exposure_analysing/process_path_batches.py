@@ -49,7 +49,7 @@ def process_exposure_results_as_batches(
     # results_table_exists = self.db_handler.check_table_exists(OUTPUT_RESULTS_TABLE)
 
     db_handler.create_table_from_dict_data(
-        table=OUTPUT_RESULTS_TABLE, data=DB_OUTPUT_RESULST_BASE_COLUMNS
+        table=OUTPUT_RESULTS_TABLE, data=DB_OUTPUT_RESULST_BASE_COLUMNS, force=True
     )
 
     # init the all possible columns with the defaults that can be found from each path

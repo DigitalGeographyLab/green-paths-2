@@ -20,12 +20,27 @@ class DatabaseController:
     def connect(self):
         return sqlite3.connect(self.db_path)
 
-    # empty table
+        # empty table
+
     def empty_table(self, table: str):
         conn = self.connect()
         cursor = conn.cursor()
-        cursor.execute(f"DELETE FROM {table}")
-        conn.commit()
+
+        # Check if the table exists
+        cursor.execute(
+            f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table}';"
+        )
+        table_exists = cursor.fetchone()
+
+        if table_exists:
+            # If table exists, proceed to delete the contents
+            cursor.execute(f"DELETE FROM {table}")
+            conn.commit()
+            print(f"Table '{table}' emptied successfully.")
+        else:
+            print(f"Table '{table}' does not exist.")
+
+        # Close the connection
         conn.close()
 
     def drop_table(self, table: str):
