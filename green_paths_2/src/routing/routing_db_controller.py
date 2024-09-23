@@ -12,6 +12,7 @@ from ..config import (
     OSM_IDS_KEY,
     TO_ID_KEY,
     TRAVEL_TIME_KEY,
+    USER_ID_KEY,
 )
 
 from ...src.database_controller import DatabaseController
@@ -64,14 +65,14 @@ def ensure_python_list(val):
 
 @time_logger
 def convert_results_to_dicts(
-    config_name: str, green_paths_route_results: list[dict]
+    config_name: str, route_results: list[dict], user_id
 ) -> dict:
     """
     Format routing results to be stored in the database.
 
     Parameters
     ----------
-    green_paths_route_results : list[dict]
+    route_results : list[dict]
         List of routing results.
 
     Returns
@@ -83,12 +84,13 @@ def convert_results_to_dicts(
         f"{entry[FROM_ID_KEY]}_{entry[TO_ID_KEY]}": {
             FROM_ID_KEY: entry[FROM_ID_KEY],
             TO_ID_KEY: entry[TO_ID_KEY],
+            USER_ID_KEY: user_id,
             CONFIG_NAME_KEY: config_name,
             # first convert from java list to python list
             # then convert list to JSON string
             OSM_IDS_KEY: json.dumps(ensure_python_list(entry[OSM_IDS_KEY])),
         }
-        for entry in green_paths_route_results
+        for entry in route_results
     }
 
 

@@ -275,14 +275,14 @@ def calculate_segment_raster_values(
             raster_null_value=raster_null_value,
         )
 
+        osm_id = row[OSM_ID_KEY]
+
         # do not store None values
         # this most likely means that the segment is outside of the raster
         # or no data value
         if not value_for_segment or value_for_segment is None:
             segment_raster_values[osm_id] = None
             continue
-
-        osm_id = row[OSM_ID_KEY]
 
         # round and store value
         segment_raster_values[osm_id] = round(

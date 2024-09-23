@@ -14,11 +14,13 @@ from ..config import (
     ANALYSING_KEY,
     CUMULATIVE_RANGES_KEY,
     DB_OUTPUT_RESULST_BASE_COLUMNS,
+    DEFAULT_USER_ID,
     FROM_ID_KEY,
     OSM_IDS_KEY,
     OUTPUT_RESULTS_TABLE,
     ROUTING_RESULTS_TABLE,
     TO_ID_KEY,
+    USER_ID_KEY,
 )
 from ..green_paths_exceptions import PipeLineRuntimeError
 from ..logging import setup_logger, LoggerColors
@@ -35,7 +37,12 @@ def process_exposure_results_as_batches(
     data_names: list[str],
     keep_geometries: bool,
     existing_columns: set = None,
+    user_id: str = None,
+    combine_geometries: bool = True,
 ):
+
+    # set user id, default to DEFAULT_USER_ID
+    user_id = user_id or DEFAULT_USER_ID
 
     routing_results_count = db_handler.get_row_count(ROUTING_RESULTS_TABLE)
 
@@ -48,8 +55,19 @@ def process_exposure_results_as_batches(
     # first time create the table
     # results_table_exists = self.db_handler.check_table_exists(OUTPUT_RESULTS_TABLE)
 
+    output_results_base_columns = DB_OUTPUT_RESULST_BASE_COLUMNS.copy()
+    # add user_id to the columns dict
+    output_results_base_columns[USER_ID_KEY] = user_id
+
+    # the table needs to be dropped if using locally as "science" tool as the data might be different
+    # for API the data remaing the same, and for multiple users we don't want to drop the table
+    drop_table_bool = True if user_id == DEFAULT_USER_ID else False
+
+    # create the table if not exists
     db_handler.create_table_from_dict_data(
-        table=OUTPUT_RESULTS_TABLE, data=DB_OUTPUT_RESULST_BASE_COLUMNS, force=True
+        table=OUTPUT_RESULTS_TABLE,
+        data=output_results_base_columns,
+        force=drop_table_bool,
     )
 
     # init the all possible columns with the defaults that can be found from each path
@@ -68,7 +86,7 @@ def process_exposure_results_as_batches(
         exposure_calculator.clear_batch_combined_path_results()
         # fetch a batch of routing results
         routing_results_batch = db_handler.fetch_batch(
-            ROUTING_RESULTS_TABLE, limit=batch_limit, offset=offset
+            ROUTING_RESULTS_TABLE, user_id=user_id, limit=batch_limit, offset=offset
         )
         LOG.info(
             f"Processing {offset} - {offset + batch_limit} / {routing_results_count} paths"
@@ -96,7 +114,13 @@ def process_exposure_results_as_batches(
             # calculate and save path exposures
             single_path_results = (
                 exposure_calculator.calculate_and_save_combined_path_exposures(
-                    path_osm_ids, data_names, path, cumulative_ranges, keep_geometries
+                    user_id=user_id,
+                    path_osm_ids=path_osm_ids,
+                    data_names=data_names,
+                    route=path,
+                    cumulative_ranges=cumulative_ranges,
+                    keep_geometries=keep_geometries,
+                    combine_geometries=combine_geometries,
                 )
             )
 

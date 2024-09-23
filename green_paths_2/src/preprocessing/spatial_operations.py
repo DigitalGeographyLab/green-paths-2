@@ -5,7 +5,7 @@ import rasterio
 import shapely
 import geopandas as gpd
 
-from shapely.geometry import MultiLineString
+from shapely.geometry import MultiLineString, LineString
 from shapely.wkt import dumps
 from pyproj import CRS
 from shapely.geometry import box
@@ -234,6 +234,11 @@ def convert_geometries_to_wkt(
 ) -> dict[str, dict[str, float]]:
     """Convert geometries to WKT format."""
     for _, values in data.items():
-        if GEOMETRY_KEY in values and isinstance(values[GEOMETRY_KEY], MultiLineString):
+        if GEOMETRY_KEY in values and isinstance(
+            values[GEOMETRY_KEY], (LineString, MultiLineString)
+        ):
             values[GEOMETRY_KEY] = dumps(values[GEOMETRY_KEY])
+        else:
+            # set the geometry in values to none
+            values[GEOMETRY_KEY] = None
     return data

@@ -3,7 +3,7 @@ from collections import defaultdict
 import sqlite3
 from typing import Dict, List, Any, Optional, Tuple
 
-from ..src.config import GP2_DB_PATH, GP2_DB_TEST_PATH, SEGMENT_STORE_TABLE
+from ..src.config import GP2_DB_PATH, GP2_DB_TEST_PATH, SEGMENT_STORE_TABLE, USER_ID_KEY
 from ..src.timer import time_logger
 
 
@@ -18,11 +18,12 @@ class DatabaseController:
             self.db_path = GP2_DB_PATH
 
     def connect(self):
-        return sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=10)
+        # Enable WAL mode for the connection, enabling concurrent reads and writes
+        conn.execute("PRAGMA journal_mode=WAL;")
+        return conn
 
-        # empty table
-
-    def empty_table(self, table: str):
+    def empty_table(self, table: str, user_id: Optional[str] = None):
         conn = self.connect()
         cursor = conn.cursor()
 
@@ -33,12 +34,13 @@ class DatabaseController:
         table_exists = cursor.fetchone()
 
         if table_exists:
-            # If table exists, proceed to delete the contents
-            cursor.execute(f"DELETE FROM {table}")
+            if user_id:
+                query_string = f"DELETE FROM {table} WHERE {USER_ID_KEY} = ?"
+                cursor.execute(query_string, (user_id,))
+            else:
+                query_string = f"DELETE FROM {table}"
+                cursor.execute(query_string)
             conn.commit()
-            print(f"Table '{table}' emptied successfully.")
-        else:
-            print(f"Table '{table}' does not exist.")
 
         # Close the connection
         conn.close()
@@ -275,22 +277,50 @@ class DatabaseController:
         columns = [description[0] for description in cursor.description]
         return [dict(zip(columns, row)) for row in rows]
 
-    def fetch_batch(self, table: str, limit: int, offset: int) -> List[Dict[str, Any]]:
+    def fetch_batch(
+        self, table: str, user_id: str, limit: int, offset: int
+    ) -> List[Dict[str, Any]]:
         conn = self.connect()
-        query = f"SELECT * FROM {table} LIMIT ? OFFSET ?"
+        query = f"SELECT * FROM {table} WHERE {USER_ID_KEY} = ? LIMIT ? OFFSET ?"
         cursor = conn.cursor()
-        cursor.execute(query, (limit, offset))
+        cursor.execute(query, (user_id, limit, offset))  # Pass user_id as a parameter
         rows = cursor.fetchall()
         columns = [description[0] for description in cursor.description]
         conn.close()
         return [dict(zip(columns, row)) for row in rows]
 
     def get_all(
-        self, table: str, column_names: bool = False
+        self, table: str, column_names: bool = False, user_id: Optional[str] = None
     ) -> Tuple[List[Dict[str, Any]], List[str]]:
+        """
+        Get all rows from a table or if user_id provided, get all matching rows.
+
+        Parameters
+        ----------
+        table : str
+            The table to get the rows from.
+        column_names : bool
+            Whether to fetch column names.
+        user_id : str
+            The user_id to filter the rows by.
+
+        Returns
+        -------
+        Tuple[List[Dict[str, Any]], List[str]]
+            A tuple where the first element is a list of dictionaries representing the rows and the second element is a list of column names.
+        """
         conn = self.connect()
         cursor = conn.cursor()
-        cursor.execute(f"SELECT * FROM {table}")
+
+        # get only the rows for the user if user_id is provided
+        if user_id:
+            query_string = f"SELECT * FROM {table} WHERE {USER_ID_KEY} = ?"
+            cursor.execute(query_string, (user_id,))
+
+        else:
+            query_string = f"SELECT * FROM {table}"
+            cursor.execute(query_string)
+
         rows = cursor.fetchall()
 
         # Fetch column names if required

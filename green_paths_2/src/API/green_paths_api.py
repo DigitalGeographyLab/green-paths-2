@@ -1,4 +1,14 @@
+import sys
+import sqlite3
+import uuid
+import logging
+
 from contextlib import asynccontextmanager
+
+from .network_builder_singleton import network_builder_instance as network_builder
+from .redis_client_singleton import redis_client
+
+from .aqi_updater import AQIUpdater
 from ..exposure_analysing.process_path_batches import (
     process_exposure_results_as_batches,
 )
@@ -6,12 +16,12 @@ from ..exposure_analysing.main import (
     get_data_names,
     init_exposure_handlers,
 )
+
+from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Tuple
-import logging
+
 from .models import (
-    BuildNetworksRequest,
     EdgeFeatureCollection,
     PathFeatureCollection,
     RouteRequest,
@@ -27,7 +37,9 @@ from ..config import (
     PROJECT_CRS_KEY,
     PROJECT_KEY,
     ROUTING_RESULTS_TABLE,
+    SEGMENT_STORE_TABLE,
     TRAVEL_TIMES_TABLE,
+    HElSINKI_CITY_KEY,
 )
 from ..database_controller import DatabaseController
 from ..routing.main import (
@@ -45,37 +57,40 @@ from .api_utility_engine import (
 )
 
 
-import logging
+# Set up logger to print to the terminal
+def setup_logger(name, level=logging.INFO):
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    handler = logging.StreamHandler(sys.stdout)  # Send log output to terminal
+    handler.setFormatter(
+        logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    )
+    logger.addHandler(handler)
+    return logger
 
-from ..logging import setup_logger, LoggerColors
 
-logger = setup_logger(__name__, LoggerColors.GREEN.value)
+# Initialize logger
+logger = setup_logger(__name__)
+
 
 # Configure CORS settings
 allowed_cors_origins = [
     "http://localhost:3000",
 ]
 
-custom_cost_networks = {}
-configs = {}
-build_networks_initialized = False
+aqi_updater = AQIUpdater()
+db_controller = DatabaseController()
 
 
 # Using lifespan to handle startup and shutdown events
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global custom_cost_networks, configs, build_networks_initialized
     try:
-        if not build_networks_initialized:
-            # TODO: tee paremiin, ehkä support muita kaupunkeja...
-            # täsä pitäs loopata ihan kaikki läpi mitä on...
-            city = "helsinki"
-
-            custom_cost_networks, configs = build_custom_cost_networks(city_name=city)
-            logger.info(f"Created {len(custom_cost_networks)} custom cost networks")
-            logger.info(f"Custom cost networks: {custom_cost_networks.keys()}")
-            logger.info("Success in lifespan")
-            build_networks_initialized = True
+        networks_initialized = network_builder.get_build_networks_initialized()
+        if not networks_initialized:
+            network_builder.init_preprocessing_and_custom_cost_networks(
+                db_controller, aqi_updater
+            )
         else:
             logger.info("Custom cost networks already initialized")
     except Exception as e:
@@ -97,38 +112,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# init scheduler for fetching AQI data
+scheduler = BackgroundScheduler()
+scheduler.add_job(
+    aqi_updater.fetch_and_update_aqi_data_hourly_job, "interval", hours=1
+)  # minutes=2
+scheduler.start()
 
 # ENDPOINTS
-
-
-@app.post("/build_networks/")
-async def build_networks(request: BuildNetworksRequest):
-    """
-    Endpoint to build custom cost networks for a specified city.
-    """
-    logger.info("STARTING TO BUILD CUSTOM COST NETWORKS")
-
-    # Build custom cost networks based on the request's city parameter
-    global custom_cost_networks, configs
-    try:
-        custom_cost_networks, configs = build_custom_cost_networks(request.city)
-        logger.info(
-            f"Finished building {len(custom_cost_networks)} custom cost networks"
-        )
-        logger.info(f"Custom cost networks created: {custom_cost_networks.keys()}")
-
-        return {"status": "success", "networks_built": len(custom_cost_networks)}
-    except Exception as e:
-        logger.error(f"Error during network building: {e}")
-        raise HTTPException(
-            status_code=500, detail="Failed to build custom cost networks."
-        )
 
 
 @app.post("/route/")
 async def calculate_routes(request: RouteRequest):
     try:
-        if not build_networks_initialized:
+        if not network_builder.get_build_networks_initialized():
             logger.error("Custom cost networks not initialized.")
             raise HTTPException(
                 status_code=500,
@@ -157,18 +154,6 @@ async def calculate_routes(request: RouteRequest):
 
         db_handler = DatabaseController()
 
-        # TODO: maybe figure some better way
-        # ALSO -> figure how this will work with multiple users...
-        logger.info("Empty tables: routing_results and output_results")
-        if db_handler.check_table_exists(ROUTING_RESULTS_TABLE):
-            db_handler.empty_table(ROUTING_RESULTS_TABLE)
-
-        if db_handler.check_table_exists(OUTPUT_RESULTS_TABLE):
-            db_handler.empty_table(OUTPUT_RESULTS_TABLE)
-
-        if db_handler.check_table_exists(TRAVEL_TIMES_TABLE):
-            db_handler.empty_table(TRAVEL_TIMES_TABLE)
-
         _, exposure_db_controller, exposure_calculator = init_exposure_handlers(
             db_handler
         )
@@ -179,7 +164,7 @@ async def calculate_routes(request: RouteRequest):
         # Filter the configs and custom cost networks for the requested city and exposure
         city_exposure_filtered_configs = {
             key: value
-            for key, value in configs.items()
+            for key, value in network_builder.get_configs().items()
             if key.lower().startswith(
                 f"{request.city.lower()}/{request.exposure.lower()}/"
             )
@@ -191,7 +176,12 @@ async def calculate_routes(request: RouteRequest):
         logger.info("Looping through the API configs for given exposure")
         logger.info(f"all configs keys: {city_exposure_filtered_configs.keys()}")
 
-        custom_cost_networks_instance = custom_cost_networks.copy()
+        custom_cost_networks_instance = (
+            network_builder.get_custom_cost_networks().copy()
+        )
+
+        # create unique user id
+        user_id = str(uuid.uuid4())
 
         # loop all configs and their custom cost networks
         for config_key, config_object in city_exposure_filtered_configs.items():
@@ -207,6 +197,7 @@ async def calculate_routes(request: RouteRequest):
                     custom_cost_transport_network=current_network,
                     no_travel_times=no_travel_times,
                     transportMode=request.transportMode,
+                    user_id=user_id,
                 )
             except:
                 raise HTTPException(
@@ -228,7 +219,7 @@ async def calculate_routes(request: RouteRequest):
 
             # emptying the table after each loop to only have a single output results in table
             if db_handler.check_table_exists(OUTPUT_RESULTS_TABLE):
-                db_handler.empty_table(OUTPUT_RESULTS_TABLE)
+                db_handler.empty_table(OUTPUT_RESULTS_TABLE, user_id=user_id)
 
             try:
                 new_columns_added_db = process_exposure_results_as_batches(
@@ -239,9 +230,12 @@ async def calculate_routes(request: RouteRequest):
                     data_names=data_names,
                     keep_geometries=keep_geometries,
                     existing_columns=output_table_all_columns,
+                    user_id=user_id,
+                    combine_geometries=False,
                 )
 
-            except:
+            except Exception as e:
+                logger.error(f"GP2 SERVER EXPOSURE ANALYSING FAILED: {e}")
                 raise HTTPException(
                     status_code=500, detail="GP2 SERVER EXPOSURE ANALYSING FAILED."
                 )
@@ -254,7 +248,9 @@ async def calculate_routes(request: RouteRequest):
             edge_exposure_data_name = API_EXPOSURES_NAME_MAPPING[request.exposure]
 
             edge_rows = get_individual_segments_using_routing_results(
-                db_handler=db_handler, data_name=edge_exposure_data_name
+                db_handler=db_handler,
+                data_name=edge_exposure_data_name,
+                user_id=user_id,
             )
 
             current_path_edge_FC = convert_segments_to_features(
@@ -269,7 +265,7 @@ async def calculate_routes(request: RouteRequest):
             # PATH
 
             path_output_results, _ = db_handler.get_all(
-                OUTPUT_RESULTS_TABLE, column_names=True
+                OUTPUT_RESULTS_TABLE, column_names=True, user_id=user_id
             )
 
             current_path_FC = create_path_feature(
@@ -297,20 +293,37 @@ async def calculate_routes(request: RouteRequest):
             all_path_FC=filtered_path_fc, all_edge_FC=all_edge_FC
         )
 
+        # empty the tables after routing with user-id
+        db_handler.empty_table(ROUTING_RESULTS_TABLE, user_id=user_id)
+        db_handler.empty_table(OUTPUT_RESULTS_TABLE, user_id=user_id)
+
+        # latest build aqi file timestamp
+        latest_aqi_build_timestamp = (
+            redis_client.get("latest_build_aqi_timestamp") or ""
+        )
+
         return RouteResponse(
             city=request.city,
             transportMode=request.transportMode,
             exposure=request.exposure,
+            latest_aqi_file_timestamp=latest_aqi_build_timestamp,
             edge_FC=EdgeFeatureCollection(features=filtered_edge_FC),
             path_FC=PathFeatureCollection(features=filtered_path_fc),
         )
 
+    except sqlite3.OperationalError as e:
+        if "database is locked" in str(e):
+            # Handle the specific database lock error
+            raise HTTPException(
+                status_code=503,
+                detail="Too many concurrent users, try again in a few seconds.",
+            )
+        else:
+            raise HTTPException(status_code=500, detail="Database operation failed.")
     except HTTPException as http_exc:
-        # If the error is already an HTTPException, re-raise it to preserve the original message and status code
         logger.error(f"HTTPException occurred: {http_exc.detail}")
         raise http_exc
     except Exception as e:
-        # For all other exceptions, log and raise a generic 500 error with the exception message
         logger.error(f"Unhandled exception in calculate_routes: {e}")
         raise HTTPException(
             status_code=500,
@@ -318,10 +331,14 @@ async def calculate_routes(request: RouteRequest):
         )
 
 
-# ROOPE TODO: should this be done in frontend? i guess!
-def geocode_address_to_lat_long(address: str) -> Tuple[float, float]:
-    """TODO"""
-    return True
+# @app.on_event("startup")
+# def startup_event():
+
+
+# @app.on_event("shutdown")
+# def shutdown_event():
+#     scheduler.shutdown()
+#     executor.shutdown(wait=True)
 
 
 # Running the server

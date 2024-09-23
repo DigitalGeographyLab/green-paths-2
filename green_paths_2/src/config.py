@@ -66,6 +66,8 @@ ALL_PIPELINE_NAME = "all"
 
 NAME_KEY = "name"
 
+USER_ID_KEY = "user_id"
+
 CONFIG_NAME_KEY = "config_name"
 
 FROM_ID_KEY = "from_id"
@@ -172,7 +174,9 @@ LOGS_CACHE_DIR_NAME = "logs"
 
 # FILENAMES AND FILE EXTENSIONS
 
-OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION: str = "_segmented.osm.pbf"
+OSM_DEFAULT_FILE_EXTENSION: str = ".osm.pbf"
+
+OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION: str = "_segmented"
 
 DESCRIPTOR_FILE_NAME = "data_description.txt"
 
@@ -214,6 +218,8 @@ DEFAULT_R5_TRAVEL_SPEED_CYCLING = 15
 
 DEFAULT_BATCH_PROCENTAGE = 0.1
 
+DEFAULT_USER_ID = "GP2"
+
 
 # default values for optional user configuration attributes
 # these will be used if the user does not specify them in the configuration file
@@ -231,6 +237,7 @@ DB_ROUTING_RESULTS_COLUMNS = [
     {"name": TO_ID_KEY, "type": "TEXT"},
     {"name": CONFIG_NAME_KEY, "type": "TEXT"},
     {"name": OSM_IDS_KEY, "type": "TEXT"},
+    {"name": USER_ID_KEY, "type": "TEXT"},
 ]
 
 DB_TRAVEL_TIMES_COLUMNS = [
@@ -241,6 +248,14 @@ DB_TRAVEL_TIMES_COLUMNS = [
 DB_OUTPUT_RESULST_BASE_COLUMNS = {TO_ID_KEY: -1, FROM_ID_KEY: -1}
 
 # API
+
+HElSINKI_CITY_KEY = "helsinki"
+
+UPDATE_IN_PROGRESS_KEY = "update_in_progress"
+
+LATEST_BUILD_AQI_TIMESTAMP_KEY = "latest_build_aqi_timestamp"
+
+LATEST_FETCH_AQI_TIMESTAMP_KEY = "latest_fetch_aqi_timestamp"
 
 # mapping for API exposures names to the names used in the database
 API_EXPOSURES_NAME_MAPPING = {

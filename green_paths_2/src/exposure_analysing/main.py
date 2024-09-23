@@ -14,6 +14,7 @@ from ...src.exposure_analysing.exposures_calculator import (
 
 from ..config import (
     ANALYSING_KEY,
+    DEFAULT_USER_ID,
     KEEP_GEOMETRY_KEY,
     NAME_KEY,
     OUTPUT_RESULTS_TABLE,
@@ -75,6 +76,9 @@ def exposure_analysing_pipeline(user_config: UserConfig):
             [ANALYSING_KEY, KEEP_GEOMETRY_KEY], default=False
         )
 
+        # set here for the science base user, not api
+        user_id = DEFAULT_USER_ID
+
         process_exposure_results_as_batches(
             db_handler=db_handler,
             exposure_db_controller=exposure_db_controller,
@@ -82,6 +86,7 @@ def exposure_analysing_pipeline(user_config: UserConfig):
             user_config=user_config,
             data_names=data_names,
             keep_geometries=keep_geometries,
+            user_id=user_id,
         )
 
         save_exposure_results_to_file(db_handler, user_config, keep_geometries)

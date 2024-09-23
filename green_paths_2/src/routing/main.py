@@ -21,6 +21,7 @@ from ..config import (
     CHUNKING_TRESHOLD_KEY,
     DB_ROUTING_RESULTS_COLUMNS,
     DB_TRAVEL_TIMES_COLUMNS,
+    DEFAULT_USER_ID,
     ROUTING_CHUNKING_THRESHOLD,
     ROUTING_KEY,
     ROUTING_RESULTS_TABLE,
@@ -68,13 +69,13 @@ def chunk_data(data, chunk_size):
 
 @time_logger
 def process_and_store_results(
-    db_handler, config_name, route_data=None, travel_times=None
+    db_handler, config_name, user_id, route_data=None, travel_times=None
 ):
     """Convert, format, and store routing results and travel times in the database."""
     if route_data is not None:
         route_data_dict = convert_gdf_to_dict(route_data, orient="records")
         formatted_routing_results = convert_results_to_dicts(
-            config_name, route_data_dict
+            config_name=config_name, route_results=route_data_dict, user_id=user_id
         )
         db_handler.add_many_dict(ROUTING_RESULTS_TABLE, formatted_routing_results)
     if travel_times is not None:
@@ -120,6 +121,7 @@ def handle_routing_and_saving_processes(
     custom_cost_transport_network,
     no_travel_times=False,
     transportMode=None,
+    user_id=None,
 ) -> None:
     """
     Handle routing and saving processes.
@@ -137,6 +139,9 @@ def handle_routing_and_saving_processes(
     ----------
     None
     """
+    # handle user id
+    user_id = user_id or DEFAULT_USER_ID
+
     # handle OD pairs
     origins, destinations = init_origin_destinations_from_files(
         user_config.routing, user_config.project.project_crs
@@ -173,21 +178,30 @@ def handle_routing_and_saving_processes(
         )
         for route_chunk in route_result_chunks:
             process_and_store_results(
-                db_handler, user_config.config_name, route_chunk, None
+                db_handler=db_handler,
+                config_name=user_config.config_name,
+                user_id=user_id,
+                route_data=route_chunk,
+                travel_times=None,
             )
         # add travel times to db outside of loop
         # because they are not chunked and are all the same for each chunk
         if not no_travel_times:
             process_and_store_results(
-                db_handler, user_config.config_name, None, actual_travel_times
+                db_handler=db_handler,
+                config_name=user_config.config_name,
+                user_id=user_id,
+                route_data=None,
+                travel_times=actual_travel_times,
             )
     # if smaller results than threshold, store all at once
     else:
         process_and_store_results(
-            db_handler,
-            user_config.config_name,
-            green_paths_route_results,
-            actual_travel_times,
+            db_handler=db_handler,
+            config_name=user_config.config_name,
+            user_id=user_id,
+            route_data=green_paths_route_results,
+            travel_times=actual_travel_times,
         )
 
 
@@ -234,6 +248,8 @@ def routing_pipeline(
             db_handler,
             data_handler,
         )
+
+        # TODO: maybe need to add a filtering for None exposures
 
         # build custom cost network
         custom_cost_transport_network = build_custom_cost_network(

@@ -68,9 +68,21 @@ def save_csv(lat: float, long: float, filename: str, id: int) -> str:
         raise HTTPException(status_code=500, detail="Failed to process OD's.")
 
 
-def build_custom_cost_networks(city_name: str) -> Tuple[dict, dict]:
+def build_custom_cost_networks(
+    city_name: str, preprocess_in_background=False
+) -> Tuple[dict, dict]:
     """
     Build custom cost networks for all user configurations.
+
+    Parameters:
+    -----------
+    city_name : str
+        Name of the city to build custom cost networks for.
+    preprocess_in_background : bool, optional
+        If True, the preprocessing pipeline will be executed in the background.
+        This basically meanst that preprocessing pipeline will be executed for the first conf
+        and that the segment_store table will be emptied in the end of preprocessing line
+        THIS SHOULD ONLY BE USED WITH AQI UPDATER!!!
 
     Returns:
     --------
@@ -82,10 +94,8 @@ def build_custom_cost_networks(city_name: str) -> Tuple[dict, dict]:
 
     db_controller = DatabaseController()
 
-    # empty segment store table to get a fresh start
-    # TODO: only run this in PROD!!!
+    # TODO: ONLY IN PROD -> ALSO, remove this???!!!
     # db_controller.empty_table(SEGMENT_STORE_TABLE)
-    # TODO: run that code only in prod...
 
     custom_cost_networks = {}
     configs = {}
@@ -99,16 +109,21 @@ def build_custom_cost_networks(city_name: str) -> Tuple[dict, dict]:
         # loop all of these sensitivities
         user_configuration_sensitivity_names = os.listdir(exposure_config_path)
 
+        preprocessing_done = False
+
         for config_name in user_configuration_sensitivity_names:
             config_path = os.path.join(exposure_config_path, config_name)
             user_config, data_handler = init_config_and_data_handler(config_path)
 
             # for first config, execute preprocessing pipeline if not done before
 
+            # TODO: should invent better way of managing run conditions, also this should be separated to another place
+            # now using p_i_b and i to run only on 1st config for background run
             segment_store_exists = db_controller.check_table_exists(SEGMENT_STORE_TABLE)
             if (
                 not segment_store_exists
                 or db_controller.get_row_count(SEGMENT_STORE_TABLE) == 0
+                or (preprocess_in_background and not preprocessing_done)
             ):
                 logger.info("Starting preprocessing...")
                 osm_network_gdf = handle_osm_network_process(user_config=user_config)
@@ -116,8 +131,10 @@ def build_custom_cost_networks(city_name: str) -> Tuple[dict, dict]:
                     osm_network_gdf=osm_network_gdf,
                     data_handler=data_handler,
                     user_config=user_config,
+                    preprocess_in_background=preprocess_in_background,
                 )
                 logger.info("Preprocessing completed.")
+                preprocessing_done = True
 
             osm_segmented_network_path = validate_segmented_osm_network_path(
                 osm_segmented_network_path=user_config.osm_network.osm_pbf_file_path
@@ -141,7 +158,7 @@ def build_custom_cost_networks(city_name: str) -> Tuple[dict, dict]:
 
 
 def get_individual_segments_using_routing_results(
-    db_handler: DatabaseController, data_name: str
+    db_handler: DatabaseController, data_name: str, user_id: str
 ) -> list[dict]:
     """
     Get single segments from the database to return a edge_FC to API.
@@ -160,7 +177,9 @@ def get_individual_segments_using_routing_results(
     """
     # get all osmids from the routing
     logger.info("Getting individual segments using routing results")
-    routing_results = db_handler.get_all(ROUTING_RESULTS_TABLE, column_names=True)
+    routing_results = db_handler.get_all(
+        ROUTING_RESULTS_TABLE, column_names=True, user_id=user_id
+    )
 
     # get only osm_ids column by column name
     # this is actually string, which reminds of list, but it is not list
@@ -207,15 +226,18 @@ def convert_segments_to_features(
 
         for segment in segments_data:
 
-            # the geometry is stored as string in sqlite db
-            # convert to shapely geom
-            geometry = wkt.loads(segment[GEOMETRY_KEY])
+            if segment[GEOMETRY_KEY]:
+                # the geometry is stored as string in sqlite db
+                # convert to shapely geom
+                geometry = wkt.loads(segment[GEOMETRY_KEY])
 
-            # convert to 4326, which the front end uses
-            geometry = convert_to_epsg4326(geometry, source_crs)
+                # convert to 4326, which the front end uses
+                geometry = convert_to_epsg4326(geometry, source_crs)
 
-            # Convert Shapely geometry to GeoJSON-like dictionary
-            geometry = mapping(geometry)
+                # Convert Shapely geometry to GeoJSON-like dictionary
+                geometry = mapping(geometry)
+            else:
+                geometry = {"type": "LineString", "coordinates": []}
 
             # TODO: test exposure normalized value...
             # Dynamically create properties dictionary using data_names
@@ -230,7 +252,8 @@ def convert_segments_to_features(
             edge_features.append(feature)
 
         return edge_features
-    except:
+    except Exception as e:
+        logger.error(f"Failed to convert segments to features: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"GP2 SERVER FAILED TO CONVERT SEGMENTS TO FEATURES (path_id: {path_id}).",
