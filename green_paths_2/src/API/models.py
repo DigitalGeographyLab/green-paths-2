@@ -78,5 +78,6 @@ class RouteResponse(BaseModel):
     city: str
     transportMode: str
     exposure: str
+    latest_aqi_file_timestamp: str
     edge_FC: EdgeFeatureCollection
     path_FC: PathFeatureCollection

@@ -10,6 +10,7 @@ from .config import (
     DATA_CACHE_DIR_PATH,
     OSM_CACHE_DIR_NAME,
     OSM_CACHE_SEGMENTED_DIR_NAME,
+    OSM_DEFAULT_FILE_EXTENSION,
     OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION,
     TEST_DATA_CACHE_DIR_PATH,
 )
@@ -121,27 +122,27 @@ def convert_gdf_to_dict(
 
 def construct_osm_segmented_network_name(osm_source_path: str) -> str:
     """Constructs the name for the segmented OSM network file."""
-    # Normalize input path to avoid mix of path separators
-    osm_source_path = osm_source_path.replace("\\", os.sep).replace("/", os.sep)
 
+    # Normalize input path and extract file name without extension
+    osm_source_path = os.path.normpath(osm_source_path)
     network_name_no_extension = os.path.basename(osm_source_path).rsplit(".osm.pbf", 1)[
         0
     ]
+
+    # Determine the OSM file name
     osm_file_name = (
         network_name_no_extension + OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION
+        if OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION not in network_name_no_extension
+        else network_name_no_extension
+    ) + OSM_DEFAULT_FILE_EXTENSION
+
+    # Determine the environment (TEST or other) and set data cache directory
+    data_cache_dir_path = (
+        TEST_DATA_CACHE_DIR_PATH if os.getenv("ENV") == "TEST" else DATA_CACHE_DIR_PATH
     )
+    data_cache_dir_path = os.path.normpath(data_cache_dir_path)
 
-    # check if is dev env or test env from os.environ
-    if os.getenv("ENV") == "TEST":
-        data_cache_dir_path = TEST_DATA_CACHE_DIR_PATH.replace("\\", os.sep).replace(
-            "/", os.sep
-        )
-
-    else:
-        data_cache_dir_path = DATA_CACHE_DIR_PATH.replace("\\", os.sep).replace(
-            "/", os.sep
-        )
-
+    # Return the constructed file path
     return os.path.join(
         data_cache_dir_path,
         OSM_CACHE_DIR_NAME,
@@ -181,6 +182,30 @@ def string_to_list(string: str) -> list[str]:
 
 from shapely.geometry import LineString, MultiLineString, Point
 from shapely.ops import linemerge
+
+
+def append_multilinestrings(multi_lines) -> LineString:
+    """
+    Appends Geometries. This will not produce visually correct results
+    as it will not order the segments by proximity.
+    This is used for API where the geometries are not really used for visualization.
+
+    Parameters:
+    ----------------
+    - multi_lines: List of MultiLineStrings.
+
+    Returns:
+    ----------------
+    - LineString.
+
+    """
+    combined_coords = []
+    for multi_line in multi_lines:
+        if not multi_line or multi_line.is_empty:
+            continue
+        for line in multi_line.geoms:
+            combined_coords.extend(line.coords)
+    return LineString(combined_coords)
 
 
 def combine_multilinestrings(multi_lines) -> LineString | MultiLineString:

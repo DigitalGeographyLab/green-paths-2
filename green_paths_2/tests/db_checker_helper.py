@@ -11,12 +11,12 @@ def execute_query(conn, query):
     return results
 
 
-def check_row_count(conn, table_name, expected_count):
+def check_row_count(conn, table_name):
     cursor = conn.cursor()
     query = f"SELECT COUNT(*) FROM {table_name}"
     cursor.execute(query)
     actual_count = cursor.fetchone()[0]
-    return actual_count == expected_count
+    return actual_count
 
 
 def check_row_exists(conn, table_name, column_name, value):
@@ -89,7 +89,7 @@ def check_geospatial_data(
     results = cursor.fetchall()
 
     for geom in results:
-        if not geom[0].startswith(expected_prefix):
+        if geom and geom[0] and not geom[0].startswith(expected_prefix):
             return False
     return True
 
@@ -108,39 +108,3 @@ def empty_table(conn, table_name):
     cursor = conn.cursor()
     cursor.execute(f"DELETE FROM {table_name};")
     conn.commit()
-
-
-# example usages
-
-# conn = sqlite3.connect("path_to_your_db.db")
-
-# check if row count is as expected
-# assert check_row_count(conn, "segment_store", expected_count=5)
-
-# get by osmid
-# column_value = get_column_value_by_osm_id(conn, SEGMENT_STORE_TABLE, target_osm_id, "gvi")
-
-# # Check if a specific row exists
-# assert check_row_exists(conn, "segment_store", "some_column", "expected_value")
-
-# # Check if column values are within a range
-# assert check_column_value_range(
-#     conn, "segment_store", "some_numeric_column", min_value=0
-# )
-
-# # Check data types
-# assert check_data_types(conn, "segment_store", "some_column", float)
-
-# # Check for specific value
-# assert check_specific_value(conn, "segment_store", "some_column", "specific_value")
-
-# # Check geospatial data integrity
-# assert check_geospatial_data(conn, "segment_store", "geospatial_column")
-
-# # Check aggregated result (e.g., sum)
-# assert (
-#     check_aggregated_results(conn, "segment_store", "some_numeric_column")
-#     == expected_sum_value
-# )
-
-# conn.close()

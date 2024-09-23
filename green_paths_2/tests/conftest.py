@@ -88,10 +88,10 @@ def cleanup_db_before_and_after_tests():
     conn = sqlite3.connect(GP2_DB_TEST_PATH)
     cursor = conn.cursor()
 
-    # Delete all data from each table after all tests
-    for table in tables:
-        cursor.execute(f"DELETE FROM {table[0]};")
-        conn.commit()
+    # # Delete all data from each table after all tests
+    # for table in tables:
+    #     cursor.execute(f"DELETE FROM {table[0]};")
+    #     conn.commit()
 
     # Close the connection
     cursor.close()

@@ -38,6 +38,9 @@ r5py = {git = "https://github.com/DigitalGeographyLab/r5py_gp2.git"}
 pytest = "^8.3.2"
 fastapi = "^0.112.1"
 geojson = "^3.1.0"
+apscheduler = "^3.10.4"
+celery = "^5.4.0"
+redis = "^5.0.8"
 
 
 
@@ -46,6 +49,8 @@ geojson = "^3.1.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
 
 
 

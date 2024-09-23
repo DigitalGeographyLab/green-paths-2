@@ -47,7 +47,7 @@ def test_routing(conn, config_dir, user_config):
         assert check_data_types(conn, ROUTING_RESULTS_TABLE, column, expected_type)
 
     # get all rows and expect 40k because of the test config
-    assert check_row_count(conn, ROUTING_RESULTS_TABLE, 40_000)
+    assert 40_000 == check_row_count(conn, ROUTING_RESULTS_TABLE)
 
     # get all with non empty osm_ids
     routing_results_with_osmids = execute_query(

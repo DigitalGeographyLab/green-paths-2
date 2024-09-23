@@ -55,6 +55,7 @@ def preprocessing_pipeline(
     osm_network_gdf: gpd.GeoDataFrame,
     data_handler: UserDataHandler,
     user_config: UserConfig,
+    preprocess_in_background: bool = False,
 ):
     """
     Run the whole preprocessing pipeline.
@@ -65,6 +66,11 @@ def preprocessing_pipeline(
         OSM network data.
     user_config : UserConfig
         User configuration object.
+    data_handler : UserDataHandler
+        User data handler object.
+    preprocess_in_background : bool, optional
+        If True, preprocess in the background, by default False.
+        Not the best name for this. Basically means that will will empty the segment store table just before adding new data.
 
     Returns
     -------
@@ -196,6 +202,11 @@ def preprocessing_pipeline(
         db_handler = DatabaseController()
 
         table_structure_from_data = next(iter(segment_store_wkt.values()))
+
+        # FOR API to keep the db data live for longer for API calls
+        # empty the segment store table to add new data
+        if preprocess_in_background:
+            db_handler.empty_table(SEGMENT_STORE_TABLE)
 
         db_handler.create_table_from_dict_data(
             SEGMENT_STORE_TABLE, table_structure_from_data, force=True

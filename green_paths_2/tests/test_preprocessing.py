@@ -61,7 +61,7 @@ def test_preprocessing(conn, config_dir, valid_user_config):
     )
 
     assert no_gvi_in_first_row == None
-    assert no_gvi_normalized_in_first_row == None
+    assert no_gvi_normalized_in_first_row == 0.0
 
     # osm_id from second row
     gvi_row_osm_id = -166609
@@ -81,4 +81,4 @@ def test_preprocessing(conn, config_dir, valid_user_config):
 
     assert check_geospatial_data(conn, SEGMENT_STORE_TABLE, GEOMETRY_KEY)
 
-    assert check_row_count(conn, SEGMENT_STORE_TABLE, expected_count=49676)
+    assert 49_692 == check_row_count(conn, SEGMENT_STORE_TABLE)

@@ -132,18 +132,16 @@ green_paths_2/data/*
 green_paths_2/src/user/*
 green_paths_2/user/data/*
 
-# API ODS
-green_paths_2/src/API/temp_ods/*
+# API
 
 #dbs
 green_paths_2/src/database/*
 green_paths_2/tests/database/*
 
-
 # user config
 green_paths_2/user/config.yaml
 
 # API related data & configs
-green_paths_2/src/API/configs/*
-green_paths_2/src/API/temp_ods/*
-green_paths_2/src/API/data/*
+green_paths_2/src/API/configs/**/*.yml
+green_paths_2/src/API/temp_ods/*.csv
+green_paths_2/src/API/data/*/*.*
