@@ -87,13 +87,13 @@ if not exist "%CONDA_PREFIX%\etc\conda\activate.d" (
 )
 
 :: Create a batch script to set JAVA_HOME in activate.d
-echo @echo off > "%CONDA_PREFIX%\etc\conda\activate.d\set_java_home.bat"
-echo for /f "tokens=*" %%%%i in ^('where javac'^) do set JAVA_HOME=%%%%~dpi.. >> "%CONDA_PREFIX%\etc\conda\activate.d\set_java_home.bat"
-echo echo Setting JAVA_HOME to %%JAVA_HOME%% >> "%CONDA_PREFIX%\etc\conda\activate.d\set_java_home.bat"
-echo set PATH=%%JAVA_HOME%%\bin;%%PATH%% >> "%CONDA_PREFIX%\etc\conda\activate.d\set_java_home.bat"
+@REM echo @echo off > "%CONDA_PREFIX%\etc\conda\activate.d\set_java_home.bat"
+@REM echo for /f "tokens=*" %%%%i in ^('where javac'^) do set JAVA_HOME=%%%%~dpi.. >> "%CONDA_PREFIX%\etc\conda\activate.d\set_java_home.bat"
+@REM echo echo Setting JAVA_HOME to %%JAVA_HOME%% >> "%CONDA_PREFIX%\etc\conda\activate.d\set_java_home.bat"
+@REM echo set PATH=%%JAVA_HOME%%\bin;%%PATH%% >> "%CONDA_PREFIX%\etc\conda\activate.d\set_java_home.bat"
 
-:: Inform user the script has been created
-echo JAVA_HOME will be set automatically every time you activate the dgl_gp2 environment.
+@REM :: Inform user the script has been created
+@REM echo JAVA_HOME will be set automatically every time you activate the dgl_gp2 environment.
 
 
 :: Set JAVA_HOME for the Conda environment
