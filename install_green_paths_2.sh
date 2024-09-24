@@ -67,6 +67,8 @@ conda create -n dgl_gp2 python=3.11 -y
 source $(conda info --base)/etc/profile.d/conda.sh
 conda activate dgl_gp2
 
+conda install sqlite libsqlite -y
+
 # Install Java
 conda install -c conda-forge openjdk=21 -y
 

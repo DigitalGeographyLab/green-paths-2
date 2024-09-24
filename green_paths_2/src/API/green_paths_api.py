@@ -1,5 +1,6 @@
 import sys
 import sqlite3
+import traceback
 import uuid
 import logging
 
@@ -94,7 +95,8 @@ async def lifespan(app: FastAPI):
         else:
             logger.info("Custom cost networks already initialized")
     except Exception as e:
-        logger.info(f"Error during lifespan startup: {e}")
+        logger.error(f"Error during lifespan startup: {e}")
+        logger.error(traceback.format_exc())  # This will log the full traceback
 
     yield
     # Cleanup if necessary here (runs on shutdown)
