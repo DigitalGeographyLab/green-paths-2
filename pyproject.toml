@@ -24,7 +24,6 @@ proj = "^0.2.0"
 fiona = "^1.9.6"
 geopandas = "^0.14.4"
 openpyxl = "^3.1.2"
-pysqlite3 = "^0.5.3"
 gdal = "^3.9.1"
 geos = "^0.2.3"
 sphinx = "^7.4.7"
@@ -44,12 +43,9 @@ redis = "^5.0.8"
 
 
 
-[tool.poetry.group.dev.dependencies]
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
 
 
 
