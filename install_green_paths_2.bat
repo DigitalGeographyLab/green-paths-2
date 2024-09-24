@@ -76,8 +76,25 @@ call conda create -n dgl_gp2 python=3.11 -y
 :: Activate the environment
 call conda activate dgl_gp2
 
+call conda install sqlite libsqlite -y
+
 :: Install Java
 call conda install -c conda-forge openjdk=21 -y
+
+:: Create Conda's activate.d folder if it doesn't exist
+if not exist "%CONDA_PREFIX%\etc\conda\activate.d" (
+    mkdir "%CONDA_PREFIX%\etc\conda\activate.d"
+)
+
+:: Create a batch script to set JAVA_HOME in activate.d
+echo @echo off > "%CONDA_PREFIX%\etc\conda\activate.d\set_java_home.bat"
+echo for /f "tokens=*" %%%%i in ^('where javac'^) do set JAVA_HOME=%%%%~dpi.. >> "%CONDA_PREFIX%\etc\conda\activate.d\set_java_home.bat"
+echo echo Setting JAVA_HOME to %%JAVA_HOME%% >> "%CONDA_PREFIX%\etc\conda\activate.d\set_java_home.bat"
+echo set PATH=%%JAVA_HOME%%\bin;%%PATH%% >> "%CONDA_PREFIX%\etc\conda\activate.d\set_java_home.bat"
+
+:: Inform user the script has been created
+echo JAVA_HOME will be set automatically every time you activate the dgl_gp2 environment.
+
 
 :: Set JAVA_HOME for the Conda environment
 :: Note: Setting JAVA_HOME permanently in Windows requires setting it in the system environment variables
