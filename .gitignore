@@ -145,3 +145,4 @@ green_paths_2/user/config.yaml
 green_paths_2/src/API/configs/**/*.yml
 green_paths_2/src/API/temp_ods/*.csv
 green_paths_2/src/API/data/*/*.*
+green_paths_2/src/API/osm/*.pbf
