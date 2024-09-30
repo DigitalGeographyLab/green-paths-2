@@ -133,7 +133,8 @@ class SegmentValueStore:
             data_found_count = 0
             for _, data in self.master_segment_store.items():
                 if data_name in data.keys():
-                    data_found_count += 1
+                    if data[data_name] is not None:
+                        data_found_count += 1
 
             data_coverage_percentage = round(
                 (data_found_count / osm_network_segment_count) * 100, 2

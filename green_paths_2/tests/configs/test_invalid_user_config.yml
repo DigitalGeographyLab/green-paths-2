@@ -24,6 +24,7 @@ data_sources:
 
 routing:
     transport_mode: walking
+    travel_speed: 5.5
     origins: path/to/origins_points.gpkg
     od_lon_name: longitude # mandatory for csv, optional for others
     od_lat_name: latitude # mandatory for csv, optional for others

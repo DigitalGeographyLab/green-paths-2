@@ -162,6 +162,7 @@ class OsmNetworkHandler:
 
         return points
 
+    @time_logger
     def generate_sampling_points(
         self,
         most_accurate_raster_resolution: int,
@@ -218,13 +219,16 @@ class OsmNetworkHandler:
         self.handle_crs(project_crs, original_crs)
         self.network_filter_by_columns(NETWORK_COLUMNS_TO_KEEP)
         self.handle_invalid_geometries()
+        LOG.info("getting most accurate raster resolution")
         most_accurate_raster_resolution = get_most_accurate_data_source_resolution(
             data_sources
         )
+        LOG.info("calculating lengths of segments")
         self.calculate_lengts_of_segments()
+        LOG.info("generating sampling points")
         self.generate_sampling_points(
             most_accurate_raster_resolution,
             force_sampling_points_amount=force_sampling_points_amount,
         )
-
+        LOG.info("successfully processed OSM network.")
         return self.get_network_gdf()

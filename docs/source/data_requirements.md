@@ -17,6 +17,15 @@ A OSM PBF file is needed, and it can be downloaded from various online sources, 
 - [Geofabrik.de](https://download.geofabrik.de/) (street network should have as small extent as possible, so cropping might be required)
 
 
+## OD files
+
+Origins and destinations need to be set to a filepath. Supported filetypes: gpkg and csv.
+
+The OD's need to have a lowercase "id" column for all origin and destination point! 
+
+Cvs data needs additionally the crs, and od_lon_name and od_lat_name which should correspond to the column header names.
+
+
 ## Supported Exposure Data File Types
 
 | Type   | File Extension           |
@@ -41,4 +50,8 @@ A OSM PBF file is needed, and it can be downloaded from various online sources, 
 ```{warning}
 Not all filetypes are yet properly tested. Tested types: shp, tif, gpkg, nc, and gml.
 ```
+
+## GENERAL
+
+The CRS of project needs to be in metric CRS, not in degrees!
 

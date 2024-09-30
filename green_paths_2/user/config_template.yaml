@@ -1,9 +1,9 @@
 # Greetings traveller! This is a example template for user configuration file.
 #
-# 
+#
 #
 # here are the instructions for the configuration file
-# the config consist of 5 main categories: 
+# the config consist of 5 main categories:
 # - project settings
 # - osm_network
 # - data_sources
@@ -15,15 +15,12 @@
 # data sources have a list of data sources, each data source should have the same amount of indentation and the name parameter should start with a dash
 # the same applies for routing > exposure_parameters and analysing > cumulative_ranges > <data_source_name>
 
-
 # optional parameters can be left out (also remove the key)
 # the default values used by GP2 are used if the optional parameters are left out. The default values are in config.py
 
 # * * *
 # NOTICE: the keys need to be exactly the same as in the example. also the indentation is important. The order of the keys does not matter.
 # * * *
-
-
 
 # DETAILED DESCRIPTIONS BY CATEGORY:
 
@@ -34,9 +31,7 @@
 #     - (mandatory) <int | number> project_crs: the crs of the project, this is the target crs where everything will be projected to during the pipelines
 
 #     - (optional) <int or float | number> datas_coverage_safety_percentage: the percentage of the data sources that should have data in order to continue the analysis.
-#     if this is not give, will use GP2 default value. 
-
-
+#     if this is not give, will use GP2 default value.
 
 # OSM NETWORK:
 
@@ -47,8 +42,7 @@
 #     - (mandatory) <int | number> original_crs: the crs of the osm network
 
 #     - (optional) <int | number> segment_sampling_points_amount: optional but recommended! The amount of points that should be sampled from the segments.
-#     for each segment, the points are sampled evenly along the segment and their mean value is taken as the exposure value of the segment. 
-
+#     for each segment, the points are sampled evenly along the segment and their mean value is taken as the exposure value of the segment.
 
 # DATA SOURCES:
 
@@ -80,7 +74,7 @@
 #     - (optional, recommended) <str | text> data_type: this is optional because GP2 will try to infer the data type from the file extension.
 #     if this is not successfull, the program will crash. For robustness, it is recommended to always give the data type.
 
-#     - (optional) <int | float | number> no_data_value: 
+#     - (optional) <int | float | number> no_data_value:
 #
 #     the type of the data source. This can be one of the following:
 #             - vector: A vector data source. This can be any vector
@@ -102,15 +96,13 @@
 #     Mostly this is not needed and shouldn't be used, requires manual programming. Use case: converting netcdf files to tif files, scaling and offsetting the values etc.
 #     best practice is to use proper raster files that are ready for the exposure analysis.
 
-
-
 # ROUTING:
 
 # - routing:
 
 #     - (mandatory) <str | text> transport_mode: the transport mode for the routing. Can be either walking or cycling.
 
-#     - (optional) <int | float | number> travel_speed: the travel speed in km/h. If not given, will use the default values from the config.py.
+#     - (mandatory) <int | float | number> travel_speed: the travel speed in km/h.
 
 #     - (mandatory) <str | text> origins: the path to the origins file. This can be either a vector file or a csv file. The file should have the coordinates of the origins.
 
@@ -135,8 +127,6 @@
 #             - allow_missing_data (optional, experimental) <bool | True or False>: if the missing data should be allowed or not. If this is True, the segments with missing data will be ignored in the exposure analysis.
 #             default is true. If this is False, the missing data will crash the routing. This is experimental and should be used with caution. In most cases this should be True. Better not to use this.
 
-
-
 # ANALYSING:
 
 # - analysing: HEADER. Should have the following keys
@@ -154,10 +144,8 @@
 #    The ranges are used to calculate the cumulative exposure values for the segments. The cumulative exposure values are calculated for each range.
 #    if the value is out of any range, the value will be used as the "category" key. The cumulative exposure values are calculated for each range.
 
-
 # IMPORTANT: Where ever a data name is used, it need to be the same in all places and be found from all necessary places. Missmatching or missing names will crash the program.
-# Notice that the yml is very strict in it's syntax! 
-
+# Notice that the yml is very strict in it's syntax!
 
 # OTHER INSTRUCTIONS:
 # see the documentation in green-paths-2.rtfd.io for more detailed instructions and examples
@@ -166,58 +154,58 @@
 # use validator to validate the actual user_config.yaml file. This is useful for the user to understand if the file is valid or not.
 # validator should be run before the actual analysis. If the file is not valid, the program will crash. The user should fix the file and run the validator again.
 
-
-# * * * 
+# * * *
 
 # EXAMPLE VALID CONFIG FILE:
 
-project_crs: 3079 # mandatory. All the data and newtork will be projected to this crs.
-datas_coverage_safety_percentage: 75 # optional, recommended. Will crash if the data coverage is lower than this compared to the network.
-save_to_cache: False # optional. If the result data should be saved to cache or not. The final results are always saved to cache.
+project:
+    project_crs: 3079 # mandatory. All the data and newtork will be projected to this crs.
+    datas_coverage_safety_percentage: 75 # optional, recommended. Will crash if the data coverage is lower than this compared to the network.
+    save_to_cache: False # optional. If the result data should be saved to cache or not. The final results are always saved to cache.
 
 osm_network:
-  osm_pbf_file_path: path/to/user_network.osm.pbf # mandatory.
-  original_crs: 4326 # mandatory
-  segment_sampling_points_amount: 5 # optional. Amount of sampling points per segment. Recomended to use the default value, which is dynamic based on segment lenght and expoasure raster resolution.
+    osm_pbf_file_path: path/to/user_network.osm.pbf # mandatory.
+    original_crs: 4326 # mandatory
+    segment_sampling_points_amount: 5 # optional. Amount of sampling points per segment. Recomended to use the default value, which is dynamic based on segment lenght and expoasure raster resolution.
 
 data_sources:
-  - name: shade # mandatory. Can be what ever but needs to be the same throughout the config file.
-    filepath: path/to/shadows.tif # mandatory. Absolute path if not under the Green Paths 2 directory.
-    data_type: raster # optional, recommended. The type of the data source. This can be one of the following: vector or raster.
-    original_crs: 3007 # mandatory. The crs of the data source.
-    min_data_value: 0 # mandatory. Theoretical minimum value of the data source. Will be used in normalization.
-    max_data_value: 0.3333333432674408 # mandatory. Theoretical maximum value of the data source. Will be used in normalization.
-    good_exposure: True # mandatory. If the data source is good for exposure or bad. Good exposures will be considered cheaper (negative) values in routing and bad/False as expensive, in the routing.
-    no_data_value: 0 # optional. The no data value of the raster. If not given, will use the default value from the config.py.
+    - name: shade # mandatory. Can be what ever but needs to be the same throughout the config file.
+      filepath: path/to/shadows.tif # mandatory. Absolute path if not under the Green Paths 2 directory.
+      data_type: raster # optional, recommended. The type of the data source. This can be one of the following: vector or raster.
+      original_crs: 3007 # mandatory. The crs of the data source.
+      min_data_value: 0 # mandatory. Theoretical minimum value of the data source. Will be used in normalization.
+      max_data_value: 0.3333333432674408 # mandatory. Theoretical maximum value of the data source. Will be used in normalization.
+      good_exposure: True # mandatory. If the data source is good for exposure or bad. Good exposures will be considered cheaper (negative) values in routing and bad/False as expensive, in the routing.
+      no_data_value: 0 # optional. The no data value of the raster. If not given, will use the default value from the config.py.
 
-  - name: gvi # mandatory. Can be what ever but needs to be the same throughout the config file.
-    filepath: path/to/greenery_points.gpkg # mandatory. Absolute path if not under the Green Paths 2 directory.
-    data_type: vector # optional, recommended. The type of the data source. This can be one of the following: vector or raster.
-    original_crs: 3879 # mandatory. The crs of the data source.
-    layer_name: the_layer_name # optional, recommended. If not given, will use the first layer found in case multiple layers in e.g. gpkg.
-    data_column: gvi_Mean # mandatory. Name of the data column in the data source. Should have numerical values.
-    min_data_value: 0.09 # mandatory. Theoretical minimum value of the data source. Will be used in normalization.
-    max_data_value: 86.28 # mandatory. Theoretical maximum value of the data source. Will be used in normalization.
-    good_exposure: True # mandatory. If the data source is good for exposure or bad. Good exposures will be considered cheaper (negative) values in routing and bad/False as expensive, in the routing.
-    data_buffer: 10 # optional, only for vector datas, in meters. If given, add the buffer around the data objects, in meters. This can be used to make the area of interest larger for datas. Only for vector datas.
-    raster_cell_resolution: 20 # mandatory. The resolution of the raster cells in meters (e.g. 10 = 10mx10m). The data will be rasterized to this resolution.
-    save_raster_file: True # optional. If the raster file should be saved to the cache or not. Mostly for testing and visualizing purposes.
+    - name: gvi # mandatory. Can be what ever but needs to be the same throughout the config file.
+      filepath: path/to/greenery_points.gpkg # mandatory. Absolute path if not under the Green Paths 2 directory.
+      data_type: vector # optional, recommended. The type of the data source. This can be one of the following: vector or raster.
+      original_crs: 3879 # mandatory. The crs of the data source.
+      layer_name: the_layer_name # optional, recommended. If not given, will use the first layer found in case multiple layers in e.g. gpkg.
+      data_column: gvi_Mean # mandatory (for vector data). Name of the data column in the data source. Should have numerical values.
+      min_data_value: 0.09 # mandatory. Theoretical minimum value of the data source. Will be used in normalization.
+      max_data_value: 86.28 # mandatory. Theoretical maximum value of the data source. Will be used in normalization.
+      good_exposure: True # mandatory. If the data source is good for exposure or bad. Good exposures will be considered cheaper (negative) values in routing and bad/False as expensive, in the routing.
+      data_buffer: 10 # optional, only for vector datas, in meters. If given, add the buffer around the data objects, in meters. This can be used to make the area of interest larger for datas. Only for vector datas.
+      raster_cell_resolution: 20 # mandatory. The resolution of the raster cells in meters (e.g. 10 = 10mx10m). The data will be rasterized to this resolution.
+      save_raster_file: True # optional. If the raster file should be saved to the cache or not. Mostly for testing and visualizing purposes.
 
-  - name: aqi # mandatory. Can be what ever but needs to be the same throughout the config file.
-    filepath: path/to/allPollutants_2023-12-15T04.nc # mandatory. Absolute path if not under the Green Paths 2 directory.
-    data_type: raster # optional, recommended. The type of the data source. This can be one of the following: vector or raster.
-    original_crs: 4326 # mandatory. The crs of the data source.
-    data_column: AQI  # mandatory. Name of the data column in the data source. Should have numerical values.
-    min_data_value: 0 # mandatory. Theoretical minimum value of the data source. Will be used in normalization.
-    max_data_value: 5 # mandatory. Theoretical maximum value of the data source. Will be used in normalization.
-    good_exposure: False # mandatory. If the data source is good for exposure or bad. Good exposures will be considered cheaper (negative) values in routing and bad/False as expensive, in the routing.
-    raster_cell_resolution: 10 # optional. The resolution of the raster cells in meters (e.g. 10 = 10mx10m). The data will be rasterized to this resolution.
-    save_raster_file: True # optional. If the raster file should be saved to the cache or not. Mostly for testing and visualizing purposes.
-    custom_processing_function: custom_function # optional. A custom processing function that can be used to process the data source before the exposure analysis.
+    - name: aqi # mandatory. Can be what ever but needs to be the same throughout the config file.
+      filepath: path/to/allPollutants_2023-12-15T04.nc # mandatory. Absolute path if not under the Green Paths 2 directory.
+      data_type: raster # optional, recommended. The type of the data source. This can be one of the following: vector or raster.
+      original_crs: 4326 # mandatory. The crs of the data source.
+      data_column: AQI # mandatory (for vector data or data sources which have multiple "fields", so this .nc is not actually really raster). Name of the data column in the data source. Should have numerical values.
+      min_data_value: 0 # mandatory. Theoretical minimum value of the data source. Will be used in normalization.
+      max_data_value: 5 # mandatory. Theoretical maximum value of the data source. Will be used in normalization.
+      good_exposure: False # mandatory. If the data source is good for exposure or bad. Good exposures will be considered cheaper (negative) values in routing and bad/False as expensive, in the routing.
+      raster_cell_resolution: 10 # optional. The resolution of the raster cells in meters (e.g. 10 = 10mx10m). The data will be rasterized to this resolution.
+      save_raster_file: True # optional. If the raster file should be saved to the cache or not. Mostly for testing and visualizing purposes.
+      custom_processing_function: custom_function # optional. A custom processing function that can be used to process the data source before the exposure analysis.
 
 routing:
     transport_mode: walking # mandatory. The transport mode for the routing. Can be either walking or cycling.
-    travel_speed: 5 # optional. The travel speed in km/h. If not given, will use the default values from the config.py.
+    travel_speed: 5 # mandatory. The travel speed in km/h. If not given, will use the default values from the config.py.
     origins: path/to/origins_points.gpkg # mandatory. The path to the origins file. This can be either a vector file or a csv file. The file should have the coordinates of the origins.
     od_lon_name: longitude # mandatory for csv, optional for others. The column name of the longitude column in the origins file.
     od_lat_name: latitude # mandatory for csv, optional for others. The column name of the latitude column in the origins file.
@@ -225,25 +213,25 @@ routing:
     od_crs: 4326 # mandatory. The crs of the origins and destinations files.
     precalculate: True # optional. Determines if routing should precalculate custom cost values. Should be faster for large datasets. Default is True.
     exposure_parameters:
-      - name: shade # mandatory. The name of the data source (should be the same as in the data_sources)
-        sensitivity: 1.5 # mandatory. The sensitivity of the data source. This is used as a weight in the exposure value calculations for routing. Formula used in routing: base_travel_time_of_segment + (base_travel_time_of_segment * sensitivity * exposure_value_of_segment)
-        allow_missing_data: True # optional, experimental. If the missing data should be allowed or not. If this is True, the segments with missing data will be ignored in the exposure analysis. default is true. If this is False, the missing data will crash the routing. This is experimental and should be used with caution. In most cases this should be True.
+        - name: shade # mandatory. The name of the data source (should be the same as in the data_sources)
+          sensitivity: 1.5 # mandatory. The sensitivity of the data source. This is used as a weight in the exposure value calculations for routing. Formula used in routing: base_travel_time_of_segment + (base_travel_time_of_segment * sensitivity * exposure_value_of_segment)
+          allow_missing_data: True # optional, experimental. If the missing data should be allowed or not. If this is True, the segments with missing data will be ignored in the exposure analysis. default is true. If this is False, the missing data will crash the routing. This is experimental and should be used with caution. In most cases this should be True.
 
-      - name: aqi # mandatory. The name of the data source (should be the same as in the data_sources)
-        sensitivity: 2 # mandatory. The sensitivity of the data source. This is used as a weight in the exposure value calculations for routing. Formula used in routing: base_travel_time_of_segment + (base_travel_time_of_segment * sensitivity * exposure_value_of_segment)
-        allow_missing_data: True # optional, experimental. If the missing data should be allowed or not. If this is True, the segments with missing data will be ignored in the exposure analysis. default is true. If this is False, the missing data will crash the routing. This is experimental and should be used with caution. In most cases this should be True.
+        - name: aqi # mandatory. The name of the data source (should be the same as in the data_sources)
+          sensitivity: 2 # mandatory. The sensitivity of the data source. This is used as a weight in the exposure value calculations for routing. Formula used in routing: base_travel_time_of_segment + (base_travel_time_of_segment * sensitivity * exposure_value_of_segment)
+          allow_missing_data: True # optional, experimental. If the missing data should be allowed or not. If this is True, the segments with missing data will be ignored in the exposure analysis. default is true. If this is False, the missing data will crash the routing. This is experimental and should be used with caution. In most cases this should be True.
 
-      - name: gvi # mandatory. The name of the data source (should be the same as in the data_sources)
-        sensitivity: 5 # mandatory. The sensitivity of the data source. This is used as a weight in the exposure value calculations for routing. Formula used in routing: base_travel_time_of_segment + (base_travel_time_of_segment * sensitivity * exposure_value_of_segment)
-        allow_missing_data: True # optional, experimental. If the missing data should be allowed or not. If this is True, the segments with missing data will be ignored in the exposure analysis. default is true. If this is False, the missing data will crash the routing. This is experimental and should be used with caution. In most cases this should be True.
+        - name: gvi # mandatory. The name of the data source (should be the same as in the data_sources)
+          sensitivity: 5 # mandatory. The sensitivity of the data source. This is used as a weight in the exposure value calculations for routing. Formula used in routing: base_travel_time_of_segment + (base_travel_time_of_segment * sensitivity * exposure_value_of_segment)
+          allow_missing_data: True # optional, experimental. If the missing data should be allowed or not. If this is True, the segments with missing data will be ignored in the exposure analysis. default is true. If this is False, the missing data will crash the routing. This is experimental and should be used with caution. In most cases this should be True.
 
 analysing:
-  keep_geometry: True # optional. If the geometry of the segments should be kept in the final results. If this is False, the geometry will be removed from the final results. Will produce gpkg with geoms and csv without geoms.
-  save_output_name: custom_output_name # optional. The name of the output file. If not given, will use the default name from the config.py.
-  cumulative_ranges: # optional. Defining the cumulative ranges for the data sources. The cumulative exposure values are calculated for each range. If outside of range, the value will be used as the "category" key.
-    aqi: # mandatory, if given, should be the same as in the data_sources
-      - [0, 0.99] # mandatory if cumulative_ranges is given.
-      - [1, 1.99] # ...
-      - [2, 2.99] # ...
-      - [3, 3.99] # ...
-      - [4, 5] # ...
+    keep_geometry: True # optional. If the geometry of the segments should be kept in the final results. If this is False, the geometry will be removed from the final results. Will produce gpkg with geoms and csv without geoms.
+    save_output_name: custom_output_name # optional. The name of the output file. Do not use the whole filepath here. If not given, will use the default name from the config.py.
+    cumulative_ranges: # optional. Defining the cumulative ranges for the data sources. The cumulative exposure values are calculated for each range. If outside of range, the value will be used as the "category" key.
+        aqi: # mandatory, if given, should be the same as in the data_sources
+            - [0, 0.99] # mandatory if cumulative_ranges is given.
+            - [1, 1.99] # ...
+            - [2, 2.99] # ...
+            - [3, 3.99] # ...
+            - [4, 5] # ...

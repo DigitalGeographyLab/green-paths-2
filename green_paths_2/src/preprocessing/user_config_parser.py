@@ -397,6 +397,9 @@ class UserConfig:
             )
 
         transport_mode: str = routing_config.get(DataSourceModel.TransportMode.value)
+        travel_speed: int | float = routing_config.get(
+            DataSourceModel.TravelSpeed.value
+        )
         od_crs: str = routing_config.get(DataSourceModel.ODcrs.value)
         origins_path: str = routing_config.get(DataSourceModel.Origins.value)
         destinations_path: str = routing_config.get(DataSourceModel.Destinations.value)
@@ -419,6 +422,11 @@ class UserConfig:
         ):
             self.errors.append(
                 "Invalid or missing travel mode configuration in routing parameters. Should be walking or cycling."
+            )
+
+        if not travel_speed or not isinstance(travel_speed, (int, float)):
+            self.errors.append(
+                "Invalid or missing travel speed configuration in routing parameters. Should be int or float."
             )
 
         if origin_is_csv or destination_is_csv:

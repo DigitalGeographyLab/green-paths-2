@@ -40,6 +40,10 @@ def save_to_gpkg_or_csv(df: pd.DataFrame, output_path: str, crs: int | str) -> N
     output_path : str
         The path to save the output data.
     """
+    # try to convert all columns to numeric
+    # if column cant be converted to numeric, it will be left as is
+    df = df.apply(pd.to_numeric, errors="ignore", axis=0)
+
     if GEOMETRY_KEY in df.columns:
         # Convert WKT geometries to GeoDataFrame
         df[GEOMETRY_KEY] = df[GEOMETRY_KEY].apply(wkt.loads)

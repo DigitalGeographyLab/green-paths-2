@@ -31,6 +31,7 @@ class DataSourceModel(Enum):
     AllowMissingData = "allow_missing_data"
     ExposureParameters = "exposure_parameters"
     TransportMode = "transport_mode"
+    TravelSpeed = "travel_speed"
     KeepGeometry = "keep_geometry"
     CumulativeRanges = "cumulative_ranges"
     SaveOutputName = "save_output_name"

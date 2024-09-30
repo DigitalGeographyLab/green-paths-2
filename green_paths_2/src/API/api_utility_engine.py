@@ -94,8 +94,8 @@ def build_custom_cost_networks(
 
     db_controller = DatabaseController()
 
-    # TODO: ONLY IN PROD -> ALSO, remove this???!!!
-    # db_controller.empty_table(SEGMENT_STORE_TABLE)
+    # USE ONLY IN PROD
+    db_controller.empty_table(SEGMENT_STORE_TABLE)
 
     custom_cost_networks = {}
     configs = {}

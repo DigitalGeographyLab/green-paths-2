@@ -7,8 +7,14 @@ See the OS specific instructions for the installation.
 ## Windows
 
 Prerequisites:
+- Java (openjdk 22.0.1 or higher)
+- Setting JAVA_HOME environmental variable (if not set during installation)
 - Miniconda or Anaconda
 - Microsoft Visual Build Tools C++ 14.0 or greater
+
+Useful links:
+
+[Install JavaJDK](https://www.oracle.com/java/technologies/javase/jdk22-archive-downloads.html)
 
 [Install miniconda/anaconda](https://docs.conda.io/en/latest/miniconda.html) if not installed.
 The installation has python included.

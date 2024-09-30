@@ -66,7 +66,7 @@ hr {
 .separator_line {
     border: 1px solid lightgray;
     margin-bottom: 10px;
-    opacity: .5;
+    opacity: 0.5;
 }
 
 .center_logos {
@@ -76,5 +76,5 @@ hr {
 }
 
 .center_logos img {
-   width: 15rem;
+    width: 15rem;
 }

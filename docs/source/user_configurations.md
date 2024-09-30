@@ -250,7 +250,7 @@ Groups name in YML: data_sources
 
 ### data_column
   - **Type**: string
-  - **Required**: mandatory
+  - **Required**: mandatory (vector) | not used for raster
   - **Explanation**: The name of the data field "column" in the data source.
   - **Example**: db_hi
 
@@ -262,6 +262,7 @@ Groups name in YML: data_sources
   - **Required**: optional
   - **Explanation**: Value to be used for no data values (no exposure raster for segment found). If this is given, the segments with no data value do not get any good or bad weighting from exposure data sources that are not found for them.
   - **Examples**: 0.0, 1
+  - **Note**: Set this if the data has some specific value for no_data, e.g. -999. The no data will be filtered out and not used for routing or analysing exposure. 
 
 <div class="separator_line"></div>
 
@@ -375,10 +376,10 @@ Name in YML: routing
 
 ### travel_speed
   - **Type**: integer | float
-  - **Required**: optional
+  - **Required**: mandatory
   - **Explanation**: define travelling speed in km/h. 
   - **Example**: 5.5
-  - **Defaults**: 3.6 (walking), 12.0 (cycling)
+  - **Defaults**: 5.0 (walking), 15.0 (cycling)
 
 <div class="separator_line"></div>
 

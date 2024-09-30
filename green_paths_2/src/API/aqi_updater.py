@@ -128,7 +128,12 @@ class AQIUpdater:
                 self._fetch_aqi_zip_from_aws()
             )
 
-            if not aqi_zip_download_success:
+            if (
+                not aqi_zip_download_success
+                or not aqi_file_name
+                or not timestamp
+                or not aqi_zip_path
+            ):
                 logging.info("Failed to download AQI data from Enfuser AWS.")
                 return False, None
 
@@ -182,9 +187,11 @@ class AQIUpdater:
             return
 
         new_aqi_data_success, timestamp = self.download_aqi_data_from_enfuser_aws()
-        self.set_latest_fetch_aqi_timestamp(timestamp)
 
-        if new_aqi_data_success:
+        if timestamp:
+            self.set_latest_fetch_aqi_timestamp(timestamp)
+
+        if new_aqi_data_success and timestamp:
             logging.info(
                 "Successfully downloaded new AQI data. Run preprocessing pipeline."
             )
@@ -197,4 +204,5 @@ class AQIUpdater:
 
             logging.info("new AQI data downloaded successfully")
         else:
+            # TODO: separate the logging for the two cases
             logging.info("Aqi data not updated, no new data or data fetch failed.")

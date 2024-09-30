@@ -18,7 +18,7 @@ class DatabaseController:
             self.db_path = GP2_DB_PATH
 
     def connect(self):
-        conn = sqlite3.connect(self.db_path, timeout=10)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         # Enable WAL mode for the connection, enabling concurrent reads and writes
         conn.execute("PRAGMA journal_mode=WAL;")
         return conn

@@ -1,0 +1,35 @@
+# Greetings traveller!
+# This is a working example configuration file.
+# you can run this and use this as a template for your own configuration file.
+
+project:
+    project_crs: 3879
+    # datas_coverage_safety_percentage: 10
+osm_network:
+    osm_pbf_file_path: green_paths_2/user/example_data/gp2_working_example_lintsi_pieni_segmented.osm.pbf
+    original_crs: 4326
+data_sources:
+    - name: gvi_lines
+      filepath: green_paths_2/user/example_data/gp2_working_example_greenery_road_data.gpkg
+      data_type: vector
+      data_column: LU_GVI
+      min_data_value: 0.0
+      max_data_value: 97.9
+      good_exposure: True
+      raster_cell_resolution: 10
+      original_crs: 3879
+
+routing:
+    transport_mode: walking
+    travel_speed: 5.5
+    precalculate: False
+    # using same file as both origins and destinations to get a symmetric matrix
+    origins: green_paths_2/user/example_data/gp2_working_example_OD_points.gpkg
+    destinations: green_paths_2/user/example_data/gp2_working_example_OD_points.gpkg
+    # od_crs: 3879
+    exposure_parameters:
+        - name: gvi_lines
+          sensitivity: 1.25
+analysing:
+    keep_geometry: True
+    save_output_name: test_gp_working_example_green_points_lintsi

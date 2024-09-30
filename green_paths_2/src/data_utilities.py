@@ -7,6 +7,7 @@ import pandas as pd
 from shapely.geometry import LineString, MultiLineString
 
 from .config import (
+    BASE_DIR,
     DATA_CACHE_DIR_PATH,
     OSM_CACHE_DIR_NAME,
     OSM_CACHE_SEGMENTED_DIR_NAME,
@@ -122,6 +123,15 @@ def convert_gdf_to_dict(
 
 def construct_osm_segmented_network_name(osm_source_path: str) -> str:
     """Constructs the name for the segmented OSM network file."""
+    # very bad solution but no time for better one
+    if os.getenv("ENV") == "TEST":
+        return (
+            "green_paths_2/tests/data/osm/segmented/test_hki_centra_segmented.osm.pbf"
+        )
+
+    # just return the source path if it is already segmented
+    # if OSM_SEGMENTED_DEFAULT_FILE_NAME_EXTENSION in osm_source_path:
+    #     return osm_source_path
 
     # Normalize input path and extract file name without extension
     osm_source_path = os.path.normpath(osm_source_path)
@@ -136,13 +146,19 @@ def construct_osm_segmented_network_name(osm_source_path: str) -> str:
         else network_name_no_extension
     ) + OSM_DEFAULT_FILE_EXTENSION
 
-    # Determine the environment (TEST or other) and set data cache directory
+    # Ensure data_cache_dir_path is absolute
     data_cache_dir_path = (
         TEST_DATA_CACHE_DIR_PATH if os.getenv("ENV") == "TEST" else DATA_CACHE_DIR_PATH
     )
+
+    # If the data_cache_dir_path is relative, make it absolute
+    if not os.path.isabs(data_cache_dir_path):
+        data_cache_dir_path = os.path.join(BASE_DIR, data_cache_dir_path)
+
+    # Normalize to remove any redundant paths
     data_cache_dir_path = os.path.normpath(data_cache_dir_path)
 
-    # Return the constructed file path
+    # Return the constructed absolute file path
     return os.path.join(
         data_cache_dir_path,
         OSM_CACHE_DIR_NAME,

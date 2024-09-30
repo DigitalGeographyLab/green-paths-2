@@ -2,6 +2,10 @@
 
 Lets say we would like to create a greenery matrix of Some city..
 
+```{attention}
+Remember that you can run the example all pipeline by: inv gp2 -a "-c green_paths_2/user/working_example_config.yaml all"
+```
+
 0. Get familiar with documentation.
 
 <div class="separator_line"></div>

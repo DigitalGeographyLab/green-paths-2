@@ -24,15 +24,40 @@ These modules separate the logic of calculating environmental exposure for OSM s
 See more from [Modules and Components](#modules_and_components)
 ```
 
+## Module results
+
+### preprocessing module
+Preprocessing module will populate the sqlite3 db with values: raw exposure, normalized exposure, lenght, geometry. Where each row describes a single segment.
+The OSM PBF is segmented to create more representative segments vs. OSM ways (which can span across multiple intersections / nodes)
+Preprocessing module handles conversion of CRS to the project CRS.
+Preprocessing uses point segmentation for segments and overlay analysis to see what is the exposure values and then averages the mean value from all the points and assigns that to the segment.
+
+Optionally preprocessing also saves the exposure rasters according to the user configuration value.
+
+### routing module
+Routing module uses the normalized exposures from the sqlite3 segment_store to input them to r5py and forward to r5. The values in addition to the weigth / sensitivity is then used to weight the segments in the network.
+The routing saves the paths and the actual travel times to sqlite3 to tables routing_results and travel_times. 
+
+### analysing module
+Analysing module then combines the results from routing paths and travel times with segment store values by using the (osm segment newly created) OSM_ID's to fetch the exposure values.
+The module calculates time weighted averages and sum, min, max, and optionally configured cumulative values (seconds spend in each range of exposure value, exposure range is key and seconds is value).
+
+The module then produces results as gpkg if keep_geometries is defined as true in user configurations, otherwise it produces csv.
+
 ## User configurations
 Green Paths 2.0 relies heavily on user configurations in order to work. All of the necessary tool configurations are filled in the [YAML](https://yaml.org/).
 
 The user configurations: config.yaml can befound in /user/ directory in GP2 root directory.
 In case a custom path for user configuration needs to be used, it can be passed in as argument, see [cli user interface](#cli_user_interface)
 
+```{attention}
+When running without -c (config path) argument, the config used will always be user/config.yaml
+```
+
 ```{hint}
 See more from [User Configurations](#user_configurations)
 ```
+
 ## Routing engine
 The segment exposure values are then used to route healthier paths with the by using [Conveyal's R5: Rapid Realistic Routing on Real-world and Reimagined networks](https://github.com/conveyal/r5) via python interface of [r5py: Rapid Realistic Routing with R5 in Python](https://github.com/r5py/r5py). The routing returns lists of OSM ID's taken during routing, and uses those OSM ID's to combine and calculate segment exposure values (combined with Preprocessing raw exposure values).
 
@@ -41,7 +66,6 @@ GP2 is using patched forks from Digital Geography Lab's r5 [R5](https://github.c
 ## Output Results
 The output results can befound in /results_output directory in the GP2 root directory.
 Also the resulting exposure rasters will be located in this folder.
-
 
 ## Geography Masters Thesis (completed June 2024)
 Green Paths 2.0 was part of the Master's thesis by Roope Heinonen made for the [Digital Geography Lab](https://www.helsinki.fi/en/researchgroups/digital-geography-lab) in the University of Helsinki.

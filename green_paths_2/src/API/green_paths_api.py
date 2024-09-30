@@ -18,6 +18,9 @@ from ..exposure_analysing.main import (
     init_exposure_handlers,
 )
 
+from fastapi import BackgroundTasks
+
+from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -73,14 +76,19 @@ def setup_logger(name, level=logging.INFO):
 # Initialize logger
 logger = setup_logger(__name__)
 
+# TODO: this should be set to the IP and/or domain of the server
+# atm we dont know the domain, so leaving this as wildcard
+# as the server's security group should handle the access by only the allowed IP's / domains
 
-# Configure CORS settings
-allowed_cors_origins = [
-    "http://localhost:3000",
-]
 
 aqi_updater = AQIUpdater()
 db_controller = DatabaseController()
+
+executors = {"default": ThreadPoolExecutor(1)}  # Limit to 1
+
+scheduler = BackgroundScheduler(executors=executors)
+scheduler.add_job(aqi_updater.fetch_and_update_aqi_data_hourly_job, "interval", hours=1)
+scheduler.start()
 
 
 # Using lifespan to handle startup and shutdown events
@@ -94,38 +102,37 @@ async def lifespan(app: FastAPI):
             )
         else:
             logger.info("Custom cost networks already initialized")
+
+        yield
+
     except Exception as e:
         logger.error(f"Error during lifespan startup: {e}")
         logger.error(traceback.format_exc())  # This will log the full traceback
-
-    yield
-    # Cleanup if necessary here (runs on shutdown)
+    finally:
+        # Ensure scheduler is stopped during shutdown
+        scheduler.shutdown()
 
 
 app = FastAPI(lifespan=lifespan)
 app.router.lifespan_context = lifespan
 
+# Configure CORS settings
+# TODO: allow_origins might need to be changed to the actual domain of the frontend for security reasons
+
 # add cors middleware for making request from same origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_cors_origins,
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# init scheduler for fetching AQI data
-scheduler = BackgroundScheduler()
-scheduler.add_job(
-    aqi_updater.fetch_and_update_aqi_data_hourly_job, "interval", hours=1
-)  # minutes=2
-scheduler.start()
 
 # ENDPOINTS
 
 
 @app.post("/route/")
-async def calculate_routes(request: RouteRequest):
+async def calculate_routes(request: RouteRequest, background_tasks: BackgroundTasks):
     try:
         if not network_builder.get_build_networks_initialized():
             logger.error("Custom cost networks not initialized.")
@@ -285,19 +292,31 @@ async def calculate_routes(request: RouteRequest):
                 all_path_FC, key=lambda x: getattr(x.properties, "Time", float("inf"))
             )
 
-        # filter out path feature that have too similar geometry
-        logger.info(f"total number of paths before filtering: {len(all_path_FC)}")
-        filtered_path_fc = filter_too_similar_paths(all_path_FC=all_path_FC)
-        logger.info(f"total number of paths after filtering: {len(filtered_path_fc)}")
+        try:
+            # filter out path feature that have too similar geometry
+            logger.info(f"total number of paths before filtering: {len(all_path_FC)}")
+            filtered_path_fc = filter_too_similar_paths(all_path_FC=all_path_FC)
+            logger.info(
+                f"total number of paths after filtering: {len(filtered_path_fc)}"
+            )
 
-        # filter edges base on kept paths
-        filtered_edge_FC = filter_edges_based_on_pathid(
-            all_path_FC=filtered_path_fc, all_edge_FC=all_edge_FC
-        )
+            # filter edges base on kept paths
+            filtered_edge_FC = filter_edges_based_on_pathid(
+                all_path_FC=filtered_path_fc, all_edge_FC=all_edge_FC
+            )
+        except Exception as e:
+            logger.error(f"Error in filtering paths and edges: {e}")
+            logger.info("Will just return all paths and edges")
+            filtered_path_fc = all_path_FC
+            filtered_edge_FC = all_edge_FC
 
         # empty the tables after routing with user-id
-        db_handler.empty_table(ROUTING_RESULTS_TABLE, user_id=user_id)
-        db_handler.empty_table(OUTPUT_RESULTS_TABLE, user_id=user_id)
+        background_tasks.add_task(
+            db_handler.empty_table, ROUTING_RESULTS_TABLE, user_id=user_id
+        )
+        background_tasks.add_task(
+            db_handler.empty_table, OUTPUT_RESULTS_TABLE, user_id=user_id
+        )
 
         # latest build aqi file timestamp
         latest_aqi_build_timestamp = (
@@ -331,16 +350,6 @@ async def calculate_routes(request: RouteRequest):
             status_code=500,
             detail=e.args[0] if e.args else "Unhandled exception in calculate_routes",
         )
-
-
-# @app.on_event("startup")
-# def startup_event():
-
-
-# @app.on_event("shutdown")
-# def shutdown_event():
-#     scheduler.shutdown()
-#     executor.shutdown(wait=True)
 
 
 # Running the server

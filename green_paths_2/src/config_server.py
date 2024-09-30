@@ -1,5 +1,10 @@
 """ General configurations for Green Paths 2 project """
 
+# NOTE: QUICK FIX FOR ABSOLUTE PATH NAMES, NO TIME TO FIX THIS PROPERLY
+# SO THIS SHALL DO...
+# THIS SHOULD BE TAKEN TO SERVER AN NAMED AS "config.py"
+
+
 import os
 import numpy as np
 
@@ -16,10 +21,12 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # SQLITE DATABASE
 
 # SQLITE3 DB PATH
-GP2_DB_PATH = os.path.join(BASE_DIR, "database", "gp2.db")
+GP2_DB_PATH = "/home/ubuntu/green-paths-2/green_paths_2/src/database/gp2.db"
 
 # SQLITE3 DB PATH FOR TESTING
-GP2_DB_TEST_PATH = "green_paths_2/tests/database/gp2_testing.db"
+GP2_DB_TEST_PATH = (
+    "/home/ubuntu/green-paths-2/green_paths_2/tests/database/gp2_testing.db"
+)
 
 # TABLES
 
@@ -130,11 +137,11 @@ ORIGIN_DESTINATION_KEYS = [FROM_ID_KEY, TO_ID_KEY]
 
 # PATHS
 
-USER_CONFIG_PATH = "green_paths_2/user/config.yaml"
+USER_CONFIG_PATH = "/home/ubuntu/green-paths-2/green_paths_2/user/config.yaml"
 
 OUTPUT_FINAL_RESULTS_DIR_PATH = "results_output"
 
-TEST_OUTPUT_RESULTS_DIR_PATH = "green_paths_2/tests/outputs"
+TEST_OUTPUT_RESULTS_DIR_PATH = "/home/ubuntu/green-paths-2/green_paths_2/tests/outputs"
 
 
 # # CACHE
@@ -244,9 +251,9 @@ API_EXPOSURES_NAME_MAPPING = {
     "noise": "noise",
 }
 
-ODS_TEMP_CSV_PATH = "green_paths_2/src/API/temp_ods"
+ODS_TEMP_CSV_PATH = "/home/ubuntu/green-paths-2/green_paths_2/src/API/temp_ods"
 
-CONFIGS_DIR = "green_paths_2/src/API/configs"
+CONFIGS_DIR = "/home/ubuntu/green-paths-2/green_paths_2/src/API/configs"
 
 # Define filenames for origin and destination
 ORIGIN_CSV_NAME = "api_origin.csv"

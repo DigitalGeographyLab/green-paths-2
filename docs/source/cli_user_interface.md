@@ -3,6 +3,16 @@
 Green Paths 2 is operated via CLI (terminal/cmd). User can run modules separately or all together. The arguments are run with "invoke" and parameter -a (for argument) . 
 Personally I prefer to handle Green Paths 2.0 user configuration and cli user interface from VSCode (Visualstudio Code), as everything is in the same place.
 
+```{attention}
+When running without -c (config path) argument, the config will always be user/config.yaml
+```
+
+```{attention}
+Remember that you can run the example all pipeline by: inv gp2 -a "-c green_paths_2/user/working_example_config.yaml all"
+```
+
+
+
 ## Running arguments
 ```
 inv gp2 -a <COMMAND>

@@ -29,6 +29,7 @@ There has been couple of main improvements after the completion of the thesis.
 - The cache is moved from directory based saving to use Sqlite3. All modules save their results to the local db.
 - The routing module (and dependencies r5, r5py) support now the precalculations. This means that custom cost values for segments are by default calcutated before the actual routing to the segments.
 This should make the routing process faster, especially for mass calculations of routes.
+- Datatypes of "osmid"'s have been changed from Long to Int for better performance.
 
 
 ## Preprocessing
