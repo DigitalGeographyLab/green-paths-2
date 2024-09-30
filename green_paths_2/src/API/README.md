@@ -11,6 +11,8 @@ might take really long like 12-24h (?). So if getting errors in Frontend GUI, ch
 
 # memo / issues
 
+-   TODO: OSM network updater would be nice! Like weekly or monthly etc...
+
 -   the sqlite3 is defenitely not designed for this kind of use (multiple users) and can cause significant problems with db locks etc...
 -   the configurations are quite repetetive with just minimal changes, this could be done lot better
 -   the fact that currently the origin and destination csv are the same for all request could potentially give wrong routes if used simultaneously
