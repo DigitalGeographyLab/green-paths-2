@@ -1,6 +1,23 @@
 DEV README
 ==========
 
+TO RUN TESTS (in root):
+        poetry run pytest
+-----------------------
+TO BUILD DOCS (in root):
+
+- Always edit the files under folder "ipynb_docs_for_readthedocs"
+
+! NOTICE: you might need to conda-forge install some of the dependencies, e.g. sphinx and sphinx_rtd_theme
+! NOTICE: if adding a new "section" remember to add it to the "index.rst" file, so that it is included in the documentation
+! NOTICE: in order for the docs to be updated to readthedocs, you need to push the changes to github, and in readthedocs webpage in green-paths-2 -project, you need to "rebuild" the project.
+
+        ./build_readthedocs.sh
+
+-----------------------
+
+THE DISCLAIMER / FURTHER DEVELOPMENT SECTION:
+
 There are many thing that could have been made better in this project. Here are some of them:
 
 - not using poetry and conda together (should probably use only conda)
