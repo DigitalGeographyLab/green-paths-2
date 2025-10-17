@@ -8,6 +8,7 @@ See the OS specific instructions for the installation.
 
 Prerequisites:
 - Java (openjdk 22.0.1 or higher)
+    - Note: For University of Helsinki users, install Amazon Corretto from the SOftware Center 
 - Setting JAVA_HOME environmental variable (if not set during installation)
 - Miniconda or Anaconda
 - Microsoft Visual Build Tools C++ 14.0 or greater
@@ -26,9 +27,11 @@ If problems with conda not found occur, add Conda manually to the PATH or use th
 
 [Install Microsoft Visual Build Tools C++ 14.0 or greater](https://visualstudio.microsoft.com/visual-cpp-build-tools/) if running older version.
 From Visual Studio Installer select the tab "Individual components" and from there select at least:
-- C++ build tools (version 14.0 or greater)
-- Windows 10 SDK
+- MSVC v143 - VS 2022 C++ x64/x86 build tools (latest)
+- Windows 10 SDK (10.0.19041.0) 
 - C++ CMake tools for Windows
+Note: Tested on 17th October 2025
+
 
 After installing the prerequisites, install Green Paths 2 to conda environment:
 - Navigate to the Green Paths 2 root folder
