@@ -1,11 +1,15 @@
 # INSTALLATION
 
-```{note}
+Start by cloning the repository and install the prerequisites:
+
+    git clone https://github.com/DigitalGeographyLab/green-paths-2
+         
+
 See the OS specific instructions for the installation.
-```
+
 
 ## Windows
-
+        
 Prerequisites:
 - Java (openjdk 22.0.1 or higher)
     - Note: For University of Helsinki users, install Amazon Corretto from the Software Center 
