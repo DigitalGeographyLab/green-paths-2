@@ -105,9 +105,9 @@ echo Setting JAVA_HOME to %JAVA_HOME%
 :: Install Poetry for the current Conda environment
 call pip install poetry
 
-call poetry config virtualenvs.create false
+call poetry config virtualenvs.create true
 
-call poetry env use $(which python)
+call poetry env use "%CONDA_PREFIX%\python.exe"
 
 call pip install invoke
 
