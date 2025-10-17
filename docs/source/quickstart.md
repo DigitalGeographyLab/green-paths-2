@@ -38,21 +38,23 @@ and check the prerequisites for the installation from the installation section!
         
         conda activate green_paths_2
 
-7. Run the working example with:
+5. Run the working example with:
+
         inv gp2 -a "-c green_paths_2/user/working_example_config.yaml all"
 
-8. See the results in the output folder.
+7. See the results in the output folder.
 
         results_output
 
-9. After that you are ready to edit the user/config.yml and start running your own analysis e.g.
+8. After that you are ready to edit the user/config.yml and start running your own analysis e.g.
 Fill the user configurations in the **user/config.yml** file. See [User Configurations](#user_configurations).
 Validate the user configurations before running the pipeline.
 
         inv gp2 -a validate
 
 and then run the whole pipeline:
+        
         inv gp2 -a "all"
 
-10. Travel safe and healthy!
+8. Travel safe and healthy!
 
