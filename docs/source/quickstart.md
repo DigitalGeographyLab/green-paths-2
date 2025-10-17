@@ -36,7 +36,7 @@ and check the prerequisites for the installation from the installation section!
 
 4. Activate the conda environment:
         
-        conda activate green_paths_2
+        conda activate dgl_gp2
 
 5. Run the working example with:
 
