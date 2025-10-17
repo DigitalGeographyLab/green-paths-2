@@ -11,7 +11,7 @@ Prerequisites:
     - Note: For University of Helsinki users, install Amazon Corretto from the Software Center 
 - Setting JAVA_HOME environmental variable (if not set during installation)
 - Miniconda or Anaconda
-- Microsoft Visual Build Tools C++ 14.0 or greater
+- Microsoft Visual Build Tools C++ 14.0 or greater (see details below)
 
 Useful links:
 
